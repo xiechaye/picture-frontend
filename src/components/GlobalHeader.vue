@@ -29,8 +29,14 @@
               <template #overlay>
                 <a-menu>
                   <a-menu-item>
-                    <router-link to="/my_space">
+                    <router-link to="/user/profile">
                       <UserOutlined />
+                      我的信息
+                    </router-link>
+                  </a-menu-item>
+                  <a-menu-item>
+                    <router-link to="/my_space">
+                      <InboxOutlined />
                       我的空间
                     </router-link>
                   </a-menu-item>
@@ -52,7 +58,7 @@
 </template>
 <script lang="ts" setup>
 import { computed, h, ref } from 'vue'
-import { HomeOutlined, LogoutOutlined, UserOutlined } from '@ant-design/icons-vue'
+import { HomeOutlined, LogoutOutlined, UserOutlined, InboxOutlined } from '@ant-design/icons-vue'
 import { MenuProps, message } from 'ant-design-vue'
 import { useRouter } from 'vue-router'
 import { useLoginUserStore } from '@/stores/useLoginUserStore.ts'
@@ -90,8 +96,8 @@ const originItems = [
   },
   {
     key: 'others',
-    label: h('a', { href: 'https://www.codefather.cn', target: '_blank' }, '编程导航'),
-    title: '编程导航',
+    label: h('a', { href: 'https://github.com/xiechaye', target: '_blank' }, '茶叶'),
+    title: '茶叶',
   },
 ]
 

@@ -52,3 +52,20 @@ export async function testUploadFileUsingPost(
     ...(options || {}),
   })
 }
+
+/** uploadAvatar POST /api/file/upload/avatar */
+export async function uploadAvatarUsingPost(
+  file: File,
+  options?: { [key: string]: any }
+) {
+  const formData = new FormData()
+  if (file) {
+    formData.append('file', file)
+  }
+  return request<any>('/api/file/upload/avatar', {
+    method: 'POST',
+    data: formData,
+    requestType: 'form',
+    ...(options || {}),
+  })
+}
