@@ -63,12 +63,12 @@ const router = createRouter({
     },
     {
       path: '/add_picture',
-      name: '创建图片',
+      name: '上传图片',
       component: AddPicturePage,
     },
     {
       path: '/add_picture/batch',
-      name: '批量创建图片',
+      name: '批量上传图片',
       component: AddPictureBatchPage,
     },
     {
