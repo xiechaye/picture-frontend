@@ -60,6 +60,18 @@
         />
         <a-button type="primary" @click="onSemanticSearch">语义搜索</a-button>
       </a-input-group>
+      <!-- 相似度阈值滑块 -->
+      <div class="similarity-slider">
+        <span class="slider-label">匹配程度：</span>
+        <a-slider
+          v-model:value="similarityThreshold"
+          :min="0"
+          :max="1"
+          :step="0.05"
+          style="width: 180px; display: inline-block; margin: 0 12px"
+        />
+        <a-tag :color="similarityTagColor">{{ similarityLabel }}</a-tag>
+      </div>
     </a-form-item>
     <!-- 按颜色搜索，跟其他搜索条件独立 -->
     <a-form-item label="按颜色搜索">
@@ -226,6 +238,31 @@ const onColorChange = async (color: string) => {
 
 // 语义搜索
 const semanticSearchText = ref<string>('')
+const similarityThreshold = ref<number>(0.5)
+
+// 根据相似度阈值计算动态标签文字
+const similarityLabel = computed(() => {
+  const value = similarityThreshold.value
+  if (value < 0.3) {
+    return '宽松 - 匹配更多图片'
+  } else if (value < 0.7) {
+    return '均衡 - 推荐'
+  } else {
+    return '严格 - 精确匹配'
+  }
+})
+
+// 根据相似度阈值计算标签颜色
+const similarityTagColor = computed(() => {
+  const value = similarityThreshold.value
+  if (value < 0.3) {
+    return 'green'
+  } else if (value < 0.7) {
+    return 'blue'
+  } else {
+    return 'orange'
+  }
+})
 
 const onSemanticSearch = async () => {
   if (!semanticSearchText.value?.trim()) {
@@ -238,6 +275,7 @@ const onSemanticSearch = async () => {
       searchText: semanticSearchText.value,
       spaceId: props.id as number,
       topK: searchParams.value.pageSize,
+      similarityThreshold: similarityThreshold.value,
     })
     if (res.data.code === 0 && res.data.data) {
       dataList.value = res.data.data ?? []
@@ -279,5 +317,16 @@ watch(
 <style scoped>
 #spaceDetailPage {
   margin-bottom: 16px;
+}
+
+#spaceDetailPage .similarity-slider {
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+}
+
+#spaceDetailPage .slider-label {
+  color: #666;
+  font-size: 14px;
 }
 </style>

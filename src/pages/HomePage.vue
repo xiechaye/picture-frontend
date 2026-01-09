@@ -15,6 +15,18 @@
           @search="doSearch"
         />
       </a-input-group>
+      <!-- 相似度阈值滑块（仅在AI语义搜索模式下显示） -->
+      <div v-if="searchMode === 'semantic'" class="similarity-slider">
+        <span class="slider-label">匹配程度：</span>
+        <a-slider
+          v-model:value="similarityThreshold"
+          :min="0"
+          :max="1"
+          :step="0.05"
+          style="width: 200px; display: inline-block; margin: 0 12px"
+        />
+        <a-tag :color="similarityTagColor">{{ similarityLabel }}</a-tag>
+      </div>
     </div>
     <!-- 分类和标签筛选 -->
     <a-tabs v-model:active-key="selectedCategory" @change="doSearch">
@@ -48,7 +60,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import {
   listPictureTagCategoryUsingGet,
   listPictureVoByPageUsingPost,
@@ -59,6 +71,33 @@ import PictureList from '@/components/PictureList.vue'
 
 // 搜索模式：normal(普通) / semantic(AI语义)
 const searchMode = ref<'normal' | 'semantic'>('normal')
+
+// 相似度阈值（仅用于AI语义搜索）
+const similarityThreshold = ref<number>(0.5)
+
+// 根据相似度阈值计算动态标签文字
+const similarityLabel = computed(() => {
+  const value = similarityThreshold.value
+  if (value < 0.3) {
+    return '宽松 - 匹配更多图片'
+  } else if (value < 0.7) {
+    return '均衡 - 推荐'
+  } else {
+    return '严格 - 精确匹配'
+  }
+})
+
+// 根据相似度阈值计算标签颜色
+const similarityTagColor = computed(() => {
+  const value = similarityThreshold.value
+  if (value < 0.3) {
+    return 'green'
+  } else if (value < 0.7) {
+    return 'blue'
+  } else {
+    return 'orange'
+  }
+})
 
 // 定义数据
 const dataList = ref<API.PictureVO[]>([])
@@ -111,6 +150,7 @@ const fetchSemanticData = async () => {
     const res = await searchPictureBySemantic({
       searchText: searchParams.searchText,
       topK: searchParams.pageSize,
+      similarityThreshold: similarityThreshold.value,
     })
     if (res.data.code === 0 && res.data.data) {
       dataList.value = res.data.data ?? []
@@ -180,6 +220,18 @@ onMounted(() => {
 #homePage .search-bar {
   max-width: 480px;
   margin: 0 auto 16px;
+}
+
+#homePage .similarity-slider {
+  margin-top: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+#homePage .slider-label {
+  color: #666;
+  font-size: 14px;
 }
 
 #homePage .tag-bar {
