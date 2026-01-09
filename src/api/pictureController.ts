@@ -296,3 +296,18 @@ export async function uploadPictureByUrlUsingPost(
     ...(options || {}),
   })
 }
+
+/** searchPictureBySemantic POST /api/picture/search/semantic */
+export async function searchPictureBySemantic(
+  body: API.SearchPictureBySemanticRequest,
+  options?: { [key: string]: any }
+) {
+  return request<API.BaseResponseListPictureVO_>('/api/picture/search/semantic', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: body,
+    ...(options || {}),
+  })
+}

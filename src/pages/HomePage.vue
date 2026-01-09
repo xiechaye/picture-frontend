@@ -2,13 +2,19 @@
   <div id="homePage">
     <!-- 搜索框 -->
     <div class="search-bar">
-      <a-input-search
-        v-model:value="searchParams.searchText"
-        placeholder="从海量图片中搜索"
-        enter-button="搜索"
-        size="large"
-        @search="doSearch"
-      />
+      <a-input-group compact size="large">
+        <a-select v-model:value="searchMode" style="width: 140px" size="large">
+          <a-select-option value="normal">普通搜索</a-select-option>
+          <a-select-option value="semantic">AI语义搜索</a-select-option>
+        </a-select>
+        <a-input-search
+          v-model:value="searchParams.searchText"
+          :placeholder="searchMode === 'semantic' ? '输入语义描述，如：雪中的宫殿' : '从海量图片中搜索'"
+          enter-button="搜索"
+          style="width: calc(100% - 140px)"
+          @search="doSearch"
+        />
+      </a-input-group>
     </div>
     <!-- 分类和标签筛选 -->
     <a-tabs v-model:active-key="selectedCategory" @change="doSearch">
@@ -46,9 +52,13 @@ import { onMounted, reactive, ref } from 'vue'
 import {
   listPictureTagCategoryUsingGet,
   listPictureVoByPageUsingPost,
+  searchPictureBySemantic,
 } from '@/api/pictureController.ts'
 import { message } from 'ant-design-vue'
-import PictureList from '@/components/PictureList.vue' // 定义数据
+import PictureList from '@/components/PictureList.vue'
+
+// 搜索模式：normal(普通) / semantic(AI语义)
+const searchMode = ref<'normal' | 'semantic'>('normal')
 
 // 定义数据
 const dataList = ref<API.PictureVO[]>([])
@@ -63,7 +73,7 @@ const searchParams = reactive<API.PictureQueryRequest>({
   sortOrder: 'descend',
 })
 
-// 获取数据
+// 获取数据（普通搜索）
 const fetchData = async () => {
   loading.value = true
   // 转换搜索参数
@@ -90,6 +100,30 @@ const fetchData = async () => {
   loading.value = false
 }
 
+// 获取数据（AI语义搜索）
+const fetchSemanticData = async () => {
+  if (!searchParams.searchText?.trim()) {
+    message.warning('请输入语义搜索内容')
+    return
+  }
+  loading.value = true
+  try {
+    const res = await searchPictureBySemantic({
+      searchText: searchParams.searchText,
+      topK: searchParams.pageSize,
+    })
+    if (res.data.code === 0 && res.data.data) {
+      dataList.value = res.data.data ?? []
+      total.value = res.data.data.length ?? 0
+    } else {
+      message.error('语义搜索失败，' + res.data.message)
+    }
+  } catch (e: any) {
+    message.error('语义搜索失败：' + e.message)
+  }
+  loading.value = false
+}
+
 // 页面加载时获取数据，请求一次
 onMounted(() => {
   fetchData()
@@ -106,7 +140,11 @@ const onPageChange = (page: number, pageSize: number) => {
 const doSearch = () => {
   // 重置搜索条件
   searchParams.current = 1
-  fetchData()
+  if (searchMode.value === 'semantic') {
+    fetchSemanticData()
+  } else {
+    fetchData()
+  }
 }
 
 // 标签和分类列表

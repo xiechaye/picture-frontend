@@ -721,4 +721,15 @@ declare namespace API {
   type VipExchangeRequest = {
     vipCode?: string
   }
+
+  type SearchPictureBySemanticRequest = {
+    /** 搜索文本，例如"雪中的宫殿" */
+    searchText?: string
+    /** 空间ID，用于数据隔离 */
+    spaceId?: number
+    /** 返回结果数量，默认10 */
+    topK?: number
+    /** 相似度阈值，默认0.5，范围0-1 */
+    similarityThreshold?: number
+  }
 }

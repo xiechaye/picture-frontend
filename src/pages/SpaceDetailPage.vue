@@ -48,6 +48,19 @@
     <!-- 搜索表单 -->
     <PictureSearchForm :onSearch="onSearch" />
     <div style="margin-bottom: 16px" />
+    <!-- 语义搜索 -->
+    <a-form-item label="AI语义搜索">
+      <a-input-group compact>
+        <a-input
+          v-model:value="semanticSearchText"
+          placeholder="输入语义描述，如：雪中的宫殿"
+          style="width: 300px"
+          allow-clear
+          @pressEnter="onSemanticSearch"
+        />
+        <a-button type="primary" @click="onSemanticSearch">语义搜索</a-button>
+      </a-input-group>
+    </a-form-item>
     <!-- 按颜色搜索，跟其他搜索条件独立 -->
     <a-form-item label="按颜色搜索">
       <color-picker format="hex" @pureColorChange="onColorChange" />
@@ -85,6 +98,7 @@ import { message } from 'ant-design-vue'
 import {
   listPictureVoByPageUsingPost,
   searchPictureByColorUsingPost,
+  searchPictureBySemantic,
 } from '@/api/pictureController.ts'
 import { formatSize } from '@/utils'
 import PictureList from '@/components/PictureList.vue'
@@ -206,6 +220,33 @@ const onColorChange = async (color: string) => {
     total.value = data.length
   } else {
     message.error('获取数据失败，' + res.data.message)
+  }
+  loading.value = false
+}
+
+// 语义搜索
+const semanticSearchText = ref<string>('')
+
+const onSemanticSearch = async () => {
+  if (!semanticSearchText.value?.trim()) {
+    message.warning('请输入语义搜索内容')
+    return
+  }
+  loading.value = true
+  try {
+    const res = await searchPictureBySemantic({
+      searchText: semanticSearchText.value,
+      spaceId: props.id as number,
+      topK: searchParams.value.pageSize,
+    })
+    if (res.data.code === 0 && res.data.data) {
+      dataList.value = res.data.data ?? []
+      total.value = res.data.data.length ?? 0
+    } else {
+      message.error('语义搜索失败，' + res.data.message)
+    }
+  } catch (e: any) {
+    message.error('语义搜索失败：' + e.message)
   }
   loading.value = false
 }
