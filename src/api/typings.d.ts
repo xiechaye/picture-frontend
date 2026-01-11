@@ -41,6 +41,12 @@ declare namespace API {
     message?: string
   }
 
+  type BaseResponseListSpaceVO_ = {
+    code?: number
+    data?: SpaceVO[]
+    message?: string
+  }
+
   type BaseResponseListSpaceCategoryAnalyzeResponse_ = {
     code?: number
     data?: SpaceCategoryAnalyzeResponse[]
@@ -731,5 +737,39 @@ declare namespace API {
     topK?: number
     /** 相似度阈值，默认0.5，范围0-1 */
     similarityThreshold?: number
+  }
+
+  type GenerateImageRequest = {
+    prompt: string
+    spaceId: number
+  }
+
+  type ImageGenerationResponse = {
+    imageUrl: string
+    cosKey: string
+    optimizedPrompt: string
+    totalTime: number
+    spaceId: number
+  }
+
+  type OptimizePromptRequest = {
+    prompt: string
+  }
+
+  type OptimizePromptResponse = {
+    originalPrompt: string
+    optimizedPrompt: string
+  }
+
+  type BaseResponseImageGenerationResponse_ = {
+    code?: number
+    data?: ImageGenerationResponse
+    message?: string
+  }
+
+  type BaseResponseOptimizePromptResponse_ = {
+    code?: number
+    data?: OptimizePromptResponse
+    message?: string
   }
 }

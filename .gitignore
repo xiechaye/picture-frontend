@@ -29,5 +29,10 @@ coverage
 
 *.tsbuildinfo
 
+# 环境变量文件
+.env
+.env.local
+.env.*.local
+
 # claude
 CLAUDE.md

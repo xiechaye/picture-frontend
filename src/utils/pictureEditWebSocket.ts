@@ -1,53 +1,110 @@
+import { createLogger } from './logger'
+
+const logger = createLogger({ prefix: 'WebSocket' })
+
+/**
+ * WebSocket 连接状态
+ */
+enum WebSocketStatus {
+  CONNECTING = 'CONNECTING',
+  CONNECTED = 'CONNECTED',
+  DISCONNECTING = 'DISCONNECTING',
+  DISCONNECTED = 'DISCONNECTED',
+  RECONNECTING = 'RECONNECTING',
+}
+
+/**
+ * WebSocket 配置接口
+ */
+interface WebSocketConfig {
+  heartbeatInterval?: number // 心跳间隔（毫秒）
+  reconnectInterval?: number // 重连间隔（毫秒）
+  maxReconnectAttempts?: number // 最大重连次数
+  reconnectBackoff?: number // 重连退避系数
+}
+
 export default class PictureEditWebSocket {
   private pictureId: number
   private socket: WebSocket | null
-  private eventHandlers: any
+  private eventHandlers: Map<string, Array<(data?: any) => void>>
+  private status: WebSocketStatus
+  private heartbeatTimer: number | null
+  private reconnectTimer: number | null
+  private reconnectAttempts: number
+  private config: Required<WebSocketConfig>
+  private manualClose: boolean // 是否手动关闭
 
-  constructor(pictureId: number) {
-    this.pictureId = pictureId // 当前编辑的图片 ID
-    this.socket = null // WebSocket 实例
-    this.eventHandlers = {} // 自定义事件处理器
+  constructor(pictureId: number, config: WebSocketConfig = {}) {
+    this.pictureId = pictureId
+    this.socket = null
+    this.eventHandlers = new Map()
+    this.status = WebSocketStatus.DISCONNECTED
+    this.heartbeatTimer = null
+    this.reconnectTimer = null
+    this.reconnectAttempts = 0
+    this.manualClose = false
+
+    // 默认配置
+    this.config = {
+      heartbeatInterval: config.heartbeatInterval || 30000, // 30秒
+      reconnectInterval: config.reconnectInterval || 1000, // 1秒
+      maxReconnectAttempts: config.maxReconnectAttempts || 5,
+      reconnectBackoff: config.reconnectBackoff || 2, // 指数退避系数
+    }
   }
 
   /**
    * 初始化 WebSocket 连接
    */
   connect() {
-    const DEV_BASE_URL = "ws://localhost:8123";
-    // 线上地址
-    // const PROD_BASE_URL = "ws://81.69.229.63";
-    const url = `${DEV_BASE_URL}/api/ws/picture/edit?pictureId=${this.pictureId}`
-    this.socket = new WebSocket(url)
-
-    // 设置携带 cookie
-    this.socket.binaryType = 'blob'
-
-    // 监听连接成功事件
-    this.socket.onopen = () => {
-      console.log('WebSocket 连接已建立')
-      this.triggerEvent('open')
+    if (this.status === WebSocketStatus.CONNECTED || this.status === WebSocketStatus.CONNECTING) {
+      return
     }
 
-    // 监听消息事件
-    this.socket.onmessage = (event) => {
-      const message = JSON.parse(event.data)
-      console.log('收到消息:', message)
+    this.status = WebSocketStatus.CONNECTING
+    this.manualClose = false
 
-      // 根据消息类型触发对应事件
-      const type = message.type
-      this.triggerEvent(type, message)
-    }
+    const WS_BASE_URL = import.meta.env.VITE_WS_BASE_URL || "ws://localhost:8123"
+    const url = `${WS_BASE_URL}/api/ws/picture/edit?pictureId=${this.pictureId}`
 
-    // 监听连接关闭事件
-    this.socket.onclose = (event) => {
-      console.log('WebSocket 连接已关闭:', event)
-      this.triggerEvent('close', event)
-    }
+    try {
+      this.socket = new WebSocket(url)
+      this.socket.binaryType = 'blob'
 
-    // 监听错误事件
-    this.socket.onerror = (error) => {
-      console.error('WebSocket 发生错误:', error)
-      this.triggerEvent('error', error)
+      this.socket.onopen = () => {
+        this.status = WebSocketStatus.CONNECTED
+        this.reconnectAttempts = 0
+        this.startHeartbeat()
+        this.triggerEvent('open')
+      }
+
+      this.socket.onmessage = (event) => {
+        try {
+          const message = JSON.parse(event.data)
+          const type = message.type
+          this.triggerEvent(type, message)
+        } catch (error) {
+          this.triggerEvent('error', { type: 'parse_error', error })
+        }
+      }
+
+      this.socket.onclose = (event) => {
+        this.status = WebSocketStatus.DISCONNECTED
+        this.stopHeartbeat()
+        this.triggerEvent('close', event)
+
+        // 非手动关闭且未超过重连次数，自动重连
+        if (!this.manualClose && this.reconnectAttempts < this.config.maxReconnectAttempts) {
+          this.scheduleReconnect()
+        }
+      }
+
+      this.socket.onerror = (error) => {
+        this.triggerEvent('error', error)
+      }
+    } catch (error) {
+      this.status = WebSocketStatus.DISCONNECTED
+      this.triggerEvent('error', { type: 'connect_error', error })
     }
   }
 
@@ -55,46 +112,140 @@ export default class PictureEditWebSocket {
    * 关闭 WebSocket 连接
    */
   disconnect() {
+    this.manualClose = true
+    this.status = WebSocketStatus.DISCONNECTING
+
+    this.stopHeartbeat()
+    this.stopReconnect()
+
     if (this.socket) {
       this.socket.close()
-      console.log('WebSocket 连接已手动关闭')
+      this.socket = null
     }
+
+    // 清理所有事件监听器
+    this.eventHandlers.clear()
+    this.status = WebSocketStatus.DISCONNECTED
   }
 
   /**
    * 发送消息到后端
-   * @param {Object} message 消息对象
    */
   sendMessage(message: object) {
     if (this.socket && this.socket.readyState === WebSocket.OPEN) {
       this.socket.send(JSON.stringify(message))
-      console.log('消息已发送:', message)
-    } else {
-      console.error('WebSocket 未连接，无法发送消息:', message)
+      return true
     }
+    return false
   }
 
   /**
    * 添加自定义事件监听
-   * @param {string} type 消息类型
-   * @param {Function} handler 消息处理函数
    */
   on(type: string, handler: (data?: any) => void) {
-    if (!this.eventHandlers[type]) {
-      this.eventHandlers[type] = []
+    if (!this.eventHandlers.has(type)) {
+      this.eventHandlers.set(type, [])
     }
-    this.eventHandlers[type].push(handler)
+    this.eventHandlers.get(type)!.push(handler)
+  }
+
+  /**
+   * 移除事件监听
+   */
+  off(type: string, handler?: (data?: any) => void) {
+    if (!handler) {
+      this.eventHandlers.delete(type)
+      return
+    }
+
+    const handlers = this.eventHandlers.get(type)
+    if (handlers) {
+      const index = handlers.indexOf(handler)
+      if (index > -1) {
+        handlers.splice(index, 1)
+      }
+    }
   }
 
   /**
    * 触发事件
-   * @param {string} type 消息类型
-   * @param {Object} data 消息数据
    */
-  triggerEvent(type: string, data?: any) {
-    const handlers = this.eventHandlers[type]
+  private triggerEvent(type: string, data?: any) {
+    const handlers = this.eventHandlers.get(type)
     if (handlers) {
-      handlers.forEach((handler: any) => handler(data))
+      handlers.forEach((handler) => {
+        try {
+          handler(data)
+        } catch (error) {
+          logger.error(`Error in event handler for ${type}:`, error)
+        }
+      })
     }
+  }
+
+  /**
+   * 开始心跳检测
+   */
+  private startHeartbeat() {
+    this.stopHeartbeat()
+    this.heartbeatTimer = window.setInterval(() => {
+      this.sendMessage({ type: 'ping' })
+    }, this.config.heartbeatInterval)
+  }
+
+  /**
+   * 停止心跳检测
+   */
+  private stopHeartbeat() {
+    if (this.heartbeatTimer !== null) {
+      clearInterval(this.heartbeatTimer)
+      this.heartbeatTimer = null
+    }
+  }
+
+  /**
+   * 安排重连
+   */
+  private scheduleReconnect() {
+    this.stopReconnect()
+    this.status = WebSocketStatus.RECONNECTING
+
+    // 指数退避算法
+    const delay =
+      this.config.reconnectInterval * Math.pow(this.config.reconnectBackoff, this.reconnectAttempts)
+
+    this.reconnectAttempts++
+    this.triggerEvent('reconnecting', {
+      attempt: this.reconnectAttempts,
+      delay,
+    })
+
+    this.reconnectTimer = window.setTimeout(() => {
+      this.connect()
+    }, delay)
+  }
+
+  /**
+   * 停止重连
+   */
+  private stopReconnect() {
+    if (this.reconnectTimer !== null) {
+      clearTimeout(this.reconnectTimer)
+      this.reconnectTimer = null
+    }
+  }
+
+  /**
+   * 获取当前连接状态
+   */
+  getStatus(): WebSocketStatus {
+    return this.status
+  }
+
+  /**
+   * 是否已连接
+   */
+  isConnected(): boolean {
+    return this.status === WebSocketStatus.CONNECTED && this.socket?.readyState === WebSocket.OPEN
   }
 }

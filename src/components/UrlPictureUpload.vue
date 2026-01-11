@@ -19,6 +19,7 @@
 import { ref } from 'vue'
 import { message } from 'ant-design-vue'
 import { uploadPictureByUrlUsingPost } from '@/api/pictureController.ts'
+import { error } from '@/utils/logger'
 
 interface Props {
   picture?: API.PictureVO
@@ -50,9 +51,9 @@ const handleUpload = async () => {
     } else {
       message.error('图片上传失败，' + res.data.message)
     }
-  } catch (error) {
-    console.error('图片上传失败', error)
-    message.error('图片上传失败，' + error.message)
+  } catch (err) {
+    error('图片上传失败', err)
+    message.error('图片上传失败，' + (err as any).message)
   }
   loading.value = false
 }

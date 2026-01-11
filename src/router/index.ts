@@ -104,6 +104,11 @@ const router = createRouter({
       component: SearchPicturePage,
     },
     {
+      path: '/image_generation',
+      name: 'AI创作',
+      component: () => import('@/pages/ImageGenerationPage.vue'),
+    },
+    {
       path: '/user_exchange_vip',
       name: '用户兑换会员',
       component: UserExchangeVipPage,

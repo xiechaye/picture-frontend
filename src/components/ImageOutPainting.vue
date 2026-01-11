@@ -39,6 +39,7 @@ import {
   uploadPictureByUrlUsingPost,
 } from '@/api/pictureController.ts'
 import { message } from 'ant-design-vue'
+import { debug, error } from '@/utils/logger'
 
 interface Props {
   picture?: API.PictureVO
@@ -70,7 +71,7 @@ const createTask = async () => {
   })
   if (res.data.code === 0 && res.data.data) {
     message.success('创建任务成功，请耐心等待，不要退出界面')
-    console.log(res.data.data.output.taskId)
+    debug('扩图任务ID', res.data.data.output.taskId)
     taskId.value = res.data.data.output.taskId
     // 开启轮询
     startPolling()
@@ -106,9 +107,9 @@ const startPolling = () => {
           clearPolling()
         }
       }
-    } catch (error) {
-      console.error('扩图任务轮询失败', error)
-      message.error('扩图任务轮询失败，' + error.message)
+    } catch (err) {
+      error('扩图任务轮询失败', err)
+      message.error('扩图任务轮询失败，' + (err as any).message)
       // 清理轮询
       clearPolling()
     }
@@ -151,9 +152,9 @@ const handleUpload = async () => {
     } else {
       message.error('图片上传失败，' + res.data.message)
     }
-  } catch (error) {
-    console.error('图片上传失败', error)
-    message.error('图片上传失败，' + error.message)
+  } catch (err) {
+    error('图片上传失败', err)
+    message.error('图片上传失败，' + (err as any).message)
   }
   uploadLoading.value = false
 }

@@ -50,6 +50,7 @@ import { useLoginUserStore } from '@/stores/useLoginUserStore.ts'
 import PictureEditWebSocket from '@/utils/pictureEditWebSocket.ts'
 import { PICTURE_EDIT_ACTION_ENUM, PICTURE_EDIT_MESSAGE_TYPE_ENUM } from '@/constants/picture.ts'
 import { SPACE_TYPE_ENUM } from '@/constants/space.ts'
+import { debug, error } from '@/utils/logger'
 
 interface Props {
   imageUrl?: string
@@ -122,9 +123,9 @@ const handleUpload = async ({ file }: any) => {
     } else {
       message.error('图片上传失败，' + res.data.message)
     }
-  } catch (error) {
-    console.error('图片上传失败', error)
-    message.error('图片上传失败，' + error.message)
+  } catch (err) {
+    error('图片上传失败', err)
+    message.error('图片上传失败，' + (err as any).message)
   }
   loading.value = false
 }
@@ -196,23 +197,23 @@ const initWebsocket = () => {
 
   // 监听一系列的事件
   websocket.on(PICTURE_EDIT_MESSAGE_TYPE_ENUM.INFO, (msg) => {
-    console.log('收到通知消息：', msg)
+    debug('收到通知消息', msg)
     message.info(msg.message)
   })
 
   websocket.on(PICTURE_EDIT_MESSAGE_TYPE_ENUM.ERROR, (msg) => {
-    console.log('收到错误通知：', msg)
+    debug('收到错误通知', msg)
     message.info(msg.message)
   })
 
   websocket.on(PICTURE_EDIT_MESSAGE_TYPE_ENUM.ENTER_EDIT, (msg) => {
-    console.log('收到进入编辑状态的消息：', msg)
+    debug('收到进入编辑状态的消息', msg)
     message.info(msg.message)
     editingUser.value = msg.user
   })
 
   websocket.on(PICTURE_EDIT_MESSAGE_TYPE_ENUM.EDIT_ACTION, (msg) => {
-    console.log('收到编辑操作的消息：', msg)
+    debug('收到编辑操作的消息', msg)
     message.info(msg.message)
     // 根据收到的编辑操作，执行相应的操作
     switch (msg.editAction) {
@@ -232,7 +233,7 @@ const initWebsocket = () => {
   })
 
   websocket.on(PICTURE_EDIT_MESSAGE_TYPE_ENUM.EXIT_EDIT, (msg) => {
-    console.log('收到退出编辑状态的消息：', msg)
+    debug('收到退出编辑状态的消息', msg)
     message.info(msg.message)
     editingUser.value = undefined
   })

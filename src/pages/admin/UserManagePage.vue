@@ -47,6 +47,7 @@ import { computed, onMounted, reactive, ref } from 'vue'
 import { deleteUserUsingPost, listUserVoByPageUsingPost } from '@/api/userController.ts'
 import { message } from 'ant-design-vue'
 import dayjs from 'dayjs'
+import { handleApiResponse, handleException } from '@/utils/errorHandler'
 
 const columns = [
   {
@@ -97,14 +98,16 @@ const searchParams = reactive<API.UserQueryRequest>({
 
 // 获取数据
 const fetchData = async () => {
-  const res = await listUserVoByPageUsingPost({
-    ...searchParams,
-  })
-  if (res.data.code === 0 && res.data.data) {
-    dataList.value = res.data.data.records ?? []
-    total.value = res.data.data.total ?? 0
-  } else {
-    message.error('获取数据失败，' + res.data.message)
+  try {
+    const res = await listUserVoByPageUsingPost({
+      ...searchParams,
+    })
+    if (handleApiResponse(res, { operation: '获取用户列表' })) {
+      dataList.value = res.data.data?.records ?? []
+      total.value = res.data.data?.total ?? 0
+    }
+  } catch (error) {
+    handleException(error, { operation: '获取用户列表' })
   }
 }
 
@@ -143,13 +146,15 @@ const doDelete = async (id: string) => {
   if (!id) {
     return
   }
-  const res = await deleteUserUsingPost({ id })
-  if (res.data.code === 0) {
-    message.success('删除成功')
-    // 刷新数据
-    fetchData()
-  } else {
-    message.error('删除失败')
+  try {
+    const res = await deleteUserUsingPost({ id })
+    if (handleApiResponse(res, { operation: '删除用户' })) {
+      message.success('删除成功')
+      // 刷新数据
+      fetchData()
+    }
+  } catch (error) {
+    handleException(error, { operation: '删除用户' })
   }
 }
 </script>

@@ -129,3 +129,11 @@ export async function updateSpaceUsingPost(
     ...(options || {}),
   })
 }
+
+/** listMySpace GET /api/space/list/my */
+export async function listMySpaceUsingGet(options?: { [key: string]: any }) {
+  return request<API.BaseResponseListSpaceVO_>('/api/space/list/my', {
+    method: 'GET',
+    ...(options || {}),
+  })
+}

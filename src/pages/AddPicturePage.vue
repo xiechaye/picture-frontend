@@ -3,9 +3,29 @@
     <h2 style="margin-bottom: 16px">
       {{ route.query?.id ? '修改图片' : '上传图片' }}
     </h2>
-    <a-typography-paragraph v-if="spaceId" type="secondary">
-      保存至空间：<a :href="`/space/${spaceId}`" target="_blank">{{ spaceId }}</a>
-    </a-typography-paragraph>
+
+    <!-- 空间选择器 -->
+    <a-form-item label="保存至空间" style="margin-bottom: 16px">
+      <a-select
+        v-model:value="selectedSpaceId"
+        placeholder="请选择空间"
+        :loading="spacesLoading"
+        show-search
+        :filter-option="filterSpaceOption"
+      >
+        <!-- 公共图库选项 -->
+        <a-select-option :value="null">公共图库</a-select-option>
+        <!-- 用户空间列表 -->
+        <a-select-option
+          v-for="space in spaceList"
+          :key="space.id"
+          :value="space.id"
+        >
+          {{ space.spaceName }}（{{ SPACE_TYPE_MAP[space.spaceType ?? 0] }}）
+        </a-select-option>
+      </a-select>
+    </a-form-item>
+
     <!-- 选择上传方式 -->
     <a-tabs v-model:activeKey="uploadType">
       <a-tab-pane key="file" tab="文件上传">
@@ -85,7 +105,7 @@
 
 <script setup lang="ts">
 import PictureUpload from '@/components/PictureUpload.vue'
-import { computed, h, onMounted, reactive, ref, watchEffect } from 'vue'
+import { computed, h, onMounted, reactive, ref, watchEffect, nextTick } from 'vue'
 import { message } from 'ant-design-vue'
 import {
   editPictureUsingPost,
@@ -97,7 +117,9 @@ import UrlPictureUpload from '@/components/UrlPictureUpload.vue'
 import ImageCropper from '@/components/ImageCropper.vue'
 import { EditOutlined, FullscreenOutlined } from '@ant-design/icons-vue'
 import ImageOutPainting from '@/components/ImageOutPainting.vue'
-import { getSpaceVoByIdUsingGet } from '@/api/spaceController.ts'
+import { debug } from '@/utils/logger'
+import { getSpaceVoByIdUsingGet, listMySpaceUsingGet } from '@/api/spaceController.ts'
+import { SPACE_TYPE_MAP } from '@/constants/space'
 
 const router = useRouter()
 const route = useRoute()
@@ -105,10 +127,14 @@ const route = useRoute()
 const picture = ref<API.PictureVO>()
 const pictureForm = reactive<API.PictureEditRequest>({})
 const uploadType = ref<'file' | 'url'>('file')
-// 空间 id
-const spaceId = computed(() => {
-  return route.query?.spaceId
-})
+
+// 空间相关状态
+const spaceList = ref<API.SpaceVO[]>([])
+const spacesLoading = ref(false)
+const selectedSpaceId = ref<number | null>(null)
+
+// 空间 id（从 selectedSpaceId 获取）
+const spaceId = computed(() => selectedSpaceId.value)
 
 /**
  * 图片上传成功
@@ -124,7 +150,7 @@ const onSuccess = (newPicture: API.PictureVO) => {
  * @param values
  */
 const handleSubmit = async (values: any) => {
-  console.log(values)
+  debug('提交图片表单', values)
   const pictureId = picture.value.id
   if (!pictureId) {
     return
@@ -173,11 +199,55 @@ const getTagCategoryOptions = async () => {
   }
 }
 
-onMounted(() => {
-  getTagCategoryOptions()
-})
+/**
+ * 前往创建空间页面
+ */
+const goToCreateSpace = () => {
+  router.push('/add_space')
+}
 
-// 获取老数据
+/**
+ * 加载空间列表
+ */
+const loadSpaces = async () => {
+  spacesLoading.value = true
+  try {
+    const res = await listMySpaceUsingGet()
+    if (res.data.code === 0 && res.data.data) {
+      spaceList.value = res.data.data || []
+    }
+  } catch (err) {
+    message.error('加载空间列表失败')
+  } finally {
+    spacesLoading.value = false
+  }
+
+  // 等待 loading 状态结束和选项渲染完成后再设置选中值
+  await nextTick()
+  await nextTick()
+
+  // 如果 URL 有 spaceId 参数，使用该参数
+  const querySpaceId = route.query?.spaceId
+  if (querySpaceId) {
+    selectedSpaceId.value = Number(querySpaceId)
+  } else {
+    // 否则默认选择公共图库（null）
+    selectedSpaceId.value = null
+  }
+}
+
+/**
+ * 空间搜索过滤
+ */
+const filterSpaceOption = (input: string, option: any) => {
+  const children = option.children
+  if (!children || !children[0]) return false
+  return children[0].children.toLowerCase().includes(input.toLowerCase())
+}
+
+/**
+ * 获取老数据
+ */
 const getOldPicture = async () => {
   // 获取到 id
   const id = route.query?.id
@@ -197,7 +267,9 @@ const getOldPicture = async () => {
 }
 
 onMounted(() => {
+  getTagCategoryOptions()
   getOldPicture()
+  loadSpaces()
 })
 
 // ----- 图片编辑器引用 ------

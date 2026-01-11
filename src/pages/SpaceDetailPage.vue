@@ -120,6 +120,7 @@ import 'vue3-colorpicker/style.css'
 import BatchEditPictureModal from '@/components/BatchEditPictureModal.vue'
 import { BarChartOutlined, EditOutlined, TeamOutlined } from '@ant-design/icons-vue'
 import { SPACE_PERMISSION_ENUM, SPACE_TYPE_MAP } from '../constants/space.ts'
+import { debug } from '@/utils/logger'
 
 interface Props {
   id: string | number
@@ -208,14 +209,14 @@ const onPageChange = (page: number, pageSize: number) => {
 
 // 搜索
 const onSearch = (newSearchParams: API.PictureQueryRequest) => {
-  console.log('new', newSearchParams)
+  debug('搜索参数', newSearchParams)
 
   searchParams.value = {
     ...searchParams.value,
     ...newSearchParams,
     current: 1,
   }
-  console.log('searchparams', searchParams.value)
+  debug('最终搜索参数', searchParams.value)
   fetchData()
 }
 

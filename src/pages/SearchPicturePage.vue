@@ -45,28 +45,43 @@ import {
   searchPictureByPictureUsingPost,
 } from '@/api/pictureController.ts'
 import { message } from 'ant-design-vue'
-import { useRoute } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
+import { handleApiResponse, handleException } from '@/utils/errorHandler'
 
 const route = useRoute()
+const router = useRouter()
 
+// 验证并解析 pictureId
 const pictureId = computed(() => {
-  return route.query?.pictureId
+  const id = route.query?.pictureId
+  if (!id) {
+    return undefined
+  }
+  // 处理可能的数组情况
+  const idValue = Array.isArray(id) ? id[0] : id
+  const numId = Number(idValue)
+  return !isNaN(numId) && numId > 0 ? numId : undefined
 })
 const picture = ref<API.PictureVO>({})
 
 // 获取图片详情
 const fetchPictureDetail = async () => {
+  // 验证 pictureId
+  if (!pictureId.value) {
+    message.error('图片ID无效')
+    router.push('/')
+    return
+  }
+
   try {
     const res = await getPictureVoByIdUsingGet({
       id: pictureId.value,
     })
-    if (res.data.code === 0 && res.data.data) {
-      picture.value = res.data.data
-    } else {
-      message.error('获取图片详情失败，' + res.data.message)
+    if (handleApiResponse(res, { operation: '获取图片详情' })) {
+      picture.value = res.data.data!
     }
-  } catch (e: any) {
-    message.error('获取图片详情失败：' + e.message)
+  } catch (error) {
+    handleException(error, { operation: '获取图片详情' })
   }
 }
 
