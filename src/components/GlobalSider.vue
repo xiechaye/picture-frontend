@@ -128,7 +128,34 @@ const router = useRouter()
 const current = ref<string[]>([])
 // 监听路由变化，更新高亮菜单项
 router.afterEach((to) => {
-  current.value = [to.path]
+  const path = to.path
+  // 检查是否是创建空间页面
+  if (path === '/add_space') {
+    const type = to.query.type
+    if (String(type) === '1') {
+      // 创建团队空间，高亮"创建团队"菜单项
+      current.value = ['/add_space?type=' + SPACE_TYPE_ENUM.TEAM]
+    } else {
+      // 创建私有空间，高亮"我的空间"菜单项
+      current.value = ['/my_space']
+    }
+  } else if (path.startsWith('/space/')) {
+    // 检查是否是空间详情页
+    const spaceId = path.replace('/space/', '')
+    // 检查是否是团队空间
+    const isTeamSpace = teamSpaceList.value.some(
+      (item) => String(item.spaceId) === spaceId
+    )
+    if (isTeamSpace) {
+      // 团队空间，高亮对应的团队空间项
+      current.value = [path]
+    } else {
+      // 私有空间，高亮"我的空间"菜单项
+      current.value = ['/my_space']
+    }
+  } else {
+    current.value = [path]
+  }
 })
 
 // 路由跳转事件
