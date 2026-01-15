@@ -4,8 +4,8 @@
       <a-layout-header class="header">
         <GlobalHeader />
       </a-layout-header>
-      <a-layout>
-        <GlobalSider class="sider" />
+      <a-layout class="main-layout">
+        <GlobalSider />
         <a-layout-content class="content">
           <router-view />
         </a-layout-content>
@@ -19,7 +19,7 @@
 
 <script setup lang="ts">
 import GlobalHeader from '@/components/GlobalHeader.vue'
-import GlobalSider from "@/components/GlobalSider.vue";
+import GlobalSider from '@/components/GlobalSider.vue'
 </script>
 
 <style scoped>
@@ -28,32 +28,50 @@ import GlobalSider from "@/components/GlobalSider.vue";
   background: white;
   color: unset;
   margin-bottom: 1px;
+  position: sticky;
+  top: 0;
+  z-index: 101;
+  box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
 }
 
-#basicLayout .sider {
-  background: #fff;
-  border-right: 0.5px solid #eee;
-  padding-top: 20px;
-}
-
-#basicLayout :deep(.ant-menu-root) {
-  border-bottom: none !important;
-  border-inline-end: none !important;
+#basicLayout .main-layout {
+  background: #f3f4f6;
 }
 
 #basicLayout .content {
-  padding: 28px;
-  background: linear-gradient(to right, #fefefe, #fff);
-  margin-bottom: 28px;
+  padding: 24px;
+  padding-left: 104px; /* 侧边栏宽度64px + 左边距16px + 间距24px */
+  background: #f3f4f6;
+  margin-bottom: 60px;
+  min-height: calc(100vh - 64px - 60px);
 }
 
 #basicLayout .footer {
-  background: #efefef;
+  background: white;
   padding: 16px;
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
   text-align: center;
+  border-top: 1px solid #e5e7eb;
+  z-index: 99;
+}
+
+#basicLayout .footer a {
+  color: #059669;
+  text-decoration: none;
+  transition: color 200ms ease;
+}
+
+#basicLayout .footer a:hover {
+  color: #047857;
+}
+
+/* 响应式：移动端隐藏侧边栏时调整内容区 */
+@media (max-width: 992px) {
+  #basicLayout .content {
+    padding-left: 24px;
+  }
 }
 </style>

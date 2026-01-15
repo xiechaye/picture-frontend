@@ -1,40 +1,87 @@
 <template>
-  <div id="addSpacePage">
-    <h2 style="margin-bottom: 16px">
+  <CenterContainer max-width="700px" :vertical-center="false">
+    <h2 class="page-title">
+      <TeamOutlined v-if="spaceType === SPACE_TYPE_ENUM.TEAM" class="title-icon" />
+      <FolderOutlined v-else class="title-icon" />
       {{ route.query?.id ? '修改' : '创建' }} {{ SPACE_TYPE_MAP[spaceType] }}
     </h2>
+
     <!-- 空间信息表单 -->
-    <a-form name="spaceForm" layout="vertical" :model="spaceForm" @finish="handleSubmit">
-      <a-form-item name="spaceName" label="空间名称">
-        <a-input v-model:value="spaceForm.spaceName" placeholder="请输入空间" allow-clear />
-      </a-form-item>
-      <a-form-item name="spaceLevel" label="空间级别">
-        <a-select
-          v-model:value="spaceForm.spaceLevel"
-          style="min-width: 180px"
-          placeholder="请选择空间级别"
-          :options="SPACE_LEVEL_OPTIONS"
+    <a-form
+      name="spaceForm"
+      layout="vertical"
+      :model="spaceForm"
+      @finish="handleSubmit"
+      class="space-form"
+    >
+      <a-form-item
+        name="spaceName"
+        label="空间名称"
+        :rules="[{ required: true, message: '请输入空间名称' }]"
+      >
+        <a-input
+          v-model:value="spaceForm.spaceName"
+          placeholder="请输入空间名称"
           allow-clear
+          size="large"
+          class="form-input"
         />
       </a-form-item>
-      <a-form-item>
-        <a-button type="primary" html-type="submit" :loading="loading" style="width: 100%">
-          提交
+
+      <a-form-item name="spaceLevel" label="选择套餐">
+        <div class="level-cards">
+          <div
+            v-for="level in spaceLevelList"
+            :key="level.value"
+            class="level-card"
+            :class="{
+              active: spaceForm.spaceLevel === level.value,
+              disabled: level.value !== 0,
+            }"
+            @click="selectLevel(level)"
+          >
+            <div class="level-icon">
+              <RocketOutlined v-if="level.value === 2" />
+              <ThunderboltOutlined v-else-if="level.value === 1" />
+              <CloudOutlined v-else />
+            </div>
+            <div class="level-name">{{ level.text }}</div>
+            <div class="level-specs">
+              <div class="spec-item">
+                <DatabaseOutlined />
+                <span>{{ formatSize(level.maxSize) }}</span>
+              </div>
+              <div class="spec-item">
+                <PictureOutlined />
+                <span>{{ level.maxCount }} 张</span>
+              </div>
+            </div>
+            <div v-if="level.value !== 0" class="level-badge">敬请期待</div>
+            <div v-else class="level-badge free">免费</div>
+          </div>
+        </div>
+      </a-form-item>
+
+      <a-form-item style="margin-top: 24px; margin-bottom: 0">
+        <a-button
+          type="primary"
+          html-type="submit"
+          :loading="loading"
+          block
+          size="large"
+          class="submit-btn"
+        >
+          {{ route.query?.id ? '保存修改' : '立即创建' }}
         </a-button>
       </a-form-item>
     </a-form>
-    <!-- 空间级别介绍 -->
-    <a-card title="空间级别介绍">
-      <a-typography-paragraph>
-        * 目前仅支持开通普通版，如需升级空间，请联系
-        <a href="https://codefather.cn" target="_blank">茶叶</a>
-      </a-typography-paragraph>
-      <a-typography-paragraph v-for="spaceLevel in spaceLevelList">
-        {{ spaceLevel.text }}：大小 {{ formatSize(spaceLevel.maxSize) }}，数量
-        {{ spaceLevel.maxCount }}
-      </a-typography-paragraph>
-    </a-card>
-  </div>
+
+    <!-- 提示信息 -->
+    <div class="tips">
+      <InfoCircleOutlined />
+      <span>目前仅支持开通普通版，如需升级空间，请联系管理员</span>
+    </div>
+  </CenterContainer>
 </template>
 
 <script setup lang="ts">
@@ -47,14 +94,29 @@ import {
   updateSpaceUsingPost,
 } from '@/api/spaceController.ts'
 import { useRoute, useRouter } from 'vue-router'
-import {SPACE_LEVEL_MAP, SPACE_LEVEL_OPTIONS, SPACE_TYPE_ENUM, SPACE_TYPE_MAP} from '@/constants/space.ts'
+import { SPACE_TYPE_ENUM, SPACE_TYPE_MAP } from '@/constants/space.ts'
 import { formatSize } from '../utils'
+import CenterContainer from '@/components/CenterContainer.vue'
+import {
+  TeamOutlined,
+  FolderOutlined,
+  CloudOutlined,
+  ThunderboltOutlined,
+  RocketOutlined,
+  DatabaseOutlined,
+  PictureOutlined,
+  InfoCircleOutlined,
+} from '@ant-design/icons-vue'
 
 const space = ref<API.SpaceVO>()
-const spaceForm = reactive<API.SpaceAddRequest | API.SpaceEditRequest>({})
+const spaceForm = reactive<API.SpaceAddRequest | API.SpaceEditRequest>({
+  spaceLevel: 0,
+})
 const loading = ref(false)
 
 const route = useRoute()
+const router = useRouter()
+
 // 空间类别，默认为私有空间
 const spaceType = computed(() => {
   if (route.query?.type) {
@@ -66,6 +128,16 @@ const spaceType = computed(() => {
 
 const spaceLevelList = ref<API.SpaceLevel[]>([])
 
+// 选择套餐级别
+const selectLevel = (level: API.SpaceLevel) => {
+  // 目前只支持普通版
+  if (level.value !== 0) {
+    message.info('该套餐暂未开放，敬请期待')
+    return
+  }
+  spaceForm.spaceLevel = level.value
+}
+
 // 获取空间级别
 const fetchSpaceLevelList = async () => {
   const res = await listSpaceLevelUsingGet()
@@ -76,37 +148,26 @@ const fetchSpaceLevelList = async () => {
   }
 }
 
-onMounted(() => {
-  fetchSpaceLevelList()
-})
-
-const router = useRouter()
-
 /**
  * 提交表单
- * @param values
  */
-const handleSubmit = async (values: any) => {
+const handleSubmit = async () => {
   const spaceId = space.value?.id
   loading.value = true
   let res
   if (spaceId) {
-    // 更新
     res = await updateSpaceUsingPost({
       id: spaceId,
       ...spaceForm,
     })
   } else {
-    // 创建
     res = await addSpaceUsingPost({
       ...spaceForm,
       spaceType: spaceType.value,
     })
   }
-  // 操作成功
   if (res.data.code === 0 && res.data.data) {
     message.success('操作成功')
-    // 跳转到空间详情页
     router.push({
       path: `/space/${res.data.data}`,
     })
@@ -118,16 +179,12 @@ const handleSubmit = async (values: any) => {
 
 // 获取老数据
 const getOldSpace = async () => {
-  // 获取到 id
   const id = route.query?.id
   if (id) {
-    const res = await getSpaceVoByIdUsingGet({
-      id,
-    })
+    const res = await getSpaceVoByIdUsingGet({ id })
     if (res.data.code === 0 && res.data.data) {
       const data = res.data.data
       space.value = data
-      // 填充表单
       spaceForm.spaceName = data.spaceName
       spaceForm.spaceLevel = data.spaceLevel
     }
@@ -135,13 +192,150 @@ const getOldSpace = async () => {
 }
 
 onMounted(() => {
+  fetchSpaceLevelList()
   getOldSpace()
 })
 </script>
 
 <style scoped>
-#addSpacePage {
-  max-width: 720px;
-  margin: 0 auto;
+.page-title {
+  margin: 0 0 28px 0;
+  font-size: 22px;
+  font-weight: 600;
+  color: #111827;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.title-icon {
+  color: #059669;
+}
+
+.space-form {
+  width: 100%;
+}
+
+.form-input :deep(input) {
+  border-radius: 12px;
+}
+
+.level-cards {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.level-card {
+  position: relative;
+  background: #f9fafb;
+  border: 2px solid #e5e7eb;
+  border-radius: 16px;
+  padding: 20px 16px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 200ms ease;
+}
+
+.level-card:hover:not(.disabled) {
+  border-color: #059669;
+  background: #f0fdf4;
+}
+
+.level-card.active {
+  border-color: #059669;
+  background: #f0fdf4;
+  box-shadow: 0 0 0 4px rgba(5, 150, 105, 0.1);
+}
+
+.level-card.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.level-icon {
+  width: 48px;
+  height: 48px;
+  margin: 0 auto 12px;
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  color: white;
+}
+
+.level-card.disabled .level-icon {
+  background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
+}
+
+.level-name {
+  font-size: 16px;
+  font-weight: 600;
+  color: #111827;
+  margin-bottom: 12px;
+}
+
+.level-specs {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.spec-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.level-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #6b7280;
+  color: white;
+  font-size: 10px;
+  padding: 2px 8px;
+  border-radius: 10px;
+}
+
+.level-badge.free {
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+}
+
+.submit-btn {
+  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+  border: none;
+  border-radius: 12px;
+  height: 48px;
+  font-size: 16px;
+  font-weight: 500;
+}
+
+.submit-btn:hover {
+  background: linear-gradient(135deg, #047857 0%, #059669 100%);
+}
+
+.tips {
+  margin-top: 24px;
+  padding: 12px 16px;
+  background: #f9fafb;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+/* 响应式 */
+@media (max-width: 600px) {
+  .level-cards {
+    grid-template-columns: 1fr;
+  }
 }
 </style>

@@ -1,59 +1,40 @@
 <template>
   <div class="picture-list">
-    <!-- 图片列表 -->
-    <a-list
-      :grid="{ gutter: 16, xs: 1, sm: 2, md: 3, lg: 4, xl: 5, xxl: 6 }"
-      :data-source="dataList"
-      :loading="loading"
-    >
-      <template #renderItem="{ item: picture }">
-        <a-list-item style="padding: 0">
-          <!-- 单张图片 -->
-          <a-card hoverable @click="doClickPicture(picture)">
-            <template #cover>
-              <img
-                :alt="picture.name"
-                :src="picture.thumbnailUrl ?? picture.url"
-                style="height: 180px; object-fit: cover"
-              />
-            </template>
-            <a-card-meta :title="picture.name">
-              <template #description>
-                <a-flex>
-                  <a-tag color="green">
-                    {{ picture.category ?? '默认' }}
-                  </a-tag>
-                  <a-tag v-for="tag in picture.tags" :key="tag">
-                    {{ tag }}
-                  </a-tag>
-                </a-flex>
-              </template>
-            </a-card-meta>
-            <template v-if="showOp" #actions>
-              <ShareAltOutlined @click="(e) => doShare(picture, e)" />
-              <SearchOutlined @click="(e) => doSearch(picture, e)" />
-              <EditOutlined v-if="canEdit" @click="(e) => doEdit(picture, e)" />
-              <DeleteOutlined v-if="canDelete" @click="(e) => doDelete(picture, e)" />
-            </template>
-          </a-card>
-        </a-list-item>
-      </template>
-    </a-list>
+    <a-spin :spinning="loading">
+      <a-empty v-if="dataList.length === 0 && !loading" description="暂无图片" />
+      <MasonryGrid
+        v-else
+        :items="dataList"
+        :column-width="280"
+        :gap="16"
+        :ssr-columns="4"
+      >
+        <template #default="{ item: picture }">
+          <PictureCard
+            :picture="picture"
+            :can-edit="canEdit"
+            :can-delete="canDelete"
+            :show-op="showOp"
+            @click="doClickPicture"
+            @share="doShare"
+            @search="doSearch"
+            @edit="doEdit"
+            @delete="doDelete"
+          />
+        </template>
+      </MasonryGrid>
+    </a-spin>
     <ShareModal ref="shareModalRef" :link="shareLink" />
   </div>
 </template>
 
 <script setup lang="ts">
 import { useRouter } from 'vue-router'
-import {
-  DeleteOutlined,
-  EditOutlined,
-  SearchOutlined,
-  ShareAltOutlined,
-} from '@ant-design/icons-vue'
 import { deletePictureUsingPost } from '@/api/pictureController.ts'
 import { message } from 'ant-design-vue'
 import ShareModal from '@/components/ShareModal.vue'
+import MasonryGrid from '@/components/MasonryGrid.vue'
+import PictureCard from '@/components/PictureCard.vue'
 import { ref } from 'vue'
 
 interface Props {
@@ -74,6 +55,7 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const router = useRouter()
+
 // 跳转至图片详情页
 const doClickPicture = (picture: API.PictureVO) => {
   router.push({
@@ -82,18 +64,14 @@ const doClickPicture = (picture: API.PictureVO) => {
 }
 
 // 搜索
-const doSearch = (picture, e) => {
-  // 阻止冒泡
+const doSearch = (picture: API.PictureVO, e: MouseEvent) => {
   e.stopPropagation()
-  // 打开新的页面
   window.open(`/search_picture?pictureId=${picture.id}`)
 }
 
 // 编辑
-const doEdit = (picture, e) => {
-  // 阻止冒泡
+const doEdit = (picture: API.PictureVO, e: MouseEvent) => {
   e.stopPropagation()
-  // 跳转时一定要携带 spaceId
   router.push({
     path: '/add_picture',
     query: {
@@ -104,8 +82,7 @@ const doEdit = (picture, e) => {
 }
 
 // 删除数据
-const doDelete = async (picture, e) => {
-  // 阻止冒泡
+const doDelete = async (picture: API.PictureVO, e: MouseEvent) => {
   e.stopPropagation()
   const id = picture.id
   if (!id) {
@@ -122,11 +99,9 @@ const doDelete = async (picture, e) => {
 
 // ----- 分享操作 ----
 const shareModalRef = ref()
-// 分享链接
 const shareLink = ref<string>()
-// 分享
-const doShare = (picture, e) => {
-  // 阻止冒泡
+
+const doShare = (picture: API.PictureVO, e: MouseEvent) => {
   e.stopPropagation()
   shareLink.value = `${window.location.protocol}//${window.location.host}/picture/${picture.id}`
   if (shareModalRef.value) {
@@ -135,4 +110,16 @@ const doShare = (picture, e) => {
 }
 </script>
 
-<style scoped></style>
+<style scoped>
+.picture-list {
+  min-height: 200px;
+}
+
+.picture-list :deep(.ant-spin-nested-loading) {
+  min-height: 200px;
+}
+
+.picture-list :deep(.ant-empty) {
+  padding: 60px 0;
+}
+</style>
