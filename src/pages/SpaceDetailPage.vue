@@ -45,38 +45,28 @@
       </a-space>
     </a-flex>
     <div style="margin-bottom: 16px" />
-    <!-- 搜索表单 -->
-    <PictureSearchForm :onSearch="onSearch" />
-    <div style="margin-bottom: 16px" />
-    <!-- 语义搜索 -->
-    <a-form-item label="AI语义搜索">
-      <a-input-group compact>
-        <a-input
-          v-model:value="semanticSearchText"
-          placeholder="输入语义描述，如：雪中的宫殿"
-          style="width: 300px"
-          allow-clear
-          @pressEnter="onSemanticSearch"
-        />
-        <a-button type="primary" @click="onSemanticSearch">语义搜索</a-button>
-      </a-input-group>
-      <!-- 相似度阈值滑块 -->
-      <div class="similarity-slider">
-        <span class="slider-label">匹配程度：</span>
-        <a-slider
-          v-model:value="similarityThreshold"
-          :min="0"
-          :max="1"
-          :step="0.05"
-          style="width: 180px; display: inline-block; margin: 0 12px"
-        />
-        <a-tag :color="similarityTagColor">{{ similarityLabel }}</a-tag>
-      </div>
-    </a-form-item>
-    <!-- 按颜色搜索，跟其他搜索条件独立 -->
-    <a-form-item label="按颜色搜索">
-      <color-picker format="hex" @pureColorChange="onColorChange" />
-    </a-form-item>
+    <!-- 全能搜索栏 -->
+    <div class="search-section">
+      <OmniSearchBar
+        v-model="searchText"
+        v-model:aiMode="isAiMode"
+        v-model:similarity="similarityThreshold"
+        :filterCount="activeFilterCount"
+        @search="doSearch"
+        @openFilter="filterDrawerOpen = true"
+      />
+    </div>
+
+    <!-- 高级筛选抽屉 -->
+    <SearchFilterDrawer
+      v-model:open="filterDrawerOpen"
+      v-model:filters="filterValues"
+      :categoryList="categoryList"
+      :tagList="tagList"
+      :showColorPicker="true"
+      @apply="handleFilterApply"
+      @reset="handleFilterReset"
+    />
     <!-- 图片列表 -->
     <PictureList
       :dataList="dataList"
@@ -109,14 +99,14 @@ import { getSpaceVoByIdUsingGet } from '@/api/spaceController.ts'
 import { message } from 'ant-design-vue'
 import {
   listPictureVoByPageUsingPost,
+  listPictureTagCategoryUsingGet,
   searchPictureByColorUsingPost,
   searchPictureBySemantic,
 } from '@/api/pictureController.ts'
 import { formatSize } from '@/utils'
 import PictureList from '@/components/PictureList.vue'
-import PictureSearchForm from '@/components/PictureSearchForm.vue'
-import { ColorPicker } from 'vue3-colorpicker'
-import 'vue3-colorpicker/style.css'
+import OmniSearchBar from '@/components/OmniSearchBar.vue'
+import SearchFilterDrawer, { type FilterValues } from '@/components/SearchFilterDrawer.vue'
 import BatchEditPictureModal from '@/components/BatchEditPictureModal.vue'
 import { BarChartOutlined, EditOutlined, TeamOutlined } from '@ant-design/icons-vue'
 import { SPACE_PERMISSION_ENUM, SPACE_TYPE_MAP } from '../constants/space.ts'
@@ -142,6 +132,47 @@ const canUploadPicture = createPermissionChecker(SPACE_PERMISSION_ENUM.PICTURE_U
 const canEditPicture = createPermissionChecker(SPACE_PERMISSION_ENUM.PICTURE_EDIT)
 const canDeletePicture = createPermissionChecker(SPACE_PERMISSION_ENUM.PICTURE_DELETE)
 
+// -------- 搜索相关状态 --------
+const searchText = ref('')
+const isAiMode = ref(false)
+const similarityThreshold = ref(0.5)
+const filterDrawerOpen = ref(false)
+const filterValues = ref<FilterValues>({
+  category: undefined,
+  tags: [],
+  dateRange: null,
+  picWidth: undefined,
+  picHeight: undefined,
+  picFormat: undefined,
+  picColor: undefined,
+})
+
+// 标签和分类列表
+const categoryList = ref<string[]>([])
+const tagList = ref<string[]>([])
+
+// 计算活跃筛选数量
+const activeFilterCount = computed(() => {
+  let count = 0
+  if (filterValues.value.category) count++
+  if (filterValues.value.tags?.length) count++
+  if (filterValues.value.dateRange) count++
+  if (filterValues.value.picWidth) count++
+  if (filterValues.value.picHeight) count++
+  if (filterValues.value.picFormat) count++
+  if (filterValues.value.picColor) count++
+  return count
+})
+
+// 获取标签和分类选项
+const getTagCategoryOptions = async () => {
+  const res = await listPictureTagCategoryUsingGet()
+  if (res.data.code === 0 && res.data.data) {
+    tagList.value = res.data.data.tagList ?? []
+    categoryList.value = res.data.data.categoryList ?? []
+  }
+}
+
 // -------- 获取空间详情 --------
 const fetchSpaceDetail = async () => {
   try {
@@ -160,6 +191,7 @@ const fetchSpaceDetail = async () => {
 
 onMounted(() => {
   fetchSpaceDetail()
+  getTagCategoryOptions()
 })
 
 // --------- 获取图片列表 --------
@@ -181,10 +213,27 @@ const searchParams = ref<API.PictureQueryRequest>({
 const fetchData = async () => {
   loading.value = true
   // 转换搜索参数
-  const params = {
+  const params: API.PictureQueryRequest = {
     spaceId: props.id,
     ...searchParams.value,
+    searchText: searchText.value || undefined,
+    tags: filterValues.value.tags || [],
   }
+
+  // 应用筛选条件
+  if (filterValues.value.category) {
+    params.category = filterValues.value.category
+  }
+  if (filterValues.value.picWidth) {
+    params.picWidth = filterValues.value.picWidth
+  }
+  if (filterValues.value.picHeight) {
+    params.picHeight = filterValues.value.picHeight
+  }
+  if (filterValues.value.picFormat) {
+    params.picFormat = filterValues.value.picFormat
+  }
+
   const res = await listPictureVoByPageUsingPost(params)
   if (res.data.code === 0 && res.data.data) {
     dataList.value = res.data.data.records ?? []
@@ -208,72 +257,63 @@ const onPageChange = (page: number, pageSize: number) => {
 }
 
 // 搜索
-const onSearch = (newSearchParams: API.PictureQueryRequest) => {
-  debug('搜索参数', newSearchParams)
-
-  searchParams.value = {
-    ...searchParams.value,
-    ...newSearchParams,
-    current: 1,
+const doSearch = () => {
+  searchParams.value.current = 1
+  // 如果有颜色筛选，使用颜色搜索
+  if (filterValues.value.picColor) {
+    fetchColorData()
+  } else if (isAiMode.value) {
+    fetchSemanticData()
+  } else {
+    fetchData()
   }
-  debug('最终搜索参数', searchParams.value)
-  fetchData()
 }
 
-// 按照颜色搜索
-const onColorChange = async (color: string) => {
+// 筛选应用
+const handleFilterApply = () => {
+  doSearch()
+}
+
+// 筛选重置
+const handleFilterReset = () => {
+  filterValues.value = {
+    category: undefined,
+    tags: [],
+    dateRange: null,
+    picWidth: undefined,
+    picHeight: undefined,
+    picFormat: undefined,
+    picColor: undefined,
+  }
+  doSearch()
+}
+
+// 按颜色搜索
+const fetchColorData = async () => {
   loading.value = true
   const res = await searchPictureByColorUsingPost({
-    picColor: color,
+    picColor: filterValues.value.picColor,
     spaceId: props.id,
   })
   if (res.data.code === 0 && res.data.data) {
-    const data = res.data.data ?? []
-    dataList.value = data
-    total.value = data.length
+    dataList.value = res.data.data ?? []
+    total.value = res.data.data.length ?? 0
   } else {
     message.error('获取数据失败，' + res.data.message)
   }
   loading.value = false
 }
 
-// 语义搜索
-const semanticSearchText = ref<string>('')
-const similarityThreshold = ref<number>(0.5)
-
-// 根据相似度阈值计算动态标签文字
-const similarityLabel = computed(() => {
-  const value = similarityThreshold.value
-  if (value < 0.3) {
-    return '宽松 - 匹配更多图片'
-  } else if (value < 0.7) {
-    return '均衡 - 推荐'
-  } else {
-    return '严格 - 精确匹配'
-  }
-})
-
-// 根据相似度阈值计算标签颜色
-const similarityTagColor = computed(() => {
-  const value = similarityThreshold.value
-  if (value < 0.3) {
-    return 'green'
-  } else if (value < 0.7) {
-    return 'blue'
-  } else {
-    return 'orange'
-  }
-})
-
-const onSemanticSearch = async () => {
-  if (!semanticSearchText.value?.trim()) {
+// AI语义搜索
+const fetchSemanticData = async () => {
+  if (!searchText.value?.trim()) {
     message.warning('请输入语义搜索内容')
     return
   }
   loading.value = true
   try {
     const res = await searchPictureBySemantic({
-      searchText: semanticSearchText.value,
+      searchText: searchText.value,
       spaceId: props.id as number,
       topK: searchParams.value.pageSize,
       similarityThreshold: similarityThreshold.value,
@@ -320,14 +360,8 @@ watch(
   margin-bottom: 16px;
 }
 
-#spaceDetailPage .similarity-slider {
-  margin-top: 8px;
-  display: flex;
-  align-items: center;
-}
-
-#spaceDetailPage .slider-label {
-  color: #666;
-  font-size: 14px;
+.search-section {
+  margin-bottom: 20px;
+  padding: 8px 0;
 }
 </style>

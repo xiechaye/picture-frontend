@@ -1,60 +1,38 @@
 <template>
   <div id="homePage">
-    <!-- 搜索框 -->
-    <div class="search-bar">
-      <a-input-group compact size="large">
-        <a-select v-model:value="searchMode" style="width: 140px" size="large">
-          <a-select-option value="normal">普通搜索</a-select-option>
-          <a-select-option value="semantic">AI语义搜索</a-select-option>
-        </a-select>
-        <a-input-search
-          v-model:value="searchParams.searchText"
-          :placeholder="searchMode === 'semantic' ? '输入语义描述，如：雪中的宫殿' : '从海量图片中搜索'"
-          enter-button="搜索"
-          style="width: calc(100% - 140px)"
-          @search="doSearch"
-        />
-      </a-input-group>
-      <!-- 相似度阈值滑块（仅在AI语义搜索模式下显示） -->
-      <div v-if="searchMode === 'semantic'" class="similarity-slider">
-        <span class="slider-label">匹配程度：</span>
-        <a-slider
-          v-model:value="similarityThreshold"
-          :min="0"
-          :max="1"
-          :step="0.05"
-          style="width: 200px; display: inline-block; margin: 0 12px"
-        />
-        <a-tag :color="similarityTagColor">{{ similarityLabel }}</a-tag>
-      </div>
+    <!-- 全能搜索栏 -->
+    <div class="search-section">
+      <OmniSearchBar
+        v-model="searchParams.searchText"
+        v-model:aiMode="isAiMode"
+        v-model:similarity="similarityThreshold"
+        :filterCount="activeFilterCount"
+        @search="doSearch"
+        @openFilter="filterDrawerOpen = true"
+      />
     </div>
-    <!-- 分类和标签筛选 -->
-    <a-tabs v-model:active-key="selectedCategory" @change="doSearch">
-      <a-tab-pane key="all" tab="全部" />
-      <a-tab-pane v-for="category in categoryList" :tab="category" :key="category" />
-    </a-tabs>
-    <div class="tag-bar">
-      <span style="margin-right: 8px">标签：</span>
-      <a-space :size="[0, 8]" wrap>
-        <a-checkable-tag
-          v-for="(tag, index) in tagList"
-          :key="tag"
-          v-model:checked="selectedTagList[index]"
-          @change="doSearch"
-        >
-          {{ tag }}
-        </a-checkable-tag>
-      </a-space>
-    </div>
+
     <!-- 图片列表 -->
     <PictureList :dataList="dataList" :loading="loading" />
+
     <!-- 分页 -->
     <a-pagination
-      style="text-align: right"
+      v-if="!isAiMode"
+      style="text-align: right; margin-top: 16px"
       v-model:current="searchParams.current"
       v-model:pageSize="searchParams.pageSize"
       :total="total"
       @change="onPageChange"
+    />
+
+    <!-- 高级筛选抽屉 -->
+    <SearchFilterDrawer
+      v-model:open="filterDrawerOpen"
+      v-model:filters="filterValues"
+      :categoryList="categoryList"
+      :tagList="tagList"
+      @apply="handleFilterApply"
+      @reset="handleFilterReset"
     />
   </div>
 </template>
@@ -68,35 +46,36 @@ import {
 } from '@/api/pictureController.ts'
 import { message } from 'ant-design-vue'
 import PictureList from '@/components/PictureList.vue'
+import OmniSearchBar from '@/components/OmniSearchBar.vue'
+import SearchFilterDrawer, { type FilterValues } from '@/components/SearchFilterDrawer.vue'
 
-// 搜索模式：normal(普通) / semantic(AI语义)
-const searchMode = ref<'normal' | 'semantic'>('normal')
+// 搜索模式
+const isAiMode = ref(false)
 
 // 相似度阈值（仅用于AI语义搜索）
 const similarityThreshold = ref<number>(0.5)
 
-// 根据相似度阈值计算动态标签文字
-const similarityLabel = computed(() => {
-  const value = similarityThreshold.value
-  if (value < 0.3) {
-    return '宽松 - 匹配更多图片'
-  } else if (value < 0.7) {
-    return '均衡 - 推荐'
-  } else {
-    return '严格 - 精确匹配'
-  }
+// 筛选抽屉状态
+const filterDrawerOpen = ref(false)
+const filterValues = ref<FilterValues>({
+  category: undefined,
+  tags: [],
+  dateRange: null,
+  picWidth: undefined,
+  picHeight: undefined,
+  picFormat: undefined,
 })
 
-// 根据相似度阈值计算标签颜色
-const similarityTagColor = computed(() => {
-  const value = similarityThreshold.value
-  if (value < 0.3) {
-    return 'green'
-  } else if (value < 0.7) {
-    return 'blue'
-  } else {
-    return 'orange'
-  }
+// 计算活跃筛选数量
+const activeFilterCount = computed(() => {
+  let count = 0
+  if (filterValues.value.category) count++
+  if (filterValues.value.tags?.length) count++
+  if (filterValues.value.dateRange) count++
+  if (filterValues.value.picWidth) count++
+  if (filterValues.value.picHeight) count++
+  if (filterValues.value.picFormat) count++
+  return count
 })
 
 // 定义数据
@@ -116,19 +95,25 @@ const searchParams = reactive<API.PictureQueryRequest>({
 const fetchData = async () => {
   loading.value = true
   // 转换搜索参数
-  const params = {
+  const params: API.PictureQueryRequest = {
     ...searchParams,
-    tags: [] as string[],
+    tags: filterValues.value.tags || [],
   }
-  if (selectedCategory.value !== 'all') {
-    params.category = selectedCategory.value
+
+  // 应用筛选条件
+  if (filterValues.value.category) {
+    params.category = filterValues.value.category
   }
-  // [true, false, false] => ['java']
-  selectedTagList.value.forEach((useTag, index) => {
-    if (useTag) {
-      params.tags.push(tagList.value[index])
-    }
-  })
+  if (filterValues.value.picWidth) {
+    params.picWidth = filterValues.value.picWidth
+  }
+  if (filterValues.value.picHeight) {
+    params.picHeight = filterValues.value.picHeight
+  }
+  if (filterValues.value.picFormat) {
+    params.picFormat = filterValues.value.picFormat
+  }
+
   const res = await listPictureVoByPageUsingPost(params)
   if (res.data.code === 0 && res.data.data) {
     dataList.value = res.data.data.records ?? []
@@ -164,9 +149,10 @@ const fetchSemanticData = async () => {
   loading.value = false
 }
 
-// 页面加载时获取数据，请求一次
+// 页面加载时获取数据
 onMounted(() => {
   fetchData()
+  getTagCategoryOptions()
 })
 
 // 分页参数
@@ -178,25 +164,37 @@ const onPageChange = (page: number, pageSize: number) => {
 
 // 搜索
 const doSearch = () => {
-  // 重置搜索条件
   searchParams.current = 1
-  if (searchMode.value === 'semantic') {
+  if (isAiMode.value) {
     fetchSemanticData()
   } else {
     fetchData()
   }
 }
 
+// 筛选应用
+const handleFilterApply = () => {
+  doSearch()
+}
+
+// 筛选重置
+const handleFilterReset = () => {
+  filterValues.value = {
+    category: undefined,
+    tags: [],
+    dateRange: null,
+    picWidth: undefined,
+    picHeight: undefined,
+    picFormat: undefined,
+  }
+  doSearch()
+}
+
 // 标签和分类列表
 const categoryList = ref<string[]>([])
-const selectedCategory = ref<string>('all')
 const tagList = ref<string[]>([])
-const selectedTagList = ref<boolean[]>([])
 
-/**
- * 获取标签和分类选项
- * @param values
- */
+// 获取标签和分类选项
 const getTagCategoryOptions = async () => {
   const res = await listPictureTagCategoryUsingGet()
   if (res.data.code === 0 && res.data.data) {
@@ -206,10 +204,6 @@ const getTagCategoryOptions = async () => {
     message.error('获取标签分类列表失败，' + res.data.message)
   }
 }
-
-onMounted(() => {
-  getTagCategoryOptions()
-})
 </script>
 
 <style scoped>
@@ -217,24 +211,8 @@ onMounted(() => {
   margin-bottom: 16px;
 }
 
-#homePage .search-bar {
-  max-width: 480px;
-  margin: 0 auto 16px;
-}
-
-#homePage .similarity-slider {
-  margin-top: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-#homePage .slider-label {
-  color: #666;
-  font-size: 14px;
-}
-
-#homePage .tag-bar {
-  margin-bottom: 16px;
+.search-section {
+  margin-bottom: 24px;
+  padding: 16px 0;
 }
 </style>
