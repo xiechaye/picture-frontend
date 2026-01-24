@@ -118,11 +118,15 @@ import ImageCropper from '@/components/ImageCropper.vue'
 import { EditOutlined, FullscreenOutlined } from '@ant-design/icons-vue'
 import ImageOutPainting from '@/components/ImageOutPainting.vue'
 import { debug } from '@/utils/logger'
-import { getSpaceVoByIdUsingGet, listMySpaceUsingGet } from '@/api/spaceController.ts'
+import { getSpaceVoByIdUsingGet } from '@/api/spaceController.ts'
 import { SPACE_TYPE_MAP } from '@/constants/space'
+import { useSpaceStore } from '@/stores/useSpaceStore'
 
 const router = useRouter()
 const route = useRoute()
+
+// 使用空间 Store
+const spaceStore = useSpaceStore()
 
 const picture = ref<API.PictureVO>()
 const pictureForm = reactive<API.PictureEditRequest>({})
@@ -212,10 +216,9 @@ const goToCreateSpace = () => {
 const loadSpaces = async () => {
   spacesLoading.value = true
   try {
-    const res = await listMySpaceUsingGet()
-    if (res.data.code === 0 && res.data.data) {
-      spaceList.value = res.data.data || []
-    }
+    // 使用 store 获取空间列表
+    await spaceStore.fetchSpaceList()
+    spaceList.value = spaceStore.spaceList
   } catch (err) {
     message.error('加载空间列表失败')
   } finally {
@@ -230,10 +233,10 @@ const loadSpaces = async () => {
   const querySpaceId = route.query?.spaceId
   if (querySpaceId) {
     const spaceIdNum = Number(querySpaceId)
-    // 验证 spaceId 是否在空间列表中存在
-    const spaceExists = spaceList.value.some(space => space.id === spaceIdNum)
+    // 先在 store 中查找
+    let space = spaceStore.findSpaceById(spaceIdNum)
 
-    if (spaceExists) {
+    if (space) {
       selectedSpaceId.value = spaceIdNum
     } else {
       // 如果空间不在列表中，尝试通过 API 获取该空间信息
@@ -242,8 +245,9 @@ const loadSpaces = async () => {
         const spaceRes = await getSpaceVoByIdUsingGet({ id: spaceIdNum })
         if (spaceRes.data.code === 0 && spaceRes.data.data) {
           // 成功获取空间信息，说明用户有权限访问
-          // 将该空间添加到列表中
-          spaceList.value.push(spaceRes.data.data)
+          // 将该空间添加到 store 中
+          spaceStore.addSpace(spaceRes.data.data)
+          spaceList.value = spaceStore.spaceList
           selectedSpaceId.value = spaceIdNum
         } else {
           // 无法获取空间信息，可能是权限不足或空间不存在

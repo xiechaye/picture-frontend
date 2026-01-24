@@ -240,7 +240,6 @@ import {
   CloudUploadOutlined,
 } from '@ant-design/icons-vue'
 import { useImageGeneration } from '@/composables/useImageGeneration'
-import { listMySpaceUsingGet } from '@/api/spaceController'
 import { uploadPictureByUrlUsingPost } from '@/api/pictureController'
 import { handleApiResponse, handleException } from '@/utils/errorHandler'
 import { PROMPT_EXAMPLES } from '@/constants/imageGeneration'
@@ -249,8 +248,12 @@ import { useRouter } from 'vue-router'
 import { debug } from '@/utils/logger'
 import GlassCard from '@/components/GlassCard.vue'
 import GradientButton from '@/components/GradientButton.vue'
+import { useSpaceStore } from '@/stores/useSpaceStore'
 
 const router = useRouter()
+
+// 使用空间 Store
+const spaceStore = useSpaceStore()
 
 // 使用业务逻辑Hook
 const {
@@ -286,23 +289,18 @@ const loadSpaces = async () => {
   spacesLoading.value = true
   try {
     debug('开始加载空间列表...')
-    const res = await listMySpaceUsingGet()
+    // 使用 store 获取空间列表
+    await spaceStore.fetchSpaceList()
+    spaceList.value = spaceStore.spaceList
 
-    debug('空间列表API响应:', res)
+    debug(`加载到 ${spaceList.value.length} 个空间`)
 
-    if (
-      handleApiResponse(res, { operation: '加载空间列表', showError: true })
-    ) {
-      spaceList.value = res.data.data || []
-      debug(`加载到 ${spaceList.value.length} 个空间`)
-
-      // 默认选择第一个空间
-      if (spaceList.value.length > 0 && !spaceId.value) {
-        spaceId.value = spaceList.value[0].id
-        debug(`默认选中空间: ${spaceList.value[0].spaceName}`)
-      } else if (spaceList.value.length === 0) {
-        message.warning('您还没有创建空间，请先创建一个空间')
-      }
+    // 默认选择第一个空间
+    if (spaceList.value.length > 0 && !spaceId.value) {
+      spaceId.value = spaceList.value[0].id
+      debug(`默认选中空间: ${spaceList.value[0].spaceName}`)
+    } else if (spaceList.value.length === 0) {
+      message.warning('您还没有创建空间，请先创建一个空间')
     }
   } catch (err) {
     handleException(err, { operation: '加载空间列表' })
