@@ -229,7 +229,16 @@ const loadSpaces = async () => {
   // 如果 URL 有 spaceId 参数，使用该参数
   const querySpaceId = route.query?.spaceId
   if (querySpaceId) {
-    selectedSpaceId.value = Number(querySpaceId)
+    const spaceIdNum = Number(querySpaceId)
+    // 验证 spaceId 是否在空间列表中存在
+    const spaceExists = spaceList.value.some(space => space.id === spaceIdNum)
+    if (spaceExists) {
+      selectedSpaceId.value = spaceIdNum
+    } else {
+      // 如果空间不存在，默认选择公共图库
+      selectedSpaceId.value = null
+      message.warning('指定的空间不存在，已切换到公共图库')
+    }
   } else {
     // 否则默认选择公共图库（null）
     selectedSpaceId.value = null
