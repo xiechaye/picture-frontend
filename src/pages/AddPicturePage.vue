@@ -232,12 +232,29 @@ const loadSpaces = async () => {
     const spaceIdNum = Number(querySpaceId)
     // 验证 spaceId 是否在空间列表中存在
     const spaceExists = spaceList.value.some(space => space.id === spaceIdNum)
+
     if (spaceExists) {
       selectedSpaceId.value = spaceIdNum
     } else {
-      // 如果空间不存在，默认选择公共图库
-      selectedSpaceId.value = null
-      message.warning('指定的空间不存在，已切换到公共图库')
+      // 如果空间不在列表中，尝试通过 API 获取该空间信息
+      // 这可能是用户加入的团队空间
+      try {
+        const spaceRes = await getSpaceVoByIdUsingGet({ id: spaceIdNum })
+        if (spaceRes.data.code === 0 && spaceRes.data.data) {
+          // 成功获取空间信息，说明用户有权限访问
+          // 将该空间添加到列表中
+          spaceList.value.push(spaceRes.data.data)
+          selectedSpaceId.value = spaceIdNum
+        } else {
+          // 无法获取空间信息，可能是权限不足或空间不存在
+          selectedSpaceId.value = null
+          message.warning('无法访问指定的空间，已切换到公共图库')
+        }
+      } catch (err) {
+        // API 调用失败
+        selectedSpaceId.value = null
+        message.warning('无法访问指定的空间，已切换到公共图库')
+      }
     }
   } else {
     // 否则默认选择公共图库（null）
