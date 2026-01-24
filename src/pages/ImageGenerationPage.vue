@@ -384,7 +384,6 @@ const saveToSpace = async () => {
           path: '/add_picture',
           query: {
             id: pictureId,
-            spaceId: spaceId.value,
           },
         })
       }, 500)
