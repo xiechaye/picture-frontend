@@ -1,0 +1,15 @@
+// vue-cropper 类型声明
+declare module 'vue-cropper' {
+  import type { DefineComponent, Plugin } from 'vue'
+  const VueCropper: DefineComponent<any, any, any>
+  const VueCropperPlugin: Plugin
+  export { VueCropper }
+  export default VueCropperPlugin
+}
+
+// 忽略 vue-cropper 内部模块的类型检查
+declare module 'vue-cropper/lib/vue-cropper.vue' {
+  import type { DefineComponent } from 'vue'
+  const component: DefineComponent<any, any, any>
+  export default component
+}
