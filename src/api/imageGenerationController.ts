@@ -49,6 +49,7 @@ export async function optimizePromptUsingPost(
         'Content-Type': 'application/json',
       },
       data: body,
+      timeout: 30000, // 30秒超时，AI优化提示词需要较长时间
       ...(options || {}),
     }
   )
