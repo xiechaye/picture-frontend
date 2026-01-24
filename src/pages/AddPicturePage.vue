@@ -248,6 +248,11 @@ const loadSpaces = async () => {
           // 将该空间添加到 store 中
           spaceStore.addSpace(spaceRes.data.data)
           spaceList.value = spaceStore.spaceList
+
+          // 等待 Vue 重新渲染选项列表
+          await nextTick()
+          await nextTick()
+
           selectedSpaceId.value = spaceIdNum
         } else {
           // 无法获取空间信息，可能是权限不足或空间不存在
