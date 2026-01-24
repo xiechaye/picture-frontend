@@ -757,8 +757,12 @@ declare namespace API {
   }
 
   type OptimizePromptResponse = {
-    originalPrompt: string
-    optimizedPrompt: string
+    success?: boolean
+    errorMessage?: string | null
+    originalPrompt?: string
+    optimizedPrompt?: string
+    recommendedSize?: string | null
+    negativePrompt?: string | null
   }
 
   type BaseResponseImageGenerationResponse_ = {

@@ -27,6 +27,10 @@ export function useImageGeneration() {
   // 原始prompt（用于撤销优化）
   const originalPrompt = ref('')
 
+  // 优化结果的附加信息
+  const recommendedSize = ref<string | null>(null)
+  const negativePrompt = ref<string | null>(null)
+
   // 生成结果
   const generatedImage = ref<API.ImageGenerationResponse>()
 
@@ -71,12 +75,24 @@ export function useImageGeneration() {
 
       if (handleApiResponse(res, { operation: '优化描述', showError: true })) {
         const data = res.data.data!
-        // 保存原始prompt
-        originalPrompt.value = data.originalPrompt
-        // 更新prompt
-        prompt.value = data.optimizedPrompt
-        message.success('Prompt优化完成')
-        debug('优化结果', data)
+
+        if (data.success !== false) {
+          // 优化成功
+          originalPrompt.value = data.originalPrompt || prompt.value
+          prompt.value = data.optimizedPrompt || prompt.value
+          recommendedSize.value = data.recommendedSize || null
+          negativePrompt.value = data.negativePrompt || null
+          message.success('Prompt优化完成')
+          debug('优化结果', data)
+        } else {
+          // 优化失败，使用回退值
+          originalPrompt.value = data.originalPrompt || prompt.value
+          prompt.value = data.optimizedPrompt || prompt.value
+          recommendedSize.value = null
+          negativePrompt.value = null
+          message.warning(`优化失败：${data.errorMessage || '未知错误'}，已使用原始输入`)
+          debug('优化失败', data)
+        }
       }
     } catch (err) {
       handleException(err, { operation: '优化描述' })
@@ -95,6 +111,8 @@ export function useImageGeneration() {
     if (originalPrompt.value) {
       prompt.value = originalPrompt.value
       originalPrompt.value = ''
+      recommendedSize.value = null
+      negativePrompt.value = null
       message.success('已恢复原始描述')
     }
   }
@@ -143,6 +161,8 @@ export function useImageGeneration() {
     originalPrompt.value = ''
     spaceId.value = undefined
     generatedImage.value = undefined
+    recommendedSize.value = null
+    negativePrompt.value = null
   }
 
   // 是否可以撤销优化
@@ -164,6 +184,10 @@ export function useImageGeneration() {
 
     // 生成结果
     generatedImage,
+
+    // 优化结果的附加信息
+    recommendedSize,
+    negativePrompt,
 
     // 方法
     optimizePrompt,
