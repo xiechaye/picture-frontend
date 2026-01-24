@@ -49,8 +49,8 @@ class Logger {
   /**
    * 格式化日志消息
    */
-  private format(level: string, ...args: any[]): any[] {
-    const parts: any[] = []
+  private format(level: string, ...args: unknown[]): unknown[] {
+    const parts: unknown[] = []
 
     if (this.config.enableTimestamp) {
       parts.push(this.getTimestamp())
@@ -75,7 +75,7 @@ class Logger {
   /**
    * 调试日志（开发环境）
    */
-  debug(...args: any[]): void {
+  debug(...args: unknown[]): void {
     if (this.shouldLog(LogLevel.DEBUG)) {
       console.log(...this.format('DEBUG', ...args))
     }
@@ -84,7 +84,7 @@ class Logger {
   /**
    * 信息日志
    */
-  info(...args: any[]): void {
+  info(...args: unknown[]): void {
     if (this.shouldLog(LogLevel.INFO)) {
       console.info(...this.format('INFO', ...args))
     }
@@ -93,7 +93,7 @@ class Logger {
   /**
    * 警告日志
    */
-  warn(...args: any[]): void {
+  warn(...args: unknown[]): void {
     if (this.shouldLog(LogLevel.WARN)) {
       console.warn(...this.format('WARN', ...args))
     }
@@ -102,7 +102,7 @@ class Logger {
   /**
    * 错误日志
    */
-  error(...args: any[]): void {
+  error(...args: unknown[]): void {
     if (this.shouldLog(LogLevel.ERROR)) {
       console.error(...this.format('ERROR', ...args))
 
@@ -151,9 +151,9 @@ export function createLogger(config?: Partial<LoggerConfig>): Logger {
 }
 
 // 导出常用的日志方法（便捷使用）
-export const debug = (...args: any[]) => logger.debug(...args)
-export const info = (...args: any[]) => logger.info(...args)
-export const warn = (...args: any[]) => logger.warn(...args)
-export const error = (...args: any[]) => logger.error(...args)
+export const debug = (...args: unknown[]) => logger.debug(...args)
+export const info = (...args: unknown[]) => logger.info(...args)
+export const warn = (...args: unknown[]) => logger.warn(...args)
+export const error = (...args: unknown[]) => logger.error(...args)
 
 export default logger

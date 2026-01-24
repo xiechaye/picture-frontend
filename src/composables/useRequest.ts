@@ -1,5 +1,5 @@
-import { ref, Ref } from 'vue'
-import { handleApiResponse, handleException, ErrorHandlerOptions } from '@/utils/errorHandler'
+import { ref, type Ref } from 'vue'
+import { handleApiResponse, handleException, type ErrorHandlerOptions } from '@/utils/errorHandler'
 
 /**
  * API 请求状态
@@ -98,21 +98,21 @@ export function useRequest<T>(
  * 分页请求 Hook
  * 专门用于分页列表数据
  */
-export function usePaginationRequest<T>(
-  requestFn: (params: any) => Promise<{
+export function usePaginationRequest<T, P = Record<string, unknown>>(
+  requestFn: (params: P & { current: number; pageSize: number }) => Promise<{
     data: { code: number; data?: { records: T[]; total: number }; message?: string }
   }>,
   options: UseRequestOptions<{ records: T[]; total: number }> & {
-    defaultParams?: any
+    defaultParams?: Partial<P>
   } = {}
 ) {
   const { defaultParams = {}, ...restOptions } = options
 
-  const params = ref({
+  const params = ref<P & { current: number; pageSize: number }>({
     current: 1,
     pageSize: 10,
     ...defaultParams,
-  })
+  } as P & { current: number; pageSize: number })
 
   const { loading, data, error, execute } = useRequest(
     () => requestFn(params.value),
@@ -147,7 +147,7 @@ export function usePaginationRequest<T>(
   /**
    * 搜索（重置到第一页）
    */
-  const search = async (searchParams: any) => {
+  const search = async (searchParams: Partial<P>) => {
     params.value = {
       ...params.value,
       ...searchParams,
@@ -186,7 +186,7 @@ export function usePaginationRequest<T>(
  * 表单提交 Hook
  * 专门用于表单提交操作
  */
-export function useFormSubmit<T, R = any>(
+export function useFormSubmit<T, R = unknown>(
   submitFn: (data: T) => Promise<{ data: { code: number; data?: R; message?: string } }>,
   options: UseRequestOptions<R> & {
     onSubmitSuccess?: (result: R) => void

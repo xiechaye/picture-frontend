@@ -11,7 +11,7 @@
       >
         <template #default="{ item: picture }">
           <PictureCard
-            :picture="picture"
+            :picture="picture as API.PictureVO"
             :can-edit="canEdit"
             :can-delete="canDelete"
             :show-op="showOp"
@@ -24,7 +24,7 @@
         </template>
       </MasonryGrid>
     </a-spin>
-    <ShareModal ref="shareModalRef" :link="shareLink" />
+    <ShareModal ref="shareModalRef" title="分享图片" :link="shareLink" />
   </div>
 </template>
 
@@ -99,11 +99,11 @@ const doDelete = async (picture: API.PictureVO, e: MouseEvent) => {
 
 // ----- 分享操作 ----
 const shareModalRef = ref()
-const shareLink = ref<string>()
+const shareLink = ref<string>('')
 
 const doShare = (picture: API.PictureVO, e: MouseEvent) => {
   e.stopPropagation()
-  shareLink.value = `${window.location.protocol}//${window.location.host}/picture/${picture.id}`
+  shareLink.value = `${window.location.protocol}//${window.location.host}/picture/${picture.id ?? ''}`
   if (shareModalRef.value) {
     shareModalRef.value.openModal()
   }

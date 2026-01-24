@@ -37,7 +37,6 @@
 <script lang="ts" setup>
 import { reactive } from 'vue'
 import { userRegisterUsingPost } from '@/api/userController.ts'
-import { useLoginUserStore } from '@/stores/useLoginUserStore.ts'
 import { message } from 'ant-design-vue'
 import router from '@/router' // 用于接受表单输入的值
 
@@ -48,13 +47,11 @@ const formState = reactive<API.UserRegisterRequest>({
   checkPassword: '',
 })
 
-const loginUserStore = useLoginUserStore()
-
 /**
  * 提交表单
  * @param values
  */
-const handleSubmit = async (values: any) => {
+const handleSubmit = async (values: API.UserRegisterRequest) => {
   // 校验两次输入的密码是否一致
   if (values.userPassword !== values.checkPassword) {
     message.error('两次输入的密码不一致')

@@ -2,7 +2,7 @@
   <div id="spaceDetailPage">
     <!-- 空间信息 -->
     <a-flex justify="space-between">
-      <h2>{{ space.spaceName }}（{{ SPACE_TYPE_MAP[space.spaceType] }}）</h2>
+      <h2>{{ space.spaceName }}（{{ SPACE_TYPE_MAP[space.spaceType ?? 0] }}）</h2>
       <a-space size="middle">
         <a-button
           v-if="canUploadPicture"
@@ -34,12 +34,12 @@
         </a-button>
         <a-button v-if="canEditPicture" :icon="h(EditOutlined)" @click="doBatchEdit"> 批量编辑</a-button>
         <a-tooltip
-          :title="`占用空间 ${formatSize(space.totalSize)} / ${formatSize(space.maxSize)}`"
+          :title="`占用空间 ${formatSize(space.totalSize ?? 0)} / ${formatSize(space.maxSize ?? 0)}`"
         >
           <a-progress
             type="circle"
             :size="42"
-            :percent="((space.totalSize * 100) / space.maxSize).toFixed(1)"
+            :percent="((space.totalSize ?? 0) * 100) / (space.maxSize ?? 1)"
           />
         </a-tooltip>
       </a-space>
@@ -86,7 +86,7 @@
     />
     <BatchEditPictureModal
       ref="batchEditPictureModalRef"
-      :spaceId="id"
+      :spaceId="typeof id === 'string' ? Number(id) : id"
       :pictureList="dataList"
       :onSuccess="onBatchEditPictureSuccess"
     />
@@ -110,7 +110,6 @@ import SearchFilterDrawer, { type FilterValues } from '@/components/SearchFilter
 import BatchEditPictureModal from '@/components/BatchEditPictureModal.vue'
 import { BarChartOutlined, EditOutlined, TeamOutlined } from '@ant-design/icons-vue'
 import { SPACE_PERMISSION_ENUM, SPACE_TYPE_MAP } from '../constants/space.ts'
-import { debug } from '@/utils/logger'
 
 interface Props {
   id: string | number
@@ -173,19 +172,19 @@ const getTagCategoryOptions = async () => {
   }
 }
 
-// -------- 获取空间详情 --------
+// 获取空间详情
 const fetchSpaceDetail = async () => {
   try {
     const res = await getSpaceVoByIdUsingGet({
-      id: props.id,
+      id: typeof props.id === 'string' ? Number(props.id) : props.id,
     })
     if (res.data.code === 0 && res.data.data) {
       space.value = res.data.data
     } else {
       message.error('获取空间详情失败，' + res.data.message)
     }
-  } catch (e: any) {
-    message.error('获取空间详情失败：' + e.message)
+  } catch (e: unknown) {
+    message.error('获取空间详情失败：' + (e instanceof Error ? e.message : String(e)))
   }
 }
 
@@ -214,7 +213,7 @@ const fetchData = async () => {
   loading.value = true
   // 转换搜索参数
   const params: API.PictureQueryRequest = {
-    spaceId: props.id,
+    spaceId: typeof props.id === 'string' ? Number(props.id) : props.id,
     ...searchParams.value,
     searchText: searchText.value || undefined,
     tags: filterValues.value.tags || [],
@@ -293,7 +292,7 @@ const fetchColorData = async () => {
   loading.value = true
   const res = await searchPictureByColorUsingPost({
     picColor: filterValues.value.picColor,
-    spaceId: props.id,
+    spaceId: typeof props.id === 'string' ? Number(props.id) : props.id,
   })
   if (res.data.code === 0 && res.data.data) {
     dataList.value = res.data.data ?? []
@@ -314,7 +313,7 @@ const fetchSemanticData = async () => {
   try {
     const res = await searchPictureBySemantic({
       searchText: searchText.value,
-      spaceId: props.id as number,
+      spaceId: typeof props.id === 'string' ? Number(props.id) : props.id,
       topK: searchParams.value.pageSize,
       similarityThreshold: similarityThreshold.value,
     })
@@ -324,8 +323,8 @@ const fetchSemanticData = async () => {
     } else {
       message.error('语义搜索失败，' + res.data.message)
     }
-  } catch (e: any) {
-    message.error('语义搜索失败：' + e.message)
+  } catch (e: unknown) {
+    message.error('语义搜索失败：' + (e instanceof Error ? e.message : String(e)))
   }
   loading.value = false
 }
@@ -348,7 +347,7 @@ const doBatchEdit = () => {
 // 空间 id 改变时，必须重新获取数据
 watch(
   () => props.id,
-  (newSpaceId) => {
+  () => {
     fetchSpaceDetail()
     fetchData()
   },

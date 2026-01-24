@@ -1,5 +1,4 @@
 import { ref, onMounted } from 'vue'
-import { message } from 'ant-design-vue'
 import { listPictureTagCategoryUsingGet } from '@/api/pictureController'
 import { handleApiResponse, handleException } from '@/utils/errorHandler'
 

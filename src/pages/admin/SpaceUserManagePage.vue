@@ -36,7 +36,7 @@
           <a-select
             v-model:value="record.spaceRole"
             :options="SPACE_ROLE_OPTIONS"
-            @change="(value) => editSpaceRole(value, record)"
+            @change="(value: string) => editSpaceRole(value, record)"
           />
         </template>
         <template v-else-if="column.dataIndex === 'createTime'">
@@ -93,7 +93,7 @@ const dataList = ref<API.SpaceUserVO[]>([])
 
 // 获取数据
 const fetchData = async () => {
-  const spaceId = props.id
+  const spaceId = Number(props.id)
   if (!spaceId) {
     return
   }
@@ -117,7 +117,7 @@ const formData = reactive<API.SpaceUserAddRequest>({})
 
 // 创建成员
 const handleSubmit = async () => {
-  const spaceId = props.id
+  const spaceId = Number(props.id)
   if (!spaceId) {
     return
   }
@@ -135,7 +135,7 @@ const handleSubmit = async () => {
 }
 
 // 编辑成员角色
-const editSpaceRole = async (value, record) => {
+const editSpaceRole = async (value: string, record: API.SpaceUserVO) => {
   const res = await editSpaceUserUsingPost({
     id: record.id,
     spaceRole: value,
@@ -152,7 +152,7 @@ const doDelete = async (id: string) => {
   if (!id) {
     return
   }
-  const res = await deleteSpaceUserUsingPost({ id })
+  const res = await deleteSpaceUserUsingPost({ id: Number(id) })
   if (res.data.code === 0) {
     message.success('删除成功')
     // 刷新数据

@@ -59,7 +59,8 @@
 <script lang="ts" setup>
 import { computed, h, ref } from 'vue'
 import { HomeOutlined, LogoutOutlined, UserOutlined, InboxOutlined } from '@ant-design/icons-vue'
-import { MenuProps, message } from 'ant-design-vue'
+import type { MenuProps } from 'ant-design-vue'
+import { message } from 'ant-design-vue'
 import { useRouter } from 'vue-router'
 import { useLoginUserStore } from '@/stores/useLoginUserStore.ts'
 import { userLogoutUsingPost } from '@/api/userController.ts'
@@ -105,7 +106,7 @@ const originItems = [
 const filterMenus = (menus = [] as MenuProps['items']) => {
   return menus?.filter((menu) => {
     // 管理员才能看到 /admin 开头的菜单
-    if (menu?.key?.startsWith('/admin')) {
+    if (typeof menu?.key === 'string' && menu.key.startsWith('/admin')) {
       const loginUser = loginUserStore.loginUser
       if (!loginUser || loginUser.userRole !== 'admin') {
         return false
@@ -122,12 +123,12 @@ const router = useRouter()
 // 当前要高亮的菜单项
 const current = ref<string[]>([])
 // 监听路由变化，更新高亮菜单项
-router.afterEach((to, from, next) => {
+router.afterEach((to) => {
   current.value = [to.path]
 })
 
 // 路由跳转事件
-const doMenuClick = ({ key }) => {
+const doMenuClick = ({ key }: { key: string }) => {
   router.push({
     path: key,
   })

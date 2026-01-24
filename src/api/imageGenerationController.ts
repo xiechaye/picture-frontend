@@ -13,7 +13,7 @@ import request from '@/request'
  */
 export async function generateImageUsingPost(
   body: API.GenerateImageRequest,
-  options?: { [key: string]: any }
+  options?: Record<string, unknown>
 ) {
   return request<API.BaseResponseImageGenerationResponse_>(
     '/api/image-generation/generate',
@@ -39,7 +39,7 @@ export async function generateImageUsingPost(
  */
 export async function optimizePromptUsingPost(
   body: API.OptimizePromptRequest,
-  options?: { [key: string]: any }
+  options?: Record<string, unknown>
 ) {
   return request<API.BaseResponseOptimizePromptResponse_>(
     '/api/image-generation/optimize-prompt',

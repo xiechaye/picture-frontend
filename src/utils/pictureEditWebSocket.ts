@@ -26,7 +26,7 @@ interface WebSocketConfig {
 export default class PictureEditWebSocket {
   private pictureId: number
   private socket: WebSocket | null
-  private eventHandlers: Map<string, Array<(data?: any) => void>>
+  private eventHandlers: Map<string, Array<(data?: unknown) => void>>
   private status: WebSocketStatus
   private heartbeatTimer: number | null
   private reconnectTimer: number | null
@@ -142,7 +142,7 @@ export default class PictureEditWebSocket {
   /**
    * 添加自定义事件监听
    */
-  on(type: string, handler: (data?: any) => void) {
+  on(type: string, handler: (data?: unknown) => void) {
     if (!this.eventHandlers.has(type)) {
       this.eventHandlers.set(type, [])
     }
@@ -152,7 +152,7 @@ export default class PictureEditWebSocket {
   /**
    * 移除事件监听
    */
-  off(type: string, handler?: (data?: any) => void) {
+  off(type: string, handler?: (data?: unknown) => void) {
     if (!handler) {
       this.eventHandlers.delete(type)
       return
@@ -170,7 +170,7 @@ export default class PictureEditWebSocket {
   /**
    * 触发事件
    */
-  private triggerEvent(type: string, data?: any) {
+  private triggerEvent(type: string, data?: unknown) {
     const handlers = this.eventHandlers.get(type)
     if (handlers) {
       handlers.forEach((handler) => {

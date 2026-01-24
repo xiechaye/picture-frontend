@@ -52,6 +52,13 @@ import { PICTURE_EDIT_ACTION_ENUM, PICTURE_EDIT_MESSAGE_TYPE_ENUM } from '@/cons
 import { SPACE_TYPE_ENUM } from '@/constants/space.ts'
 import { debug, error } from '@/utils/logger'
 
+// 定义 WebSocket 消息类型
+interface WebSocketMessage {
+  message?: string
+  user?: API.UserVO
+  editAction?: string
+}
+
 interface Props {
   imageUrl?: string
   picture?: API.PictureVO
@@ -71,7 +78,7 @@ const isTeamSpace = computed(() => {
 const cropperRef = ref()
 
 // 缩放比例
-const changeScale = (num) => {
+const changeScale = (num: number) => {
   cropperRef.value?.changeScale(num)
   if (num > 0) {
     editAction(PICTURE_EDIT_ACTION_ENUM.ZOOM_IN)
@@ -109,7 +116,7 @@ const loading = ref(false)
  * 上传图片
  * @param file
  */
-const handleUpload = async ({ file }: any) => {
+const handleUpload = async ({ file }: { file: File }) => {
   loading.value = true
   try {
     const params: API.PictureUploadRequest = props.picture ? { id: props.picture.id } : {}
@@ -125,7 +132,7 @@ const handleUpload = async ({ file }: any) => {
     }
   } catch (err) {
     error('图片上传失败', err)
-    message.error('图片上传失败，' + (err as any).message)
+    message.error('图片上传失败，' + (err instanceof Error ? err.message : String(err)))
   }
   loading.value = false
 }
@@ -197,26 +204,30 @@ const initWebsocket = () => {
 
   // 监听一系列的事件
   websocket.on(PICTURE_EDIT_MESSAGE_TYPE_ENUM.INFO, (msg) => {
-    debug('收到通知消息', msg)
-    message.info(msg.message)
+    const message_data = msg as WebSocketMessage
+    debug('收到通知消息', message_data)
+    message.info(message_data.message ?? '收到通知')
   })
 
   websocket.on(PICTURE_EDIT_MESSAGE_TYPE_ENUM.ERROR, (msg) => {
-    debug('收到错误通知', msg)
-    message.info(msg.message)
+    const message_data = msg as WebSocketMessage
+    debug('收到错误通知', message_data)
+    message.info(message_data.message ?? '收到错误')
   })
 
   websocket.on(PICTURE_EDIT_MESSAGE_TYPE_ENUM.ENTER_EDIT, (msg) => {
-    debug('收到进入编辑状态的消息', msg)
-    message.info(msg.message)
-    editingUser.value = msg.user
+    const message_data = msg as WebSocketMessage
+    debug('收到进入编辑状态的消息', message_data)
+    message.info(message_data.message ?? '进入编辑状态')
+    editingUser.value = message_data.user
   })
 
   websocket.on(PICTURE_EDIT_MESSAGE_TYPE_ENUM.EDIT_ACTION, (msg) => {
-    debug('收到编辑操作的消息', msg)
-    message.info(msg.message)
+    const message_data = msg as WebSocketMessage
+    debug('收到编辑操作的消息', message_data)
+    message.info(message_data.message ?? '收到编辑操作')
     // 根据收到的编辑操作，执行相应的操作
-    switch (msg.editAction) {
+    switch (message_data.editAction) {
       case PICTURE_EDIT_ACTION_ENUM.ROTATE_LEFT:
         rotateLeft()
         break
@@ -233,8 +244,9 @@ const initWebsocket = () => {
   })
 
   websocket.on(PICTURE_EDIT_MESSAGE_TYPE_ENUM.EXIT_EDIT, (msg) => {
-    debug('收到退出编辑状态的消息', msg)
-    message.info(msg.message)
+    const message_data = msg as WebSocketMessage
+    debug('收到退出编辑状态的消息', message_data)
+    message.info(message_data.message ?? '退出编辑状态')
     editingUser.value = undefined
   })
 }

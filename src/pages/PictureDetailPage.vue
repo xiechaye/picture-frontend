@@ -81,7 +81,7 @@
         </a-card>
       </a-col>
     </a-row>
-    <ShareModal ref="shareModalRef" :link="shareLink" />
+    <ShareModal ref="shareModalRef" title="分享图片" :link="shareLink" />
   </div>
 </template>
 
@@ -122,15 +122,15 @@ const canDelete = createPermissionChecker(SPACE_PERMISSION_ENUM.PICTURE_DELETE)
 const fetchPictureDetail = async () => {
   try {
     const res = await getPictureVoByIdUsingGet({
-      id: props.id,
+      id: typeof props.id === 'string' ? Number(props.id) : props.id,
     })
     if (res.data.code === 0 && res.data.data) {
       picture.value = res.data.data
     } else {
       message.error('获取图片详情失败，' + res.data.message)
     }
-  } catch (e: any) {
-    message.error('获取图片详情失败：' + e.message)
+  } catch (e: unknown) {
+    message.error('获取图片详情失败：' + (e instanceof Error ? e.message : String(e)))
   }
 }
 
@@ -167,16 +167,16 @@ const doDelete = async () => {
 
 // 下载图片
 const doDownload = () => {
-  downloadImage(picture.value.url)
+  downloadImage(picture.value.url ?? '')
 }
 
 // ----- 分享操作 ----
 const shareModalRef = ref()
 // 分享链接
-const shareLink = ref<string>()
+const shareLink = ref<string>('')
 // 分享
 const doShare = () => {
-  shareLink.value = `${window.location.protocol}//${window.location.host}/picture/${picture.value.id}`
+  shareLink.value = `${window.location.protocol}//${window.location.host}/picture/${picture.value.id ?? ''}`
   if (shareModalRef.value) {
     shareModalRef.value.openModal()
   }

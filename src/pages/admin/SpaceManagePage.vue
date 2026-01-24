@@ -175,12 +175,12 @@ const pagination = computed(() => {
     pageSize: searchParams.pageSize,
     total: total.value,
     showSizeChanger: true,
-    showTotal: (total) => `共 ${total} 条`,
+    showTotal: (total: number) => `共 ${total} 条`,
   }
 })
 
 // 表格变化之后，重新获取数据
-const doTableChange = (page: any) => {
+const doTableChange = (page: { current: number; pageSize: number }) => {
   searchParams.current = page.current
   searchParams.pageSize = page.pageSize
   fetchData()
@@ -198,7 +198,7 @@ const doDelete = async (id: string) => {
   if (!id) {
     return
   }
-  const res = await deleteSpaceUsingPost({ id })
+  const res = await deleteSpaceUsingPost({ id: Number(id) })
   if (res.data.code === 0) {
     message.success('删除成功')
     // 刷新数据

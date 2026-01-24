@@ -14,8 +14,8 @@
 <script setup lang="ts">
 import { ref, onMounted, onUnmounted, watch, nextTick } from 'vue'
 
-interface Props {
-  items: any[]
+interface Props<T = unknown> {
+  items: T[]
   columnWidth?: number
   gap?: number
   ssrColumns?: number

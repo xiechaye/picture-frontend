@@ -143,8 +143,8 @@ const fetchSemanticData = async () => {
     } else {
       message.error('语义搜索失败，' + res.data.message)
     }
-  } catch (e: any) {
-    message.error('语义搜索失败：' + e.message)
+  } catch (e: unknown) {
+    message.error('语义搜索失败：' + (e instanceof Error ? e.message : String(e)))
   }
   loading.value = false
 }

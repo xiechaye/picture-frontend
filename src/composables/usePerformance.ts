@@ -1,4 +1,4 @@
-import { onMounted, onUnmounted, ref, Ref } from 'vue'
+import { onUnmounted, ref, type Ref } from 'vue'
 
 /**
  * 图片懒加载 Hook
@@ -82,7 +82,7 @@ export function useLazyLoad(threshold = 0.1) {
  * @param callback 回调函数
  * @param delay 延迟时间（毫秒）
  */
-export function useDebounce<T extends (...args: any[]) => any>(
+export function useDebounce<T extends (...args: never[]) => unknown>(
   callback: T,
   delay: number
 ): (...args: Parameters<T>) => void {
@@ -104,7 +104,7 @@ export function useDebounce<T extends (...args: any[]) => any>(
  * @param callback 回调函数
  * @param delay 延迟时间（毫秒）
  */
-export function useThrottle<T extends (...args: any[]) => any>(
+export function useThrottle<T extends (...args: never[]) => unknown>(
   callback: T,
   delay: number
 ): (...args: Parameters<T>) => void {

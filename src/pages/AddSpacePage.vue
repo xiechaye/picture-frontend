@@ -109,7 +109,7 @@ import {
 } from '@ant-design/icons-vue'
 
 const space = ref<API.SpaceVO>()
-const spaceForm = reactive<API.SpaceAddRequest | API.SpaceEditRequest>({
+const spaceForm = reactive<API.SpaceAddRequest>({
   spaceLevel: 0,
 })
 const loading = ref(false)
@@ -181,7 +181,7 @@ const handleSubmit = async () => {
 const getOldSpace = async () => {
   const id = route.query?.id
   if (id) {
-    const res = await getSpaceVoByIdUsingGet({ id })
+    const res = await getSpaceVoByIdUsingGet({ id: Number(id) })
     if (res.data.code === 0 && res.data.data) {
       const data = res.data.data
       space.value = data

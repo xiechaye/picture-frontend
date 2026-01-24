@@ -104,8 +104,8 @@ const fetchResultData = async () => {
     } else {
       message.error('获取数据失败，' + res.data.message)
     }
-  } catch (e: any) {
-    message.error('获取数据失败，' + e.message)
+  } catch (e: unknown) {
+    message.error('获取数据失败，' + (e instanceof Error ? e.message : String(e)))
   }
   loading.value = false;
 }

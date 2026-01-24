@@ -312,10 +312,10 @@ const loadSpaces = async () => {
 /**
  * 空间搜索过滤
  */
-const filterSpaceOption = (input: string, option: any) => {
-  return option.children[0].children
-    .toLowerCase()
-    .includes(input.toLowerCase())
+const filterSpaceOption = (input: string, option: { children?: { children?: string }[] }) => {
+  return option.children?.[0]?.children
+    ?.toLowerCase()
+    .includes(input.toLowerCase()) ?? false
 }
 
 /**

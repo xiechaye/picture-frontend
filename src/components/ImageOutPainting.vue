@@ -71,8 +71,8 @@ const createTask = async () => {
   })
   if (res.data.code === 0 && res.data.data) {
     message.success('创建任务成功，请耐心等待，不要退出界面')
-    debug('扩图任务ID', res.data.data.output.taskId)
-    taskId.value = res.data.data.output.taskId
+    debug('扩图任务ID', res.data.data.output?.taskId)
+    taskId.value = res.data.data.output?.taskId
     // 开启轮询
     startPolling()
   } else {
@@ -81,7 +81,7 @@ const createTask = async () => {
 }
 
 // 轮询定时器
-let pollingTimer: NodeJS.Timeout = null
+let pollingTimer: number | undefined
 
 // 开始轮询
 const startPolling = () => {
@@ -96,12 +96,12 @@ const startPolling = () => {
       })
       if (res.data.code === 0 && res.data.data) {
         const taskResult = res.data.data.output
-        if (taskResult.taskStatus === 'SUCCEEDED') {
+        if (taskResult && taskResult.taskStatus === 'SUCCEEDED') {
           message.success('扩图任务执行成功')
-          resultImageUrl.value = taskResult.outputImageUrl
+          resultImageUrl.value = taskResult.outputImageUrl ?? ''
           // 清理轮询
           clearPolling()
-        } else if (taskResult.taskStatus === 'FAILED') {
+        } else if (taskResult && taskResult.taskStatus === 'FAILED') {
           message.error('扩图任务执行失败')
           // 清理轮询
           clearPolling()
@@ -109,7 +109,7 @@ const startPolling = () => {
       }
     } catch (err) {
       error('扩图任务轮询失败', err)
-      message.error('扩图任务轮询失败，' + (err as any).message)
+      message.error('扩图任务轮询失败，' + (err instanceof Error ? err.message : String(err)))
       // 清理轮询
       clearPolling()
     }
@@ -120,8 +120,8 @@ const startPolling = () => {
 const clearPolling = () => {
   if (pollingTimer) {
     clearInterval(pollingTimer)
-    pollingTimer = null
-    taskId.value = null
+    pollingTimer = undefined
+    taskId.value = undefined
   }
 }
 
@@ -154,7 +154,7 @@ const handleUpload = async () => {
     }
   } catch (err) {
     error('图片上传失败', err)
-    message.error('图片上传失败，' + (err as any).message)
+    message.error('图片上传失败，' + (err instanceof Error ? err.message : String(err)))
   }
   uploadLoading.value = false
 }

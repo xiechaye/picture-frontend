@@ -123,12 +123,12 @@ const pagination = computed(() => {
     pageSize: searchParams.pageSize,
     total: total.value,
     showSizeChanger: true,
-    showTotal: (total) => `共 ${total} 条`,
+    showTotal: (total: number) => `共 ${total} 条`,
   }
 })
 
 // 表格变化之后，重新获取数据
-const doTableChange = (page: any) => {
+const doTableChange = (page: { current: number; pageSize: number }) => {
   searchParams.current = page.current
   searchParams.pageSize = page.pageSize
   fetchData()
@@ -147,7 +147,7 @@ const doDelete = async (id: string) => {
     return
   }
   try {
-    const res = await deleteUserUsingPost({ id })
+    const res = await deleteUserUsingPost({ id: Number(id) })
     if (handleApiResponse(res, { operation: '删除用户' })) {
       message.success('删除成功')
       // 刷新数据

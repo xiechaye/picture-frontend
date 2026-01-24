@@ -53,7 +53,8 @@ const route = useRoute()
 
 // 空间 id
 const spaceId = computed(() => {
-  return route.query?.spaceId as string
+  const id = route.query?.spaceId
+  return id ? Number(id) : undefined
 })
 
 // 是否查询所有空间

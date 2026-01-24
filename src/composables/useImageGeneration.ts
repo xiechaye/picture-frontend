@@ -8,9 +8,8 @@ import {
   optimizePromptUsingPost,
 } from '@/api/imageGenerationController'
 import { handleApiResponse, handleException } from '@/utils/errorHandler'
-import { debug, error as logError } from '@/utils/logger'
+import { debug } from '@/utils/logger'
 import { useDebounceFn } from './useDebounce'
-import request from '@/request'
 
 /**
  * 图片生成业务逻辑Hook

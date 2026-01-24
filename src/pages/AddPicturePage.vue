@@ -30,11 +30,11 @@
     <a-tabs v-model:activeKey="uploadType">
       <a-tab-pane key="file" tab="文件上传">
         <!-- 图片上传组件 -->
-        <PictureUpload :picture="picture" :spaceId="spaceId" :onSuccess="onSuccess" />
+        <PictureUpload :picture="picture" :spaceId="spaceId ?? undefined" :onSuccess="onSuccess" />
       </a-tab-pane>
       <a-tab-pane key="url" tab="URL 上传" force-render>
         <!-- URL 图片上传组件 -->
-        <UrlPictureUpload :picture="picture" :spaceId="spaceId" :onSuccess="onSuccess" />
+        <UrlPictureUpload :picture="picture" :spaceId="spaceId ?? undefined" :onSuccess="onSuccess" />
       </a-tab-pane>
     </a-tabs>
     <!-- 图片编辑 -->
@@ -49,14 +49,14 @@
         ref="imageCropperRef"
         :imageUrl="picture?.url"
         :picture="picture"
-        :spaceId="spaceId"
+        :spaceId="spaceId ?? undefined"
         :space="space"
         :onSuccess="onCropSuccess"
       />
       <ImageOutPainting
         ref="imageOutPaintingRef"
         :picture="picture"
-        :spaceId="spaceId"
+        :spaceId="spaceId ?? undefined"
         :onSuccess="onImageOutPaintingSuccess"
       />
     </div>
@@ -153,15 +153,14 @@ const onSuccess = (newPicture: API.PictureVO) => {
  * 提交表单
  * @param values
  */
-const handleSubmit = async (values: any) => {
+const handleSubmit = async (values: API.PictureEditRequest) => {
   debug('提交图片表单', values)
-  const pictureId = picture.value.id
+  const pictureId = picture.value?.id
   if (!pictureId) {
     return
   }
   const res = await editPictureUsingPost({
     id: pictureId,
-    spaceId: spaceId.value,
     ...values,
   })
   // 操作成功
@@ -176,8 +175,8 @@ const handleSubmit = async (values: any) => {
   }
 }
 
-const categoryOptions = ref<string[]>([])
-const tagOptions = ref<string[]>([])
+const categoryOptions = ref<{ value: string; label: string }[]>([])
+const tagOptions = ref<{ value: string; label: string }[]>([])
 
 /**
  * 获取标签和分类选项
@@ -204,13 +203,6 @@ const getTagCategoryOptions = async () => {
 }
 
 /**
- * 前往创建空间页面
- */
-const goToCreateSpace = () => {
-  router.push('/add_space')
-}
-
-/**
  * 加载空间列表
  */
 const loadSpaces = async () => {
@@ -219,7 +211,7 @@ const loadSpaces = async () => {
     // 使用 store 获取空间列表
     await spaceStore.fetchSpaceList()
     spaceList.value = spaceStore.spaceList
-  } catch (err) {
+  } catch {
     message.error('加载空间列表失败')
   } finally {
     spacesLoading.value = false
@@ -234,7 +226,7 @@ const loadSpaces = async () => {
   if (querySpaceId) {
     const spaceIdNum = Number(querySpaceId)
     // 先在 store 中查找
-    let space = spaceStore.findSpaceById(spaceIdNum)
+    const space = spaceStore.findSpaceById(spaceIdNum)
 
     if (space) {
       selectedSpaceId.value = spaceIdNum
@@ -259,7 +251,7 @@ const loadSpaces = async () => {
           selectedSpaceId.value = null
           message.warning('无法访问指定的空间，已切换到公共图库')
         }
-      } catch (err) {
+      } catch {
         // API 调用失败
         selectedSpaceId.value = null
         message.warning('无法访问指定的空间，已切换到公共图库')
@@ -274,9 +266,9 @@ const loadSpaces = async () => {
 /**
  * 空间搜索过滤
  */
-const filterSpaceOption = (input: string, option: any) => {
+const filterSpaceOption = (input: string, option: { children?: { children?: string }[] }) => {
   const children = option.children
-  if (!children || !children[0]) return false
+  if (!children || !children[0] || !children[0].children) return false
   return children[0].children.toLowerCase().includes(input.toLowerCase())
 }
 
@@ -288,7 +280,7 @@ const getOldPicture = async () => {
   const id = route.query?.id
   if (id) {
     const res = await getPictureVoByIdUsingGet({
-      id,
+      id: Number(id),
     })
     if (res.data.code === 0 && res.data.data) {
       const data = res.data.data

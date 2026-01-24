@@ -111,8 +111,8 @@ const loadData = async () => {
     } else {
       message.error('加载用户数据失败')
     }
-  } catch (e: any) {
-    message.error('加载用户数据失败: ' + e.message)
+  } catch (e: unknown) {
+    message.error('加载用户数据失败: ' + (e instanceof Error ? e.message : String(e)))
   }
 }
 
@@ -132,7 +132,11 @@ const beforeUpload = (file: File) => {
   return isJpgOrPng && isLt2M
 }
 
-const handleUpload = async ({ file, onSuccess, onError }: any) => {
+const handleUpload = async ({ file, onSuccess, onError }: {
+  file: File;
+  onSuccess: (response: unknown) => void;
+  onError: (error: Error) => void
+}) => {
   loading.value = true
   try {
     const res = await uploadAvatarUsingPost(file)
@@ -144,9 +148,9 @@ const handleUpload = async ({ file, onSuccess, onError }: any) => {
       message.error('上传失败: ' + res.data.message)
       onError(new Error(res.data.message))
     }
-  } catch (e: any) {
-    message.error('上传失败: ' + e.message)
-    onError(e)
+  } catch (e: unknown) {
+    message.error('上传失败: ' + (e instanceof Error ? e.message : String(e)))
+    onError(e instanceof Error ? e : new Error(String(e)))
   } finally {
     loading.value = false
   }
@@ -165,8 +169,8 @@ const handleSubmit = async () => {
     } else {
       message.error('更新失败: ' + res.data.message)
     }
-  } catch (e: any) {
-    message.error('更新失败: ' + e.message)
+  } catch (e: unknown) {
+    message.error('更新失败: ' + (e instanceof Error ? e.message : String(e)))
   } finally {
     submitting.value = false
   }
