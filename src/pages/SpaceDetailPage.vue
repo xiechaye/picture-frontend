@@ -1,95 +1,105 @@
 <template>
   <div id="spaceDetailPage">
-    <!-- 空间信息 -->
-    <a-flex justify="space-between">
-      <h2>{{ space.spaceName }}（{{ SPACE_TYPE_MAP[space.spaceType ?? 0] }}）</h2>
-      <a-space size="middle">
-        <a-button
-          v-if="canUploadPicture"
-          type="primary"
-          :href="`/add_picture?spaceId=${id}`"
-          target="_blank"
-        >
-          + 上传图片
-        </a-button>
-        <a-button
-          v-if="canManageSpaceUser"
-          type="primary"
-          ghost
-          :icon="h(TeamOutlined)"
-          :href="`/spaceUserManage/${id}`"
-          target="_blank"
-        >
-          成员管理
-        </a-button>
-        <a-button
-          v-if="canManageSpaceUser"
-          type="primary"
-          ghost
-          :icon="h(BarChartOutlined)"
-          :href="`/space_analyze?spaceId=${id}`"
-          target="_blank"
-        >
-          空间分析
-        </a-button>
-        <a-button v-if="canEditPicture" :icon="h(EditOutlined)" @click="doBatchEdit"> 批量编辑</a-button>
-        <a-tooltip
-          :title="`占用空间 ${formatSize(space.totalSize ?? 0)} / ${formatSize(space.maxSize ?? 0)}`"
-        >
-          <a-progress
-            type="circle"
-            :size="42"
-            :percent="((space.totalSize ?? 0) * 100) / (space.maxSize ?? 1)"
-          />
-        </a-tooltip>
-      </a-space>
-    </a-flex>
-    <div style="margin-bottom: 16px" />
-    <!-- 全能搜索栏 -->
-    <div class="search-section">
-      <OmniSearchBar
-        v-model="searchText"
-        v-model:aiMode="isAiMode"
-        v-model:similarity="similarityThreshold"
-        :filterCount="activeFilterCount"
-        @search="doSearch"
-        @openFilter="filterDrawerOpen = true"
-      />
+    <!-- 加载状态 -->
+    <div v-if="!space.id" style="text-align: center; padding: 100px 0">
+      <a-spin size="large" tip="加载空间信息中..." />
     </div>
 
-    <!-- 高级筛选抽屉 -->
-    <SearchFilterDrawer
-      v-model:open="filterDrawerOpen"
-      v-model:filters="filterValues"
-      :categoryList="categoryList"
-      :tagList="tagList"
-      :showColorPicker="true"
-      @apply="handleFilterApply"
-      @reset="handleFilterReset"
-    />
-    <!-- 图片列表 -->
-    <PictureList
-      :dataList="dataList"
-      :loading="loading"
-      :showOp="true"
-      :canEdit="canEditPicture"
-      :canDelete="canDeletePicture"
-      :onReload="fetchData"
-    />
-    <!-- 分页 -->
-    <a-pagination
-      style="text-align: right"
-      v-model:current="searchParams.current"
-      v-model:pageSize="searchParams.pageSize"
-      :total="total"
-      @change="onPageChange"
-    />
-    <BatchEditPictureModal
-      ref="batchEditPictureModalRef"
-      :spaceId="typeof id === 'string' ? Number(id) : id"
-      :pictureList="dataList"
-      :onSuccess="onBatchEditPictureSuccess"
-    />
+    <!-- 空间内容 - 只在数据加载完成后显示 -->
+    <template v-else>
+      <!-- 空间信息 -->
+      <a-flex justify="space-between">
+        <h2>{{ space.spaceName }}（{{ SPACE_TYPE_MAP[space.spaceType ?? 0] }}）</h2>
+        <a-space size="middle">
+          <a-button
+            v-if="canUploadPicture"
+            type="primary"
+            :href="`/add_picture?spaceId=${id}`"
+            target="_blank"
+          >
+            + 上传图片
+          </a-button>
+          <a-button
+            v-if="canManageSpaceUser"
+            type="primary"
+            ghost
+            :icon="h(TeamOutlined)"
+            :href="`/spaceUserManage/${id}`"
+            target="_blank"
+          >
+            成员管理
+          </a-button>
+          <a-button
+            v-if="canManageSpaceUser"
+            type="primary"
+            ghost
+            :icon="h(BarChartOutlined)"
+            :href="`/space_analyze?spaceId=${id}`"
+            target="_blank"
+          >
+            空间分析
+          </a-button>
+          <a-button v-if="canEditPicture" :icon="h(EditOutlined)" @click="doBatchEdit">
+            批量编辑
+          </a-button>
+          <a-tooltip
+            :title="`占用空间 ${formatSize(space.totalSize ?? 0)} / ${formatSize(space.maxSize ?? 0)}`"
+          >
+            <a-progress
+              type="circle"
+              :size="42"
+              :percent="((space.totalSize ?? 0) * 100) / (space.maxSize ?? 1)"
+            />
+          </a-tooltip>
+        </a-space>
+      </a-flex>
+      <div style="margin-bottom: 16px" />
+      <!-- 全能搜索栏 -->
+      <div class="search-section">
+        <OmniSearchBar
+          v-model="searchText"
+          v-model:aiMode="isAiMode"
+          v-model:similarity="similarityThreshold"
+          :filterCount="activeFilterCount"
+          @search="doSearch"
+          @openFilter="filterDrawerOpen = true"
+        />
+      </div>
+
+      <!-- 高级筛选抽屉 -->
+      <SearchFilterDrawer
+        v-model:open="filterDrawerOpen"
+        v-model:filters="filterValues"
+        :categoryList="categoryList"
+        :tagList="tagList"
+        :showColorPicker="true"
+        @apply="handleFilterApply"
+        @reset="handleFilterReset"
+      />
+      <!-- 图片列表 -->
+      <PictureList
+        :dataList="dataList"
+        :loading="loading"
+        :showOp="true"
+        :canEdit="canEditPicture"
+        :canDelete="canDeletePicture"
+        :onReload="fetchData"
+      />
+      <!-- 分页 -->
+      <a-pagination
+        style="text-align: right"
+        v-model:current="searchParams.current"
+        v-model:pageSize="searchParams.pageSize"
+        :total="total"
+        @change="onPageChange"
+      />
+      <BatchEditPictureModal
+        ref="batchEditPictureModalRef"
+        :spaceId="typeof id === 'string' ? Number(id) : id"
+        :pictureList="dataList"
+        :onSuccess="onBatchEditPictureSuccess"
+      />
+    </template>
   </div>
 </template>
 

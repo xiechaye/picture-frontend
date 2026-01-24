@@ -35,7 +35,6 @@ const fetchData = async () => {
   // 转换搜索参数
   const res = await getSpaceRankAnalyzeUsingPost({
     topN: 10, // 后端默认是 10
-    spaceId: props.spaceId,
   })
   if (res.data.code === 0 && res.data.data) {
     dataList.value = res.data.data ?? []
