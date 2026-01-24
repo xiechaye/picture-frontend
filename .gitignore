@@ -35,4 +35,6 @@ coverage
 .env.*.local
 
 # claude
+.claude/
 CLAUDE.md
+nul
