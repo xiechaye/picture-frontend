@@ -62,7 +62,7 @@ interface WebSocketMessage {
 interface Props {
   imageUrl?: string
   picture?: API.PictureVO
-  spaceId?: number
+  spaceId?: number | string
   space?: API.SpaceVO
   onSuccess?: (newPicture: API.PictureVO) => void
 }
@@ -197,8 +197,8 @@ const initWebsocket = () => {
   if (websocket) {
     websocket.disconnect()
   }
-  // 创建 websocket 实例
-  websocket = new PictureEditWebSocket(pictureId)
+  // 创建 websocket 实例（确保 pictureId 是 number 类型）
+  websocket = new PictureEditWebSocket(Number(pictureId))
   // 建立连接
   websocket.connect()
 

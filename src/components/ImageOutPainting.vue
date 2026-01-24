@@ -43,7 +43,7 @@ import { debug, error } from '@/utils/logger'
 
 interface Props {
   picture?: API.PictureVO
-  spaceId?: number
+  spaceId?: number | string
   onSuccess?: (newPicture: API.PictureVO) => void
 }
 
@@ -62,7 +62,7 @@ const createTask = async () => {
     return
   }
   const res = await createPictureOutPaintingTaskUsingPost({
-    pictureId: props.picture.id,
+    pictureId: Number(props.picture.id),
     // 根据需要设置扩图参数
     parameters: {
       xScale: 2,

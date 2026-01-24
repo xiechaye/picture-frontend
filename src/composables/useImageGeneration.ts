@@ -21,7 +21,7 @@ import { useDebounceFn } from './useDebounce'
 export function useImageGeneration() {
   // 表单数据
   const prompt = ref('')
-  const spaceId = ref<number>()
+  const spaceId = ref<number | string>()
 
   // 可选参数
   const size = ref<string>('')

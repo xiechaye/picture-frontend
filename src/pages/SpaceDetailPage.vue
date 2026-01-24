@@ -95,7 +95,7 @@
       />
       <BatchEditPictureModal
         ref="batchEditPictureModalRef"
-        :spaceId="typeof id === 'string' ? Number(id) : id"
+        :spaceId="id"
         :pictureList="dataList"
         :onSuccess="onBatchEditPictureSuccess"
       />
@@ -122,7 +122,7 @@ import { BarChartOutlined, EditOutlined, TeamOutlined } from '@ant-design/icons-
 import { SPACE_PERMISSION_ENUM, SPACE_TYPE_MAP } from '../constants/space.ts'
 
 interface Props {
-  id: string | number
+  id: string
 }
 
 const props = defineProps<Props>()
@@ -186,7 +186,7 @@ const getTagCategoryOptions = async () => {
 const fetchSpaceDetail = async () => {
   try {
     const res = await getSpaceVoByIdUsingGet({
-      id: typeof props.id === 'string' ? Number(props.id) : props.id,
+      id: props.id,
     })
     if (res.data.code === 0 && res.data.data) {
       space.value = res.data.data
@@ -223,7 +223,7 @@ const fetchData = async () => {
   loading.value = true
   // 转换搜索参数
   const params: API.PictureQueryRequest = {
-    spaceId: typeof props.id === 'string' ? Number(props.id) : props.id,
+    spaceId: props.id,
     ...searchParams.value,
     searchText: searchText.value || undefined,
     tags: filterValues.value.tags || [],
@@ -302,7 +302,7 @@ const fetchColorData = async () => {
   loading.value = true
   const res = await searchPictureByColorUsingPost({
     picColor: filterValues.value.picColor,
-    spaceId: typeof props.id === 'string' ? Number(props.id) : props.id,
+    spaceId: props.id,
   })
   if (res.data.code === 0 && res.data.data) {
     dataList.value = res.data.data ?? []
@@ -323,7 +323,7 @@ const fetchSemanticData = async () => {
   try {
     const res = await searchPictureBySemantic({
       searchText: searchText.value,
-      spaceId: typeof props.id === 'string' ? Number(props.id) : props.id,
+      spaceId: props.id,
       topK: searchParams.value.pageSize,
       similarityThreshold: similarityThreshold.value,
     })

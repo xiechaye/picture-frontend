@@ -198,7 +198,7 @@ declare namespace API {
   }
 
   type DeleteRequest = {
-    id?: number
+    id?: number | string
   }
 
   type GetOutPaintingTaskResponse = {
@@ -208,7 +208,7 @@ declare namespace API {
 
   type getPictureByIdUsingGETParams = {
     /** id */
-    id?: number
+    id?: number | string
   }
 
   type getPictureOutPaintingTaskUsingGETParams = {
@@ -218,27 +218,27 @@ declare namespace API {
 
   type getPictureVOByIdUsingGETParams = {
     /** id */
-    id?: number
+    id?: number | string
   }
 
   type getSpaceByIdUsingGETParams = {
     /** id */
-    id?: number
+    id?: number | string
   }
 
   type getSpaceVOByIdUsingGETParams = {
     /** id */
-    id?: number
+    id?: number | string
   }
 
   type getUserByIdUsingGETParams = {
     /** id */
-    id?: number
+    id?: number | string
   }
 
   type getUserVOByIdUsingGETParams = {
     /** id */
-    id?: number
+    id?: number | string
   }
 
   type ImageSearchResult = {
@@ -249,7 +249,7 @@ declare namespace API {
   type LoginUserVO = {
     createTime?: string
     editTime?: string
-    id?: number
+    id?: number | string
     updateTime?: string
     userAccount?: string
     userAvatar?: string
@@ -333,7 +333,7 @@ declare namespace API {
     category?: string
     createTime?: string
     editTime?: string
-    id?: number
+    id?: number | string
     introduction?: string
     isDelete?: number
     name?: string
@@ -347,7 +347,7 @@ declare namespace API {
     reviewStatus?: number
     reviewTime?: string
     reviewerId?: number
-    spaceId?: number
+    spaceId?: number | string
     tags?: string
     thumbnailUrl?: string
     updateTime?: string
@@ -359,13 +359,13 @@ declare namespace API {
     category?: string
     nameRule?: string
     pictureIdList?: number[]
-    spaceId?: number
+    spaceId?: number | string
     tags?: string[]
   }
 
   type PictureEditRequest = {
     category?: string
-    id?: number
+    id?: number | string
     introduction?: string
     name?: string
     tags?: string[]
@@ -375,7 +375,7 @@ declare namespace API {
     category?: string
     current?: number
     endEditTime?: string
-    id?: number
+    id?: number | string
     introduction?: string
     name?: string
     nullSpaceId?: boolean
@@ -392,14 +392,14 @@ declare namespace API {
     searchText?: string
     sortField?: string
     sortOrder?: string
-    spaceId?: number
+    spaceId?: number | string
     startEditTime?: string
     tags?: string[]
     userId?: number
   }
 
   type PictureReviewRequest = {
-    id?: number
+    id?: number | string
     reviewMessage?: string
     reviewStatus?: number
   }
@@ -411,7 +411,7 @@ declare namespace API {
 
   type PictureUpdateRequest = {
     category?: string
-    id?: number
+    id?: number | string
     introduction?: string
     name?: string
     tags?: string[]
@@ -425,16 +425,16 @@ declare namespace API {
 
   type PictureUploadRequest = {
     fileUrl?: string
-    id?: number
+    id?: number | string
     picName?: string
-    spaceId?: number
+    spaceId?: number | string
   }
 
   type PictureVO = {
     category?: string
     createTime?: string
     editTime?: string
-    id?: number
+    id?: number | string
     introduction?: string
     name?: string
     permissionList?: string[]
@@ -444,7 +444,7 @@ declare namespace API {
     picScale?: number
     picSize?: number
     picWidth?: number
-    spaceId?: number
+    spaceId?: number | string
     tags?: string[]
     thumbnailUrl?: string
     updateTime?: string
@@ -455,7 +455,7 @@ declare namespace API {
 
   type SearchPictureByColorRequest = {
     picColor?: string
-    spaceId?: number
+    spaceId?: number | string
   }
 
   type SearchPictureByPictureRequest = {
@@ -465,7 +465,7 @@ declare namespace API {
   type Space = {
     createTime?: string
     editTime?: string
-    id?: number
+    id?: number | string
     isDelete?: number
     maxCount?: number
     maxSize?: number
@@ -487,7 +487,7 @@ declare namespace API {
   type SpaceCategoryAnalyzeRequest = {
     queryAll?: boolean
     queryPublic?: boolean
-    spaceId?: number
+    spaceId?: number | string
   }
 
   type SpaceCategoryAnalyzeResponse = {
@@ -497,7 +497,7 @@ declare namespace API {
   }
 
   type SpaceEditRequest = {
-    id?: number
+    id?: number | string
     spaceName?: string
   }
 
@@ -510,7 +510,7 @@ declare namespace API {
 
   type SpaceQueryRequest = {
     current?: number
-    id?: number
+    id?: number | string
     pageSize?: number
     sortField?: string
     sortOrder?: string
@@ -527,7 +527,7 @@ declare namespace API {
   type SpaceSizeAnalyzeRequest = {
     queryAll?: boolean
     queryPublic?: boolean
-    spaceId?: number
+    spaceId?: number | string
   }
 
   type SpaceSizeAnalyzeResponse = {
@@ -538,7 +538,7 @@ declare namespace API {
   type SpaceTagAnalyzeRequest = {
     queryAll?: boolean
     queryPublic?: boolean
-    spaceId?: number
+    spaceId?: number | string
   }
 
   type SpaceTagAnalyzeResponse = {
@@ -547,7 +547,7 @@ declare namespace API {
   }
 
   type SpaceUpdateRequest = {
-    id?: number
+    id?: number | string
     maxCount?: number
     maxSize?: number
     spaceLevel?: number
@@ -557,7 +557,7 @@ declare namespace API {
   type SpaceUsageAnalyzeRequest = {
     queryAll?: boolean
     queryPublic?: boolean
-    spaceId?: number
+    spaceId?: number | string
   }
 
   type SpaceUsageAnalyzeResponse = {
@@ -571,15 +571,15 @@ declare namespace API {
 
   type SpaceUser = {
     createTime?: string
-    id?: number
-    spaceId?: number
+    id?: number | string
+    spaceId?: number | string
     spaceRole?: string
     updateTime?: string
     userId?: number
   }
 
   type SpaceUserAddRequest = {
-    spaceId?: number
+    spaceId?: number | string
     spaceRole?: string
     userId?: number
   }
@@ -587,7 +587,7 @@ declare namespace API {
   type SpaceUserAnalyzeRequest = {
     queryAll?: boolean
     queryPublic?: boolean
-    spaceId?: number
+    spaceId?: number | string
     timeDimension?: string
     userId?: number
   }
@@ -598,22 +598,22 @@ declare namespace API {
   }
 
   type SpaceUserEditRequest = {
-    id?: number
+    id?: number | string
     spaceRole?: string
   }
 
   type SpaceUserQueryRequest = {
-    id?: number
-    spaceId?: number
+    id?: number | string
+    spaceId?: number | string
     spaceRole?: string
     userId?: number
   }
 
   type SpaceUserVO = {
     createTime?: string
-    id?: number
+    id?: number | string
     space?: SpaceVO
-    spaceId?: number
+    spaceId?: number | string
     spaceRole?: string
     updateTime?: string
     user?: UserVO
@@ -623,7 +623,7 @@ declare namespace API {
   type SpaceVO = {
     createTime?: string
     editTime?: string
-    id?: number
+    id?: number | string
     maxCount?: number
     maxSize?: number
     permissionList?: string[]
@@ -650,15 +650,15 @@ declare namespace API {
 
   type uploadPictureUsingPOSTParams = {
     fileUrl?: string
-    id?: number
+    id?: number | string
     picName?: string
-    spaceId?: number
+    spaceId?: number | string
   }
 
   type User = {
     createTime?: string
     editTime?: string
-    id?: number
+    id?: number | string
     isDelete?: number
     updateTime?: string
     userAccount?: string
@@ -687,7 +687,7 @@ declare namespace API {
 
   type UserQueryRequest = {
     current?: number
-    id?: number
+    id?: number | string
     pageSize?: number
     sortField?: string
     sortOrder?: string
@@ -704,7 +704,7 @@ declare namespace API {
   }
 
   type UserUpdateRequest = {
-    id?: number
+    id?: number | string
     userAvatar?: string
     userName?: string
     userProfile?: string
@@ -713,7 +713,7 @@ declare namespace API {
 
   type UserVO = {
     createTime?: string
-    id?: number
+    id?: number | string
     userAccount?: string
     userAvatar?: string
     userName?: string
@@ -732,7 +732,7 @@ declare namespace API {
     /** 搜索文本，例如"雪中的宫殿" */
     searchText?: string
     /** 空间ID，用于数据隔离 */
-    spaceId?: number
+    spaceId?: number | string
     /** 返回结果数量，默认10 */
     topK?: number
     /** 相似度阈值，默认0.5，范围0-1 */

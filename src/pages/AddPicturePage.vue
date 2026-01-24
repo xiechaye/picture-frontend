@@ -135,7 +135,7 @@ const uploadType = ref<'file' | 'url'>('file')
 // 空间相关状态
 const spaceList = ref<API.SpaceVO[]>([])
 const spacesLoading = ref(false)
-const selectedSpaceId = ref<number | null>(null)
+const selectedSpaceId = ref<number | string | null>(null)
 
 // 空间 id（从 selectedSpaceId 获取）
 const spaceId = computed(() => selectedSpaceId.value)
@@ -224,37 +224,40 @@ const loadSpaces = async () => {
   // 如果 URL 有 spaceId 参数，使用该参数
   const querySpaceId = route.query?.spaceId
   if (querySpaceId) {
-    const spaceIdNum = Number(querySpaceId)
-    // 先在 store 中查找
-    const space = spaceStore.findSpaceById(spaceIdNum)
+    // 处理 LocationQueryValue 类型，确保是 string 或 number
+    const spaceIdNum = Array.isArray(querySpaceId) ? querySpaceId[0] : querySpaceId
+    if (spaceIdNum) {
+      // 先在 store 中查找
+      const space = spaceStore.findSpaceById(spaceIdNum)
 
-    if (space) {
-      selectedSpaceId.value = spaceIdNum
-    } else {
-      // 如果空间不在列表中，尝试通过 API 获取该空间信息
-      // 这可能是用户加入的团队空间
-      try {
-        const spaceRes = await getSpaceVoByIdUsingGet({ id: spaceIdNum })
-        if (spaceRes.data.code === 0 && spaceRes.data.data) {
-          // 成功获取空间信息，说明用户有权限访问
-          // 将该空间添加到 store 中
-          spaceStore.addSpace(spaceRes.data.data)
-          spaceList.value = spaceStore.spaceList
+      if (space) {
+        selectedSpaceId.value = spaceIdNum
+      } else {
+        // 如果空间不在列表中，尝试通过 API 获取该空间信息
+        // 这可能是用户加入的团队空间
+        try {
+          const spaceRes = await getSpaceVoByIdUsingGet({ id: Number(spaceIdNum) })
+          if (spaceRes.data.code === 0 && spaceRes.data.data) {
+            // 成功获取空间信息，说明用户有权限访问
+            // 将该空间添加到 store 中
+            spaceStore.addSpace(spaceRes.data.data)
+            spaceList.value = spaceStore.spaceList
 
-          // 等待 Vue 重新渲染选项列表
-          await nextTick()
-          await nextTick()
+            // 等待 Vue 重新渲染选项列表
+            await nextTick()
+            await nextTick()
 
-          selectedSpaceId.value = spaceIdNum
-        } else {
-          // 无法获取空间信息，可能是权限不足或空间不存在
+            selectedSpaceId.value = spaceIdNum
+          } else {
+            // 无法获取空间信息，可能是权限不足或空间不存在
+            selectedSpaceId.value = null
+            message.warning('无法访问指定的空间，已切换到公共图库')
+          }
+        } catch {
+          // API 调用失败
           selectedSpaceId.value = null
           message.warning('无法访问指定的空间，已切换到公共图库')
         }
-      } catch {
-        // API 调用失败
-        selectedSpaceId.value = null
-        message.warning('无法访问指定的空间，已切换到公共图库')
       }
     }
   } else {

@@ -13,7 +13,7 @@ import { handleApiResponse, handleException } from '@/utils/errorHandler'
  * 图片搜索参数接口
  */
 export interface PictureSearchParams extends Omit<API.PictureQueryRequest, 'spaceId'> {
-  spaceId?: number
+  spaceId?: number | string
 }
 
 /**
@@ -59,7 +59,7 @@ export function usePictureSearch(spaceId?: number | string) {
 
       // 如果有 spaceId，添加到参数中
       if (spaceId !== undefined) {
-        params.spaceId = Number(spaceId)
+        params.spaceId = spaceId
       }
 
       const res = await listPictureVoByPageUsingPost(params as API.PictureQueryRequest)

@@ -63,10 +63,10 @@ export const useSpaceStore = defineStore('space', () => {
 
   /**
    * 根据 ID 查找空间
-   * @param id 空间 ID
+   * @param id 空间 ID（支持 number 或 string 类型）
    */
-  function findSpaceById(id: number) {
-    return spaceList.value.find(space => space.id === id)
+  function findSpaceById(id: number | string) {
+    return spaceList.value.find(space => String(space.id) === String(id))
   }
 
   return {

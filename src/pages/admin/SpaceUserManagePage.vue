@@ -93,7 +93,7 @@ const dataList = ref<API.SpaceUserVO[]>([])
 
 // 获取数据
 const fetchData = async () => {
-  const spaceId = Number(props.id)
+  const spaceId = props.id
   if (!spaceId) {
     return
   }
@@ -117,7 +117,7 @@ const formData = reactive<API.SpaceUserAddRequest>({})
 
 // 创建成员
 const handleSubmit = async () => {
-  const spaceId = Number(props.id)
+  const spaceId = props.id
   if (!spaceId) {
     return
   }

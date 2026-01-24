@@ -23,7 +23,7 @@ import { error } from '@/utils/logger'
 
 interface Props {
   picture?: API.PictureVO
-  spaceId?: number
+  spaceId?: number | string
   onSuccess?: (newPicture: API.PictureVO) => void
 }
 

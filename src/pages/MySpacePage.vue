@@ -25,7 +25,7 @@ const checkUserSpace = async () => {
   }
   // 如果用户已登录，会获取该用户已创建的空间
   const res = await listSpaceVoByPageUsingPost({
-    userId: loginUser.id,
+    userId: Number(loginUser.id),
     current: 1,
     pageSize: 1,
     spaceType: SPACE_TYPE_ENUM.PRIVATE,
