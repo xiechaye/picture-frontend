@@ -24,6 +24,10 @@ export function useImageGeneration() {
   const prompt = ref('')
   const spaceId = ref<number>()
 
+  // 可选参数
+  const size = ref<string>('')
+  const customNegativePrompt = ref<string>('')
+
   // 原始prompt（用于撤销优化）
   const originalPrompt = ref('')
 
@@ -48,10 +52,6 @@ export function useImageGeneration() {
     }
     if (prompt.value.length < 5) {
       message.warning('图片描述至少需要5个字符')
-      return false
-    }
-    if (!spaceId.value) {
-      message.warning('请选择空间')
       return false
     }
     return true
@@ -129,7 +129,8 @@ export function useImageGeneration() {
     try {
       const res = await generateImageUsingPost({
         prompt: prompt.value,
-        spaceId: spaceId.value!,
+        size: size.value || undefined,
+        negativePrompt: customNegativePrompt.value || negativePrompt.value || undefined,
       })
 
       if (handleApiResponse(res, { operation: '生成图片', showError: true })) {
@@ -161,6 +162,8 @@ export function useImageGeneration() {
     originalPrompt.value = ''
     spaceId.value = undefined
     generatedImage.value = undefined
+    size.value = ''
+    customNegativePrompt.value = ''
     recommendedSize.value = null
     negativePrompt.value = null
   }
@@ -175,6 +178,10 @@ export function useImageGeneration() {
     // 表单数据
     prompt,
     spaceId,
+
+    // 可选参数
+    size,
+    customNegativePrompt,
 
     // 状态
     optimizing,

@@ -10,43 +10,6 @@
           </h2>
 
           <a-form layout="vertical">
-            <!-- 空间选择 -->
-            <a-form-item label="保存至空间" required>
-              <a-select
-                v-model:value="spaceId"
-                placeholder="请选择空间"
-                :loading="spacesLoading"
-                :disabled="isProcessing"
-                show-search
-                :filter-option="filterSpaceOption"
-                size="large"
-              >
-                <a-select-option
-                  v-for="space in spaceList"
-                  :key="space.id"
-                  :value="space.id"
-                >
-                  {{ space.spaceName }}（{{ SPACE_TYPE_MAP[space.spaceType ?? 0] }}）
-                </a-select-option>
-              </a-select>
-
-              <!-- 空间为空时的提示 -->
-              <a-alert
-                v-if="!spacesLoading && spaceList.length === 0"
-                message="您还没有创建空间"
-                description="请先创建一个空间，用于保存生成的图片。"
-                type="warning"
-                show-icon
-                style="margin-top: 12px"
-              >
-                <template #action>
-                  <a-button size="small" type="primary" @click="goToCreateSpace">
-                    立即创建
-                  </a-button>
-                </template>
-              </a-alert>
-            </a-form-item>
-
             <!-- 图片描述 -->
             <a-form-item required>
               <template #label>
@@ -82,6 +45,85 @@
               </div>
             </a-form-item>
 
+            <!-- 高级选项（可折叠） -->
+            <a-collapse
+              v-model:activeKey="advancedOptionsVisible"
+              :bordered="false"
+              expand-icon-position="end"
+              class="advanced-options"
+            >
+              <a-collapse-panel key="1" header="高级选项">
+                <!-- 图片尺寸 -->
+                <a-form-item label="图片尺寸">
+                  <a-select
+                    v-model:value="size"
+                    placeholder="默认尺寸（1024x1024）"
+                    :disabled="isProcessing"
+                    allow-clear
+                  >
+                    <a-select-option value="1024,1024">1024 × 1024（正方形）</a-select-option>
+                    <a-select-option value="1024,768">1024 × 768（横向）</a-select-option>
+                    <a-select-option value="768,1024">768 × 1024（纵向）</a-select-option>
+                    <a-select-option value="1280,720">1280 × 720（宽屏）</a-select-option>
+                  </a-select>
+                  <a-typography-text v-if="recommendedSize" type="secondary" style="margin-top: 4px; display: block;">
+                    推荐尺寸：{{ recommendedSize }}
+                  </a-typography-text>
+                </a-form-item>
+
+                <!-- 负面提示词 -->
+                <a-form-item label="负面提示词" style="margin-bottom: 0">
+                  <a-textarea
+                    v-model:value="customNegativePrompt"
+                    placeholder="描述不希望出现的内容，例如：blurry, low quality, distorted..."
+                    :auto-size="{ minRows: 2, maxRows: 4 }"
+                    :disabled="isProcessing"
+                    allow-clear
+                  />
+                  <a-typography-text v-if="negativePrompt && !customNegativePrompt" type="secondary" style="margin-top: 4px; display: block;">
+                    推荐：{{ negativePrompt }}
+                  </a-typography-text>
+                </a-form-item>
+              </a-collapse-panel>
+            </a-collapse>
+
+            <!-- 空间选择（保存时使用） -->
+            <a-form-item label="保存至空间">
+              <a-select
+                v-model:value="spaceId"
+                placeholder="请选择空间（保存时需要）"
+                :loading="spacesLoading"
+                :disabled="isProcessing"
+                show-search
+                :filter-option="filterSpaceOption"
+                size="large"
+              >
+                <a-select-option
+                  v-for="space in spaceList"
+                  :key="space.id"
+                  :value="space.id"
+                >
+                  {{ space.spaceName }}（{{ SPACE_TYPE_MAP[space.spaceType ?? 0] }}）
+                </a-select-option>
+              </a-select>
+
+              <!-- 空间为空时的提示 -->
+              <a-alert
+                v-if="!spacesLoading && spaceList.length === 0"
+                message="您还没有创建空间"
+                description="请先创建一个空间，用于保存生成的图片。"
+                type="warning"
+                show-icon
+                style="margin-top: 12px"
+              >
+                <template #action>
+                  <a-button size="small" type="primary" @click="goToCreateSpace">
+                    立即创建
+                  </a-button>
+                </template>
+              </a-alert>
+            </a-form-item>
+
             <!-- 按钮组 -->
             <a-form-item style="margin-bottom: 0">
               <a-space direction="vertical" style="width: 100%" :size="12">
@@ -109,7 +151,7 @@
                   block
                   size="large"
                   :loading="generating"
-                  :disabled="optimizing || !prompt || !spaceId"
+                  :disabled="optimizing || !prompt"
                   @click="generateImage"
                 >
                   <PictureOutlined />
@@ -214,11 +256,15 @@ const router = useRouter()
 const {
   prompt,
   spaceId,
+  size,
+  customNegativePrompt,
   optimizing,
   generating,
   isProcessing,
   canUndo,
   generatedImage,
+  recommendedSize,
+  negativePrompt,
   optimizePrompt,
   undoOptimize,
   generateImage,
@@ -229,6 +275,9 @@ const {
 const spaceList = ref<API.SpaceVO[]>([])
 const spacesLoading = ref(false)
 const uploading = ref(false)
+
+// 高级选项折叠面板状态
+const advancedOptionsVisible = ref<string[]>([])
 
 /**
  * 加载空间列表
@@ -420,6 +469,36 @@ onMounted(() => {
   background: #059669;
   border-color: #059669;
   color: white;
+}
+
+.advanced-options {
+  margin-bottom: 16px;
+  background: transparent;
+}
+
+.advanced-options :deep(.ant-collapse-item) {
+  border: none;
+  background: #f9fafb;
+  border-radius: 12px;
+  margin-bottom: 0;
+}
+
+.advanced-options :deep(.ant-collapse-header) {
+  padding: 12px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #6b7280;
+  border-radius: 12px;
+}
+
+.advanced-options :deep(.ant-collapse-content) {
+  border-top: 1px solid #e5e7eb;
+  background: #f9fafb;
+  border-radius: 0 0 12px 12px;
+}
+
+.advanced-options :deep(.ant-collapse-content-box) {
+  padding: 16px;
 }
 
 .canvas-area {

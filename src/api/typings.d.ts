@@ -741,7 +741,8 @@ declare namespace API {
 
   type GenerateImageRequest = {
     prompt: string
-    spaceId: number
+    size?: string
+    negativePrompt?: string
   }
 
   type ImageGenerationResponse = {
@@ -749,7 +750,6 @@ declare namespace API {
     cosKey: string
     optimizedPrompt: string
     totalTime: number
-    spaceId: number
   }
 
   type OptimizePromptRequest = {
