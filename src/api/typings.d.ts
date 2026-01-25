@@ -782,6 +782,48 @@ declare namespace API {
     prompt: string
   }
 
+  type SamplePrompt = {
+    id: number
+    title: string
+    prompt: string
+    category: string
+    createTime: string
+    updateTime: string
+    isDelete: number
+  }
+
+  type SamplePromptAddRequest = {
+    title: string
+    prompt: string
+    category: string
+  }
+
+  type SamplePromptUpdateRequest = {
+    id: number
+    title?: string
+    prompt?: string
+    category?: string
+  }
+
+  type SamplePromptQueryRequest = {
+    current: number
+    pageSize: number
+    sortField?: string
+    sortOrder?: string
+    id?: number
+    title?: string
+    prompt?: string
+    category?: string
+  }
+
+  type Page<T> = {
+    records: T[]
+    total: number
+    size: number
+    current: number
+    pages: number
+  }
+
   type BaseResponse<T> = {
     code: number
     data: T

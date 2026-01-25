@@ -15,6 +15,7 @@ import SearchPicturePage from '@/pages/SearchPicturePage.vue'
 import SpaceAnalyzePage from '@/pages/SpaceAnalyzePage.vue'
 import SpaceUserManagePage from '@/pages/admin/SpaceUserManagePage.vue'
 import UserExchangeVipPage from '@/pages/UserExchangeVipPage.vue'
+import PromptManagePage from '@/pages/admin/PromptManagePage.vue'
 
 // @author chaye
 const router = createRouter({
@@ -54,6 +55,11 @@ const router = createRouter({
       path: '/admin/spaceManage',
       name: '空间管理',
       component: SpaceManagePage,
+    },
+    {
+      path: '/admin/promptManage',
+      name: '提示词管理',
+      component: PromptManagePage,
     },
     {
       path: '/spaceUserManage/:id',
