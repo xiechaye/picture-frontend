@@ -154,9 +154,15 @@ const handleSubmit = async () => {
   }
   if (res.data.code === 0 && res.data.data) {
     message.success('操作成功')
-    router.push({
-      path: `/space/${res.data.data}`,
-    })
+    if (spaceId) {
+      // 修改模式：跳转到空间管理页面
+      router.push('/admin/spaceManage')
+    } else {
+      // 创建模式：跳转到空间详情页面
+      router.push({
+        path: `/space/${res.data.data}`,
+      })
+    }
   } else {
     message.error('操作失败，' + res.data.message)
   }
