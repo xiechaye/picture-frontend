@@ -46,7 +46,9 @@
                     :loading="loadingPrompts"
                     @click="fetchRandomPrompts"
                   >
-                    换一批
+                    <template #icon>
+                      <ReloadOutlined />
+                    </template>
                   </a-button>
                 </div>
               </div>
@@ -208,6 +210,7 @@ import {
   PictureOutlined,
   DownloadOutlined,
   CloudUploadOutlined,
+  ReloadOutlined,
 } from '@ant-design/icons-vue'
 import { useImageGeneration } from '@/composables/useImageGeneration'
 import { uploadPictureByUrlUsingPost } from '@/api/pictureController'
