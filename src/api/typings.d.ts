@@ -194,7 +194,7 @@ declare namespace API {
 
   type CreatePictureOutPaintingTaskRequest = {
     parameters?: Parameters
-    pictureId?: number | string
+    pictureId?: string
   }
 
   type DeleteRequest = {
@@ -459,7 +459,7 @@ declare namespace API {
   }
 
   type SearchPictureByPictureRequest = {
-    pictureId?: number | string
+    pictureId?: string
   }
 
   type Space = {

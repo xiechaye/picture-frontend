@@ -62,7 +62,7 @@ const createTask = async () => {
     return
   }
   const res = await createPictureOutPaintingTaskUsingPost({
-    pictureId: Number(props.picture.id),
+    pictureId: props.picture.id as string,
     // 根据需要设置扩图参数
     parameters: {
       xScale: 2,

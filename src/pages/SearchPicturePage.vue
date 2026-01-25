@@ -57,10 +57,9 @@ const pictureId = computed(() => {
   if (!id) {
     return undefined
   }
-  // 处理可能的数组情况
+  // 处理可能的数组情况，直接返回 string 类型
   const idValue = Array.isArray(id) ? id[0] : id
-  const numId = Number(idValue)
-  return !isNaN(numId) && numId > 0 ? numId : undefined
+  return idValue ?? undefined
 })
 const picture = ref<API.PictureVO>({})
 
@@ -97,7 +96,7 @@ const fetchResultData = async () => {
   loading.value = true;
   try {
     const res = await searchPictureByPictureUsingPost({
-      pictureId: pictureId.value,
+      pictureId: pictureId.value as string,
     })
     if (res.data.code === 0 && res.data.data) {
       dataList.value = res.data.data ?? []
