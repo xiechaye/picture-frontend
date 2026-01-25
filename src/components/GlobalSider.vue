@@ -1,5 +1,5 @@
 <template>
-  <div id="globalSider" v-if="loginUserStore.loginUser.id">
+  <div id="globalSider" v-if="shouldShowSider">
     <div class="sider-container">
       <!-- 主菜单区域 -->
       <div class="menu-section">
@@ -61,7 +61,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, watchEffect } from 'vue'
+import { ref, watchEffect, computed } from 'vue'
 import {
   PictureOutlined,
   TeamOutlined,
@@ -76,6 +76,15 @@ import { listMyTeamSpaceUsingPost } from '@/api/spaceUserController.ts'
 import { message } from 'ant-design-vue'
 
 const loginUserStore = useLoginUserStore()
+
+/**
+ * 判断是否应该显示侧边栏
+ * 已登录且不是 admin 角色时显示
+ */
+const shouldShowSider = computed(() => {
+  const { id, userRole } = loginUserStore.loginUser
+  return id && userRole !== 'admin'
+})
 
 // 固定的菜单列表
 const fixedMenuItems = [
@@ -115,10 +124,10 @@ const fetchTeamSpaceList = async () => {
 
 /**
  * 监听变量，改变时触发数据的重新加载
+ * 只有在显示侧边栏时才加载团队空间列表
  */
 watchEffect(() => {
-  // 登录才加载
-  if (loginUserStore.loginUser.id) {
+  if (shouldShowSider.value) {
     fetchTeamSpaceList()
   }
 })

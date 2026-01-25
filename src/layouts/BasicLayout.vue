@@ -6,7 +6,7 @@
       </a-layout-header>
       <a-layout class="main-layout">
         <GlobalSider />
-        <a-layout-content class="content">
+        <a-layout-content class="content" :class="{ 'content-admin': isAdminUser }">
           <router-view />
         </a-layout-content>
       </a-layout>
@@ -18,8 +18,20 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
 import GlobalHeader from '@/components/GlobalHeader.vue'
 import GlobalSider from '@/components/GlobalSider.vue'
+import { useLoginUserStore } from '@/stores/useLoginUserStore.ts'
+
+const loginUserStore = useLoginUserStore()
+
+/**
+ * 判断当前用户是否是 admin
+ */
+const isAdminUser = computed(() => {
+  const { userRole } = loginUserStore.loginUser
+  return userRole === 'admin'
+})
 </script>
 
 <style scoped>
@@ -44,6 +56,11 @@ import GlobalSider from '@/components/GlobalSider.vue'
   background: #f3f4f6;
   margin-bottom: 60px;
   min-height: calc(100vh - 64px - 60px);
+}
+
+/* admin 用户隐藏侧边栏时的布局调整 */
+#basicLayout .content.content-admin {
+  padding-left: 24px;
 }
 
 #basicLayout .footer {
