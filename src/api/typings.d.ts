@@ -783,7 +783,7 @@ declare namespace API {
   }
 
   type SamplePrompt = {
-    id: number | string
+    id: string
     title: string
     prompt: string
     category: string
@@ -799,7 +799,7 @@ declare namespace API {
   }
 
   type SamplePromptUpdateRequest = {
-    id: number
+    id: string
     title?: string
     prompt?: string
     category?: string
@@ -810,7 +810,7 @@ declare namespace API {
     pageSize: number
     sortField?: string
     sortOrder?: string
-    id?: number
+    id?: string
     title?: string
     prompt?: string
     category?: string
