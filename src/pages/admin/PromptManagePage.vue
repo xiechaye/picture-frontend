@@ -139,7 +139,7 @@ const submitting = ref(false)
 
 // 表单数据
 const formData = reactive<{
-  id?: number
+  id?: number | string
   title: string
   category: string
   prompt: string
@@ -222,7 +222,7 @@ const handleSubmit = async () => {
     if (isEdit.value && formData.id) {
       // 编辑
       const res = await updatePromptUsingPost({
-        id: formData.id,
+        id: formData.id as number | string,
         title: formData.title,
         category: formData.category,
         prompt: formData.prompt,

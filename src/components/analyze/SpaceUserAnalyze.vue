@@ -22,7 +22,7 @@ import { message } from 'ant-design-vue'
 interface Props {
   queryAll?: boolean
   queryPublic?: boolean
-  spaceId?: number
+  spaceId?: number | string
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -48,9 +48,9 @@ const timeDimensionOptions = [
   },
 ]
 // 用户选项
-const userId = ref<number>()
+const userId = ref<string | number>()
 const doSearch = (value: string) => {
-  userId.value = value ? Number(value) : undefined
+  userId.value = value
 }
 
 // 图表数据

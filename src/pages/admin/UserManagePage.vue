@@ -147,7 +147,7 @@ const doDelete = async (id: string) => {
     return
   }
   try {
-    const res = await deleteUserUsingPost({ id: Number(id) })
+    const res = await deleteUserUsingPost({ id })
     if (handleApiResponse(res, { operation: '删除用户' })) {
       message.success('删除成功')
       // 刷新数据

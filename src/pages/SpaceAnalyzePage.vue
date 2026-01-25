@@ -52,9 +52,15 @@ import { useLoginUserStore } from '@/stores/useLoginUserStore.ts'
 const route = useRoute()
 
 // 空间 id
-const spaceId = computed(() => {
+const spaceId = computed<string | number | undefined>(() => {
   const id = route.query?.spaceId
-  return id ? Number(id) : undefined
+  if (Array.isArray(id)) {
+    return id[0]
+  }
+  if (typeof id === 'string') {
+    return id
+  }
+  return undefined
 })
 
 // 是否查询所有空间
