@@ -1,46 +1,49 @@
 <template>
-  <div id="userManagePage">
+  <AdminPageContainer title="用户管理" description="管理系统中的所有用户信息">
     <!-- 搜索表单 -->
-    <a-form layout="inline" :model="searchParams" @finish="doSearch">
-      <a-form-item label="账号">
-        <a-input v-model:value="searchParams.userAccount" placeholder="输入账号" allow-clear />
-      </a-form-item>
-      <a-form-item label="用户名">
-        <a-input v-model:value="searchParams.userName" placeholder="输入用户名" allow-clear />
-      </a-form-item>
-      <a-form-item>
-        <a-button type="primary" html-type="submit">搜索</a-button>
-      </a-form-item>
-    </a-form>
-    <div style="margin-bottom: 16px" />
+    <SearchForm
+      :form-items="searchFormItems"
+      :initial-values="searchParams"
+      @search="handleSearch"
+      @reset="handleReset"
+    />
+
     <!-- 表格 -->
     <a-table
       :columns="columns"
       :data-source="dataList"
       :pagination="pagination"
+      :loading="loading"
       @change="doTableChange"
+      row-key="id"
     >
       <template #bodyCell="{ column, record }">
         <template v-if="column.dataIndex === 'userAvatar'">
-          <a-image :src="record.userAvatar" :width="120" />
+          <a-avatar :src="record.userAvatar" :size="48" />
         </template>
         <template v-else-if="column.dataIndex === 'userRole'">
-          <div v-if="record.userRole === 'admin'">
-            <a-tag color="green">管理员</a-tag>
-          </div>
-          <div v-else>
-            <a-tag color="blue">普通用户</a-tag>
-          </div>
+          <a-tag v-if="record.userRole === 'admin'" color="green">管理员</a-tag>
+          <a-tag v-else color="blue">普通用户</a-tag>
         </template>
-        <template v-if="column.dataIndex === 'createTime'">
+        <template v-else-if="column.dataIndex === 'userProfile'">
+          <span class="text-ellipsis">{{ record.userProfile || '-' }}</span>
+        </template>
+        <template v-else-if="column.dataIndex === 'createTime'">
           {{ dayjs(record.createTime).format('YYYY-MM-DD HH:mm:ss') }}
         </template>
         <template v-else-if="column.key === 'action'">
-          <a-button danger @click="doDelete(record.id)">删除</a-button>
+          <a-popconfirm
+            title="确定要删除该用户吗？"
+            ok-text="确定"
+            cancel-text="取消"
+            @confirm="doDelete(record.id)"
+          >
+            <a-button type="link" danger size="small">删除</a-button>
+          </a-popconfirm>
         </template>
       </template>
     </a-table>
-  </div>
+  </AdminPageContainer>
 </template>
 <script lang="ts" setup>
 import { computed, onMounted, reactive, ref } from 'vue'
@@ -48,45 +51,74 @@ import { deleteUserUsingPost, listUserVoByPageUsingPost } from '@/api/userContro
 import { message } from 'ant-design-vue'
 import dayjs from 'dayjs'
 import { handleApiResponse, handleException } from '@/utils/errorHandler'
+import AdminPageContainer from '@/components/admin/AdminPageContainer.vue'
+import SearchForm from '@/components/admin/SearchForm.vue'
+
+// 搜索表单配置
+const searchFormItems = [
+  {
+    name: 'userAccount',
+    label: '账号',
+    type: 'input' as const,
+    placeholder: '输入账号'
+  },
+  {
+    name: 'userName',
+    label: '用户名',
+    type: 'input' as const,
+    placeholder: '输入用户名'
+  }
+]
 
 const columns = [
   {
-    title: 'id',
+    title: 'ID',
     dataIndex: 'id',
-  },
-  {
-    title: '账号',
-    dataIndex: 'userAccount',
-  },
-  {
-    title: '用户名',
-    dataIndex: 'userName',
+    width: 80,
   },
   {
     title: '头像',
     dataIndex: 'userAvatar',
+    width: 80,
+    align: 'center',
+  },
+  {
+    title: '账号',
+    dataIndex: 'userAccount',
+    width: 150,
+  },
+  {
+    title: '用户名',
+    dataIndex: 'userName',
+    width: 150,
   },
   {
     title: '简介',
     dataIndex: 'userProfile',
+    ellipsis: true,
   },
   {
     title: '用户角色',
     dataIndex: 'userRole',
+    width: 100,
   },
   {
     title: '创建时间',
     dataIndex: 'createTime',
+    width: 180,
   },
   {
     title: '操作',
     key: 'action',
+    width: 100,
+    fixed: 'right',
   },
 ]
 
 // 定义数据
 const dataList = ref<API.UserVO[]>([])
 const total = ref(0)
+const loading = ref(false)
 
 // 搜索条件
 const searchParams = reactive<API.UserQueryRequest>({
@@ -98,6 +130,7 @@ const searchParams = reactive<API.UserQueryRequest>({
 
 // 获取数据
 const fetchData = async () => {
+  loading.value = true
   try {
     const res = await listUserVoByPageUsingPost({
       ...searchParams,
@@ -108,6 +141,8 @@ const fetchData = async () => {
     }
   } catch (error) {
     handleException(error, { operation: '获取用户列表' })
+  } finally {
+    loading.value = false
   }
 }
 
@@ -135,8 +170,16 @@ const doTableChange = (page: { current: number; pageSize: number }) => {
 }
 
 // 搜索数据
-const doSearch = () => {
-  // 重置页码
+const handleSearch = (values: Record<string, any>) => {
+  Object.assign(searchParams, values)
+  searchParams.current = 1
+  fetchData()
+}
+
+// 重置搜索
+const handleReset = () => {
+  searchParams.userAccount = undefined
+  searchParams.userName = undefined
   searchParams.current = 1
   fetchData()
 }
@@ -158,3 +201,13 @@ const doDelete = async (id: string) => {
   }
 }
 </script>
+
+<style scoped>
+.text-ellipsis {
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: inline-block;
+}
+</style>

@@ -1,37 +1,24 @@
 <template>
-  <div id="promptManagePage">
-    <!-- 标题和新增按钮 -->
-    <a-flex justify="space-between" style="margin-bottom: 16px">
-      <h2>提示词管理</h2>
-      <a-button type="primary" @click="showAddModal">+ 新增提示词</a-button>
-    </a-flex>
+  <AdminPageContainer
+    title="提示词管理"
+    description="管理AI图片生成的提示词模板，支持创建、编辑和删除"
+  >
+    <template #extra>
+      <a-button type="primary" @click="showAddModal">
+        <template #icon>
+          <PlusOutlined />
+        </template>
+        新增提示词
+      </a-button>
+    </template>
 
     <!-- 搜索表单 -->
-    <a-form layout="inline" :model="searchParams" @finish="doSearch">
-      <a-form-item label="标题">
-        <a-input v-model:value="searchParams.title" placeholder="请输入标题" allow-clear />
-      </a-form-item>
-      <a-form-item label="分类">
-        <a-select
-          v-model:value="searchParams.category"
-          placeholder="请选择分类"
-          allow-clear
-          style="width: 150px"
-        >
-          <a-select-option v-for="cat in PROMPT_CATEGORIES" :key="cat" :value="cat">
-            {{ cat }}
-          </a-select-option>
-        </a-select>
-      </a-form-item>
-      <a-form-item label="提示词内容">
-        <a-input v-model:value="searchParams.prompt" placeholder="请输入提示词内容" allow-clear />
-      </a-form-item>
-      <a-form-item>
-        <a-button type="primary" html-type="submit">搜索</a-button>
-      </a-form-item>
-    </a-form>
-
-    <div style="margin-bottom: 16px" />
+    <SearchForm
+      :form-items="searchFormItems"
+      :initial-values="searchParams"
+      @search="handleSearch"
+      @reset="handleReset"
+    />
 
     <!-- 数据表格 -->
     <a-table
@@ -40,11 +27,17 @@
       :pagination="pagination"
       :loading="loading"
       @change="doTableChange"
+      row-key="id"
     >
       <template #bodyCell="{ column, record }">
-        <template v-if="column.key === 'prompt'">
+        <template v-if="column.dataIndex === 'category'">
+          <a-tag color="blue">{{ record.category }}</a-tag>
+        </template>
+        <template v-else-if="column.key === 'prompt'">
           <a-tooltip :title="record.prompt">
-            {{ record.prompt.substring(0, 50) }}{{ record.prompt.length > 50 ? '...' : '' }}
+            <span class="prompt-text">
+              {{ record.prompt.substring(0, 50) }}{{ record.prompt.length > 50 ? '...' : '' }}
+            </span>
           </a-tooltip>
         </template>
         <template v-else-if="column.key === 'createTime'">
@@ -52,48 +45,57 @@
         </template>
         <template v-else-if="column.key === 'action'">
           <a-space wrap>
-            <a-button type="link" @click="showEditModal(record)">编辑</a-button>
-            <a-popconfirm title="确定删除吗？" @confirm="doDelete(record.id)">
-              <a-button type="link" danger>删除</a-button>
+            <a-button type="link" size="small" @click="showEditModal(record)">编辑</a-button>
+            <a-popconfirm
+              title="确定要删除该提示词吗？"
+              ok-text="确定"
+              cancel-text="取消"
+              @confirm="doDelete(record.id)"
+            >
+              <a-button type="link" size="small" danger>删除</a-button>
             </a-popconfirm>
           </a-space>
         </template>
       </template>
     </a-table>
+  </AdminPageContainer>
 
-    <!-- 新增/编辑弹窗 -->
-    <a-modal
-      v-model:open="modalVisible"
-      :title="isEdit ? '编辑提示词' : '新增提示词'"
-      :confirm-loading="submitting"
-      @ok="handleSubmit"
-      @cancel="handleCancel"
-    >
-      <a-form :model="formData" layout="vertical">
-        <a-form-item label="标题" required>
-          <a-input
-            v-model:value="formData.title"
-            placeholder="请输入标题（最大128字符）"
-            :maxlength="128"
-          />
-        </a-form-item>
-        <a-form-item label="分类" required>
-          <a-select v-model:value="formData.category" placeholder="请选择分类">
-            <a-select-option v-for="cat in PROMPT_CATEGORIES" :key="cat" :value="cat">
-              {{ cat }}
-            </a-select-option>
-          </a-select>
-        </a-form-item>
-        <a-form-item label="提示词内容" required>
-          <a-textarea
-            v-model:value="formData.prompt"
-            placeholder="请输入提示词内容"
-            :auto-size="{ minRows: 4, maxRows: 8 }"
-          />
-        </a-form-item>
-      </a-form>
-    </a-modal>
-  </div>
+  <!-- 新增/编辑弹窗 -->
+  <a-modal
+    v-model:open="modalVisible"
+    :title="isEdit ? '编辑提示词' : '新增提示词'"
+    :confirm-loading="submitting"
+    @ok="handleSubmit"
+    @cancel="handleCancel"
+    width="600px"
+  >
+    <a-form :model="formData" layout="vertical">
+      <a-form-item label="标题" required>
+        <a-input
+          v-model:value="formData.title"
+          placeholder="请输入标题（最大128字符）"
+          :maxlength="128"
+          show-count
+        />
+      </a-form-item>
+      <a-form-item label="分类" required>
+        <a-select v-model:value="formData.category" placeholder="请选择分类" style="width: 100%">
+          <a-select-option v-for="cat in PROMPT_CATEGORIES" :key="cat" :value="cat">
+            {{ cat }}
+          </a-select-option>
+        </a-select>
+      </a-form-item>
+      <a-form-item label="提示词内容" required>
+        <a-textarea
+          v-model:value="formData.prompt"
+          placeholder="请输入提示词内容"
+          :auto-size="{ minRows: 4, maxRows: 8 }"
+          show-count
+          :maxlength="2000"
+        />
+      </a-form-item>
+    </a-form>
+  </a-modal>
 </template>
 
 <script setup lang="ts">
@@ -108,15 +110,41 @@ import {
 } from '@/api/promptController'
 import { PROMPT_CATEGORIES } from '@/constants/prompt'
 import { handleApiResponse, handleException } from '@/utils/errorHandler'
+import { PlusOutlined } from '@ant-design/icons-vue'
+import AdminPageContainer from '@/components/admin/AdminPageContainer.vue'
+import SearchForm from '@/components/admin/SearchForm.vue'
+
+// 搜索表单配置
+const searchFormItems = [
+  {
+    name: 'title',
+    label: '标题',
+    type: 'input' as const,
+    placeholder: '请输入标题'
+  },
+  {
+    name: 'category',
+    label: '分类',
+    type: 'select' as const,
+    placeholder: '请选择分类',
+    options: PROMPT_CATEGORIES.map((cat) => ({ label: cat, value: cat }))
+  },
+  {
+    name: 'prompt',
+    label: '提示词内容',
+    type: 'input' as const,
+    placeholder: '请输入提示词内容'
+  }
+]
 
 // 表格列定义
 const columns = [
   { title: 'ID', dataIndex: 'id', width: 80 },
   { title: '标题', dataIndex: 'title', width: 150 },
   { title: '分类', dataIndex: 'category', width: 120 },
-  { title: '提示词内容', key: 'prompt' },
+  { title: '提示词内容', key: 'prompt', ellipsis: true },
   { title: '创建时间', key: 'createTime', width: 180 },
-  { title: '操作', key: 'action', width: 150 },
+  { title: '操作', key: 'action', width: 150, fixed: 'right' },
 ]
 
 // 数据列表
@@ -168,7 +196,17 @@ const fetchData = async () => {
 }
 
 // 搜索
-const doSearch = () => {
+const handleSearch = (values: Record<string, any>) => {
+  Object.assign(searchParams, values)
+  searchParams.current = 1
+  fetchData()
+}
+
+// 重置搜索
+const handleReset = () => {
+  searchParams.title = undefined
+  searchParams.category = undefined
+  searchParams.prompt = undefined
   searchParams.current = 1
   fetchData()
 }
@@ -222,7 +260,7 @@ const handleSubmit = async () => {
     if (isEdit.value && formData.id) {
       // 编辑
       const res = await updatePromptUsingPost({
-        id: formData.id as number | string,
+        id: String(formData.id),
         title: formData.title,
         category: formData.category,
         prompt: formData.prompt,
@@ -283,7 +321,11 @@ onMounted(() => {
 </script>
 
 <style scoped>
-#promptManagePage {
-  padding: 20px;
+.prompt-text {
+  max-width: 400px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  display: inline-block;
 }
 </style>
