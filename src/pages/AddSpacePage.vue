@@ -36,7 +36,6 @@
             class="level-card"
             :class="{
               active: spaceForm.spaceLevel === level.value,
-              disabled: level.value !== 0,
             }"
             @click="selectLevel(level)"
           >
@@ -56,8 +55,7 @@
                 <span>{{ level.maxCount }} 张</span>
               </div>
             </div>
-            <div v-if="level.value !== 0" class="level-badge">敬请期待</div>
-            <div v-else class="level-badge free">免费</div>
+            <div v-if="level.value === 0" class="level-badge free">免费</div>
           </div>
         </div>
       </a-form-item>
@@ -75,12 +73,6 @@
         </a-button>
       </a-form-item>
     </a-form>
-
-    <!-- 提示信息 -->
-    <div class="tips">
-      <InfoCircleOutlined />
-      <span>目前仅支持开通普通版，如需升级空间，请联系管理员</span>
-    </div>
   </CenterContainer>
 </template>
 
@@ -105,7 +97,6 @@ import {
   RocketOutlined,
   DatabaseOutlined,
   PictureOutlined,
-  InfoCircleOutlined,
 } from '@ant-design/icons-vue'
 
 const space = ref<API.SpaceVO>()
@@ -130,11 +121,6 @@ const spaceLevelList = ref<API.SpaceLevel[]>([])
 
 // 选择套餐级别
 const selectLevel = (level: API.SpaceLevel) => {
-  // 目前只支持普通版
-  if (level.value !== 0) {
-    message.info('该套餐暂未开放，敬请期待')
-    return
-  }
   spaceForm.spaceLevel = level.value
 }
 
@@ -238,7 +224,7 @@ onMounted(() => {
   transition: all 200ms ease;
 }
 
-.level-card:hover:not(.disabled) {
+.level-card:hover {
   border-color: #059669;
   background: #f0fdf4;
 }
@@ -247,11 +233,6 @@ onMounted(() => {
   border-color: #059669;
   background: #f0fdf4;
   box-shadow: 0 0 0 4px rgba(5, 150, 105, 0.1);
-}
-
-.level-card.disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
 }
 
 .level-icon {
@@ -265,10 +246,6 @@ onMounted(() => {
   justify-content: center;
   font-size: 24px;
   color: white;
-}
-
-.level-card.disabled .level-icon {
-  background: linear-gradient(135deg, #9ca3af 0%, #6b7280 100%);
 }
 
 .level-name {
@@ -319,18 +296,6 @@ onMounted(() => {
 
 .submit-btn:hover {
   background: linear-gradient(135deg, #047857 0%, #059669 100%);
-}
-
-.tips {
-  margin-top: 24px;
-  padding: 12px 16px;
-  background: #f9fafb;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  color: #6b7280;
 }
 
 /* 响应式 */
