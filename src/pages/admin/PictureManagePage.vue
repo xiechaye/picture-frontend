@@ -72,7 +72,7 @@
         <template v-else-if="column.key === 'action'">
           <a-space wrap>
             <a-button
-              v-if="record.reviewStatus !== PIC_REVIEW_STATUS_ENUM.PASS"
+              v-if="record.reviewStatus === PIC_REVIEW_STATUS_ENUM.REVIEWING"
               type="link"
               size="small"
               @click="handleReview(record, PIC_REVIEW_STATUS_ENUM.PASS)"
@@ -80,7 +80,7 @@
               通过
             </a-button>
             <a-button
-              v-if="record.reviewStatus !== PIC_REVIEW_STATUS_ENUM.REJECT"
+              v-if="record.reviewStatus === PIC_REVIEW_STATUS_ENUM.REVIEWING"
               type="link"
               size="small"
               danger
