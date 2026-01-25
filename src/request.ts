@@ -14,26 +14,8 @@ const myAxios = axios.create({
 // 全局请求拦截器
 myAxios.interceptors.request.use(
   function (config) {
-    // 自动转换 ID 字段为 number 类型（后端要求）
-    if (config.data) {
-      // 转换 spaceId
-      if (config.data.spaceId && typeof config.data.spaceId === 'string') {
-        config.data.spaceId = Number(config.data.spaceId)
-      }
-      // 转换 id
-      if (config.data.id && typeof config.data.id === 'string') {
-        config.data.id = Number(config.data.id)
-      }
-    }
-    // 处理 URL 参数中的 ID
-    if (config.params) {
-      if (config.params.spaceId && typeof config.params.spaceId === 'string') {
-        config.params.spaceId = Number(config.params.spaceId)
-      }
-      if (config.params.id && typeof config.params.id === 'string') {
-        config.params.id = Number(config.params.id)
-      }
-    }
+    // 不转换 ID 字段，直接传递 string 类型（避免大数值精度丢失）
+    // 后端需要支持 string 类型的 ID
     return config
   },
   function (error) {

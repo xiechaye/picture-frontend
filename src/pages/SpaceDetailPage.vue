@@ -184,6 +184,7 @@ const getTagCategoryOptions = async () => {
 
 // 获取空间详情
 const fetchSpaceDetail = async () => {
+  console.log(props.id)
   try {
     const res = await getSpaceVoByIdUsingGet({
       id: props.id,
