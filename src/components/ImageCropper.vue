@@ -197,8 +197,8 @@ const initWebsocket = () => {
   if (websocket) {
     websocket.disconnect()
   }
-  // 创建 websocket 实例（确保 pictureId 是 number 类型）
-  websocket = new PictureEditWebSocket(Number(pictureId))
+  // 创建 websocket 实例
+  websocket = new PictureEditWebSocket(pictureId as string)
   // 建立连接
   websocket.connect()
 

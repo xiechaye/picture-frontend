@@ -24,7 +24,7 @@ interface WebSocketConfig {
 }
 
 export default class PictureEditWebSocket {
-  private pictureId: number
+  private pictureId: string
   private socket: WebSocket | null
   private eventHandlers: Map<string, Array<(data?: unknown) => void>>
   private status: WebSocketStatus
@@ -34,7 +34,7 @@ export default class PictureEditWebSocket {
   private config: Required<WebSocketConfig>
   private manualClose: boolean // 是否手动关闭
 
-  constructor(pictureId: number, config: WebSocketConfig = {}) {
+  constructor(pictureId: string, config: WebSocketConfig = {}) {
     this.pictureId = pictureId
     this.socket = null
     this.eventHandlers = new Map()
