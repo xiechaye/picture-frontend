@@ -34,13 +34,20 @@
                 <a-typography-text type="secondary">示例：</a-typography-text>
                 <div class="example-tags">
                   <a-tag
-                    v-for="(example, index) in PROMPT_EXAMPLES"
+                    v-for="(example, index) in samplePrompts"
                     :key="index"
                     class="example-tag"
-                    @click="prompt = example"
+                    @click="prompt = example.prompt"
                   >
-                    {{ example }}
+                    {{ example.title }}
                   </a-tag>
+                  <a-button
+                    size="small"
+                    :loading="loadingPrompts"
+                    @click="fetchRandomPrompts"
+                  >
+                    换一批
+                  </a-button>
                 </div>
               </div>
             </a-form-item>
@@ -204,8 +211,8 @@ import {
 } from '@ant-design/icons-vue'
 import { useImageGeneration } from '@/composables/useImageGeneration'
 import { uploadPictureByUrlUsingPost } from '@/api/pictureController'
+import { getRandomPromptsUsingGet } from '@/api/promptController'
 import { handleApiResponse, handleException } from '@/utils/errorHandler'
-import { PROMPT_EXAMPLES } from '@/constants/imageGeneration'
 import { SPACE_TYPE_MAP } from '@/constants/space'
 import { useRouter } from 'vue-router'
 import { debug } from '@/utils/logger'
@@ -242,6 +249,10 @@ const spaceList = ref<API.SpaceVO[]>([])
 const spacesLoading = ref(false)
 const uploading = ref(false)
 
+// 示例提示词
+const samplePrompts = ref<API.SamplePromptVO[]>([])
+const loadingPrompts = ref(false)
+
 // 高级选项折叠面板状态
 const advancedOptionsVisible = ref<string[]>([])
 
@@ -269,6 +280,25 @@ const loadSpaces = async () => {
     handleException(err, { operation: '加载空间列表' })
   } finally {
     spacesLoading.value = false
+  }
+}
+
+/**
+ * 获取随机提示词
+ */
+const fetchRandomPrompts = async () => {
+  loadingPrompts.value = true
+  try {
+    const res = await getRandomPromptsUsingGet({ count: 4 })
+    if (res.data.code === 0 && res.data.data) {
+      samplePrompts.value = res.data.data
+    } else {
+      message.error('获取示例提示词失败')
+    }
+  } catch (e) {
+    message.error('获取示例提示词失败')
+  } finally {
+    loadingPrompts.value = false
   }
 }
 
@@ -358,6 +388,7 @@ const saveToSpace = async () => {
 
 onMounted(() => {
   loadSpaces()
+  fetchRandomPrompts()
 })
 </script>
 

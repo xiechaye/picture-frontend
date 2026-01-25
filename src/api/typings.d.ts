@@ -776,4 +776,15 @@ declare namespace API {
     data?: OptimizePromptResponse
     message?: string
   }
+
+  type SamplePromptVO = {
+    title: string
+    prompt: string
+  }
+
+  type BaseResponse<T> = {
+    code: number
+    data: T
+    message: string
+  }
 }
