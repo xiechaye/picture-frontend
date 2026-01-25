@@ -57,14 +57,14 @@
                 <a-form-item label="图片尺寸">
                   <a-select
                     v-model:value="size"
-                    placeholder="默认尺寸（1024x1024）"
+                    placeholder="默认尺寸（1024*1024）"
                     :disabled="isProcessing"
                     allow-clear
                   >
-                    <a-select-option value="1024,1024">1024 × 1024（正方形）</a-select-option>
-                    <a-select-option value="1024,768">1024 × 768（横向）</a-select-option>
-                    <a-select-option value="768,1024">768 × 1024（纵向）</a-select-option>
-                    <a-select-option value="1280,720">1280 × 720（宽屏）</a-select-option>
+                    <a-select-option value="1024*1024">1024 × 1024（正方形）</a-select-option>
+                    <a-select-option value="720*1280">720 × 1280（纵向）</a-select-option>
+                    <a-select-option value="1280*720">1280 × 720（宽屏）</a-select-option>
+                    <a-select-option value="768*1152">768 × 1152（纵向）</a-select-option>
                   </a-select>
                   <a-typography-text v-if="recommendedSize" type="secondary" style="margin-top: 4px; display: block;">
                     推荐尺寸：{{ recommendedSize }}
