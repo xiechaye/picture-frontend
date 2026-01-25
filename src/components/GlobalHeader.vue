@@ -96,6 +96,11 @@ const originItems = [
     title: '空间管理',
   },
   {
+    key: '/admin/promptManage',
+    label: '提示词管理',
+    title: '提示词管理',
+  },
+  {
     key: 'others',
     label: h('a', { href: 'https://github.com/xiechaye', target: '_blank' }, '茶叶'),
     title: '茶叶',
