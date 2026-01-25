@@ -18,14 +18,13 @@ const loginUserStore = useLoginUserStore()
 // 检查用户是否有个人空间
 const checkUserSpace = async () => {
   // 用户未登录，则直接跳转到登录页面
-  const loginUser = loginUserStore.loginUser
-  if (!loginUser?.id) {
+  if (!loginUserStore.loginUser?.id) {
     router.replace('/user/login')
     return
   }
   // 如果用户已登录，会获取该用户已创建的空间
   const res = await listSpaceVoByPageUsingPost({
-    userId: Number(loginUser.id),
+    userId: loginUserStore.loginUser.id ? Number(loginUserStore.loginUser.id) : undefined,
     current: 1,
     pageSize: 1,
     spaceType: SPACE_TYPE_ENUM.PRIVATE,

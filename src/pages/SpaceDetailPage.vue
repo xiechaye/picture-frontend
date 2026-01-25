@@ -184,7 +184,6 @@ const getTagCategoryOptions = async () => {
 
 // 获取空间详情
 const fetchSpaceDetail = async () => {
-  console.log('fetchSpaceDetail 被调用，props.id:', props.id, '类型:', typeof props.id)
   if (!props.id) {
     message.error('空间 ID 为空，无法获取空间详情')
     return
