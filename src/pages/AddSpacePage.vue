@@ -112,9 +112,12 @@ const router = useRouter()
 const spaceType = computed(() => {
   if (route.query?.type) {
     return Number(route.query.type)
-  } else {
-    return SPACE_TYPE_ENUM.PRIVATE
   }
+  // 编辑模式：从原有空间数据获取类型
+  if (space.value?.spaceType !== undefined) {
+    return space.value.spaceType
+  }
+  return SPACE_TYPE_ENUM.PRIVATE
 })
 
 const spaceLevelList = ref<API.SpaceLevel[]>([])
