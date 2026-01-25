@@ -517,7 +517,7 @@ declare namespace API {
     spaceLevel?: number
     spaceName?: string
     spaceType?: number
-    userId?: number
+    userId?: number | string
   }
 
   type SpaceRankAnalyzeRequest = {

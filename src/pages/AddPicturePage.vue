@@ -236,7 +236,7 @@ const loadSpaces = async () => {
         // 如果空间不在列表中，尝试通过 API 获取该空间信息
         // 这可能是用户加入的团队空间
         try {
-          const spaceRes = await getSpaceVoByIdUsingGet({ id: Number(spaceIdNum) })
+          const spaceRes = await getSpaceVoByIdUsingGet({ id: spaceIdNum })
           if (spaceRes.data.code === 0 && spaceRes.data.data) {
             // 成功获取空间信息，说明用户有权限访问
             // 将该空间添加到 store 中
@@ -282,16 +282,20 @@ const getOldPicture = async () => {
   // 获取到 id
   const id = route.query?.id
   if (id) {
-    const res = await getPictureVoByIdUsingGet({
-      id: Number(id),
-    })
-    if (res.data.code === 0 && res.data.data) {
-      const data = res.data.data
-      picture.value = data
-      pictureForm.name = data.name
-      pictureForm.introduction = data.introduction
-      pictureForm.category = data.category
-      pictureForm.tags = data.tags
+    // 处理 LocationQueryValue 类型
+    const pictureId = Array.isArray(id) ? id[0] : id
+    if (pictureId) {
+      const res = await getPictureVoByIdUsingGet({
+        id: pictureId,
+      })
+      if (res.data.code === 0 && res.data.data) {
+        const data = res.data.data
+        picture.value = data
+        pictureForm.name = data.name
+        pictureForm.introduction = data.introduction
+        pictureForm.category = data.category
+        pictureForm.tags = data.tags
+      }
     }
   }
 }

@@ -152,7 +152,7 @@ const doDelete = async (id: string) => {
   if (!id) {
     return
   }
-  const res = await deleteSpaceUserUsingPost({ id: Number(id) })
+  const res = await deleteSpaceUserUsingPost({ id })
   if (res.data.code === 0) {
     message.success('删除成功')
     // 刷新数据
