@@ -87,43 +87,6 @@
               </a-collapse-panel>
             </a-collapse>
 
-            <!-- 空间选择（保存时使用） -->
-            <a-form-item label="保存至空间">
-              <a-select
-                v-model:value="spaceId"
-                placeholder="请选择空间（保存时需要）"
-                :loading="spacesLoading"
-                :disabled="isProcessing"
-                show-search
-                :filter-option="filterSpaceOption"
-                size="large"
-              >
-                <a-select-option
-                  v-for="space in spaceList"
-                  :key="space.id"
-                  :value="space.id"
-                >
-                  {{ space.spaceName }}（{{ SPACE_TYPE_MAP[space.spaceType ?? 0] }}）
-                </a-select-option>
-              </a-select>
-
-              <!-- 空间为空时的提示 -->
-              <a-alert
-                v-if="!spacesLoading && spaceList.length === 0"
-                message="您还没有创建空间"
-                description="请先创建一个空间，用于保存生成的图片。"
-                type="warning"
-                show-icon
-                style="margin-top: 12px"
-              >
-                <template #action>
-                  <a-button size="small" type="primary" @click="goToCreateSpace">
-                    立即创建
-                  </a-button>
-                </template>
-              </a-alert>
-            </a-form-item>
-
             <!-- 按钮组 -->
             <a-form-item style="margin-bottom: 0">
               <a-space direction="vertical" style="width: 100%" :size="12">
