@@ -61,7 +61,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, watchEffect, computed } from 'vue'
+import { ref, watchEffect, computed, watch } from 'vue'
 import {
   PictureOutlined,
   TeamOutlined,
@@ -116,8 +116,9 @@ const teamSpaceList = ref<API.SpaceUserVO[]>([])
 const fetchTeamSpaceList = async () => {
   try {
     const res = await listMyTeamSpaceUsingPost()
-    if (res.data.code === 0 && res.data.data) {
-      teamSpaceList.value = res.data.data
+    if (res.data.code === 0) {
+      // 确保即使返回 null/undefined 也更新为空数组，避免显示已删除的空间
+      teamSpaceList.value = res.data.data ?? []
       return res.data.data
     }
   } catch (e) {
@@ -136,6 +137,19 @@ watchEffect(() => {
     fetchTeamSpaceList()
   }
 })
+
+/**
+ * 监听路由路径变化，刷新团队空间列表
+ * 使用 watch 而非 router.afterEach 确保响应式更新正确触发
+ */
+watch(
+  () => route.path,
+  () => {
+    if (shouldShowSider.value) {
+      fetchTeamSpaceList()
+    }
+  }
+)
 
 const router = useRouter()
 // 当前要高亮的菜单项
