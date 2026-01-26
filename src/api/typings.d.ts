@@ -778,18 +778,21 @@ declare namespace API {
   }
 
   type SamplePromptVO = {
-    title: string
-    prompt: string
-  }
-
-  type SamplePrompt = {
-    id: string
+    id: number
     title: string
     prompt: string
     category: string
     createTime: string
     updateTime: string
-    isDelete: number
+  }
+
+  type SamplePrompt = {
+    id: number
+    title: string
+    prompt: string
+    category: string
+    createTime: string
+    updateTime: string
   }
 
   type SamplePromptAddRequest = {
