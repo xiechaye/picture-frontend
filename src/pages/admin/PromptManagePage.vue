@@ -79,11 +79,14 @@
         />
       </a-form-item>
       <a-form-item label="分类" required>
-        <a-select v-model:value="formData.category" placeholder="请选择分类" style="width: 100%">
-          <a-select-option v-for="cat in PROMPT_CATEGORIES" :key="cat" :value="cat">
-            {{ cat }}
-          </a-select-option>
-        </a-select>
+        <a-auto-complete
+          v-model:value="formData.category"
+          :options="categoryOptions.map((cat) => ({ value: cat }))"
+          placeholder="请选择或输入分类"
+          :loading="categoriesLoading"
+          allow-clear
+          style="width: 100%"
+        />
       </a-form-item>
       <a-form-item label="提示词内容" required>
         <a-textarea
@@ -107,15 +110,15 @@ import {
   addPromptUsingPost,
   updatePromptUsingPost,
   deletePromptUsingPost,
+  getPromptCategoriesUsingGet,
 } from '@/api/promptController'
-import { PROMPT_CATEGORIES } from '@/constants/prompt'
-import { handleApiResponse, handleException } from '@/utils/errorHandler'
+import { handleException } from '@/utils/errorHandler'
 import { PlusOutlined } from '@ant-design/icons-vue'
 import AdminPageContainer from '@/components/admin/AdminPageContainer.vue'
 import SearchForm from '@/components/admin/SearchForm.vue'
 
 // 搜索表单配置
-const searchFormItems = [
+const searchFormItems = computed(() => [
   {
     name: 'title',
     label: '标题',
@@ -127,7 +130,7 @@ const searchFormItems = [
     label: '分类',
     type: 'select' as const,
     placeholder: '请选择分类',
-    options: PROMPT_CATEGORIES.map((cat) => ({ label: cat, value: cat }))
+    options: categoryOptions.value.map((cat) => ({ label: cat, value: cat }))
   },
   {
     name: 'prompt',
@@ -135,7 +138,7 @@ const searchFormItems = [
     type: 'input' as const,
     placeholder: '请输入提示词内容'
   }
-]
+])
 
 // 表格列定义
 const columns = [
@@ -151,6 +154,25 @@ const columns = [
 const dataList = ref<API.SamplePrompt[]>([])
 const total = ref(0)
 const loading = ref(false)
+
+// 分类选项数据
+const categoryOptions = ref<string[]>([])
+const categoriesLoading = ref(false)
+
+// 获取分类列表
+const fetchCategories = async () => {
+  categoriesLoading.value = true
+  try {
+    const res = await getPromptCategoriesUsingGet()
+    if (res.data.code === 0) {
+      categoryOptions.value = res.data.data || []
+    }
+  } catch (e) {
+    handleException(e, { operation: '获取分类列表' })
+  } finally {
+    categoriesLoading.value = false
+  }
+}
 
 // 搜索参数
 const searchParams = reactive<API.SamplePromptQueryRequest>({
@@ -268,6 +290,10 @@ const handleSubmit = async () => {
       if (res.data.code === 0) {
         message.success('更新成功')
         modalVisible.value = false
+        // 如果是新分类，添加到缓存列表
+        if (formData.category && !categoryOptions.value.includes(formData.category)) {
+          categoryOptions.value.push(formData.category)
+        }
         fetchData()
       } else {
         message.error('更新失败：' + res.data.message)
@@ -282,6 +308,10 @@ const handleSubmit = async () => {
       if (res.data.code === 0) {
         message.success('新增成功')
         modalVisible.value = false
+        // 如果是新分类，添加到缓存列表
+        if (formData.category && !categoryOptions.value.includes(formData.category)) {
+          categoryOptions.value.push(formData.category)
+        }
         fetchData()
       } else {
         message.error('新增失败：' + res.data.message)
@@ -316,6 +346,7 @@ const doDelete = async (id: number) => {
 
 // 页面加载时获取数据
 onMounted(() => {
+  fetchCategories()
   fetchData()
 })
 </script>

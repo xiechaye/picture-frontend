@@ -1,6 +1,15 @@
 import request from '@/request'
 
 /**
+ * 获取提示词分类列表
+ */
+export async function getPromptCategoriesUsingGet() {
+  return request<API.BaseResponse<string[]>>('/api/prompt/category/list', {
+    method: 'GET',
+  })
+}
+
+/**
  * 获取随机提示词
  */
 export async function getRandomPromptsUsingGet(params: { count?: number }) {
