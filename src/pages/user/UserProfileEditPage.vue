@@ -33,6 +33,21 @@
       @finish="handleSubmit"
       class="profile-form"
     >
+      <a-form-item label="用户ID">
+        <a-input
+          v-model:value="editUser.id"
+          disabled
+          size="large"
+          class="form-input"
+        >
+          <template #addonAfter>
+            <a-button type="text" size="small" @click="copyUserId">
+              <CopyOutlined />
+            </a-button>
+          </template>
+        </a-input>
+      </a-form-item>
+
       <a-form-item label="账号">
         <a-input
           v-model:value="userAccount"
@@ -85,7 +100,7 @@ import { onMounted, ref } from 'vue'
 import { getLoginUserUsingGet, updateUserUsingPost } from '@/api/userController'
 import { uploadAvatarUsingPost } from '@/api/fileController'
 import { message } from 'ant-design-vue'
-import { LoadingOutlined, UserOutlined, CameraOutlined } from '@ant-design/icons-vue'
+import { LoadingOutlined, UserOutlined, CameraOutlined, CopyOutlined } from '@ant-design/icons-vue'
 import { useLoginUserStore } from '@/stores/useLoginUserStore'
 import CenterContainer from '@/components/CenterContainer.vue'
 
@@ -119,6 +134,13 @@ const loadData = async () => {
 onMounted(() => {
   loadData()
 })
+
+const copyUserId = async () => {
+  if (editUser.value.id) {
+    await navigator.clipboard.writeText(String(editUser.value.id))
+    message.success('用户ID已复制')
+  }
+}
 
 const beforeUpload = (file: File) => {
   const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png'
