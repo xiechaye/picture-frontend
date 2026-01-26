@@ -61,7 +61,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, watchEffect, computed, watch } from 'vue'
+import { ref, watchEffect, computed } from 'vue'
 import {
   PictureOutlined,
   TeamOutlined,
@@ -73,7 +73,6 @@ import { useRouter, useRoute } from 'vue-router'
 import { useLoginUserStore } from '@/stores/useLoginUserStore.ts'
 import { SPACE_TYPE_ENUM } from '@/constants/space.ts'
 import { listMyTeamSpaceUsingPost } from '@/api/spaceUserController.ts'
-import { message } from 'ant-design-vue'
 
 const loginUserStore = useLoginUserStore()
 const route = useRoute()
@@ -115,12 +114,17 @@ const teamSpaceList = ref<API.SpaceUserVO[]>([])
 
 // 加载团队空间列表
 const fetchTeamSpaceList = async () => {
-  const res = await listMyTeamSpaceUsingPost()
-  if (res.data.code === 0 && res.data.data) {
-    teamSpaceList.value = res.data.data
-  } else {
-    message.error('加载我的团队空间失败，' + res.data.message)
+  try {
+    const res = await listMyTeamSpaceUsingPost()
+    if (res.data.code === 0 && res.data.data) {
+      teamSpaceList.value = res.data.data
+      return res.data.data
+    }
+  } catch (e) {
+    // 静默处理错误，避免频繁提示
+    console.error('加载团队空间列表失败', e)
   }
+  return null
 }
 
 /**
@@ -133,39 +137,28 @@ watchEffect(() => {
   }
 })
 
-// 监听路由变化，刷新团队空间列表
-watch(
-  () => route.path,
-  () => {
-    if (shouldShowSider.value) {
-      fetchTeamSpaceList()
-    }
-  }
-)
-
 const router = useRouter()
 // 当前要高亮的菜单项
 const current = ref<string[]>([])
-// 监听路由变化，更新高亮菜单项
-router.afterEach((to) => {
-  const path = to.path
-  // 检查是否是创建空间页面
-  if (path === '/add_space') {
-    const type = to.query.type
-    if (String(type) === '1') {
-      // 创建团队空间，高亮"创建团队"菜单项
-      current.value = ['/add_space?type=' + SPACE_TYPE_ENUM.TEAM]
-    } else {
-      // 创建私有空间，高亮"我的空间"菜单项
-      current.value = ['/my_space']
-    }
-  } else if (path.startsWith('/space/')) {
-    // 检查是否是空间详情页
+
+// 更新菜单高亮状态（异步处理以解决时序问题）
+const updateCurrentHighlight = async (path: string) => {
+  if (path.startsWith('/space/')) {
     const spaceId = path.replace('/space/', '')
-    // 检查是否是团队空间
-    const isTeamSpace = teamSpaceList.value.some(
+
+    // 先用本地数据检查
+    let isTeamSpace = teamSpaceList.value.some(
       (item) => String(item.spaceId) === spaceId
     )
+
+    // 如果本地数据中找不到，刷新后再检查（解决新创建空间的时序问题）
+    if (!isTeamSpace && shouldShowSider.value) {
+      await fetchTeamSpaceList()
+      isTeamSpace = teamSpaceList.value.some(
+        (item) => String(item.spaceId) === spaceId
+      )
+    }
+
     if (isTeamSpace) {
       // 团队空间，高亮对应的团队空间项
       current.value = [path]
@@ -176,6 +169,27 @@ router.afterEach((to) => {
   } else {
     current.value = [path]
   }
+}
+
+// 监听路由变化，更新高亮菜单项
+router.afterEach((to) => {
+  const path = to.path
+
+  // 创建空间页面的特殊处理
+  if (path === '/add_space') {
+    const type = to.query.type
+    if (String(type) === '1') {
+      // 创建团队空间，高亮"创建团队"菜单项
+      current.value = ['/add_space?type=' + SPACE_TYPE_ENUM.TEAM]
+    } else {
+      // 创建私有空间，高亮"我的空间"菜单项
+      current.value = ['/my_space']
+    }
+    return
+  }
+
+  // 其他路由使用异步高亮更新
+  updateCurrentHighlight(path)
 })
 
 // 路由跳转事件
