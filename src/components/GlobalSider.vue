@@ -61,7 +61,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, watchEffect, computed } from 'vue'
+import { ref, watchEffect, computed, watch } from 'vue'
 import {
   PictureOutlined,
   TeamOutlined,
@@ -69,13 +69,14 @@ import {
   BulbOutlined,
   FolderOutlined,
 } from '@ant-design/icons-vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useLoginUserStore } from '@/stores/useLoginUserStore.ts'
 import { SPACE_TYPE_ENUM } from '@/constants/space.ts'
 import { listMyTeamSpaceUsingPost } from '@/api/spaceUserController.ts'
 import { message } from 'ant-design-vue'
 
 const loginUserStore = useLoginUserStore()
+const route = useRoute()
 
 /**
  * 判断是否应该显示侧边栏
@@ -131,6 +132,16 @@ watchEffect(() => {
     fetchTeamSpaceList()
   }
 })
+
+// 监听路由变化，刷新团队空间列表
+watch(
+  () => route.path,
+  () => {
+    if (shouldShowSider.value) {
+      fetchTeamSpaceList()
+    }
+  }
+)
 
 const router = useRouter()
 // 当前要高亮的菜单项
