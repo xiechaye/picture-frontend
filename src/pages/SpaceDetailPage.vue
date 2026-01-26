@@ -47,6 +47,18 @@
           <a-button v-if="canEditPicture" :icon="h(EditOutlined)" @click="doBatchEdit">
             批量编辑
           </a-button>
+          <a-popconfirm
+            v-if="canDeleteSpace"
+            title="确定要删除该空间吗？删除后空间内的所有图片将无法恢复。"
+            ok-text="确定删除"
+            cancel-text="取消"
+            ok-type="danger"
+            @confirm="doDeleteSpace"
+          >
+            <a-button type="primary" danger :icon="h(DeleteOutlined)">
+              删除空间
+            </a-button>
+          </a-popconfirm>
           <a-tooltip
             :title="`占用空间 ${formatSize(space.totalSize ?? 0)} / ${formatSize(space.maxSize ?? 0)}`"
           >
@@ -110,7 +122,8 @@
 
 <script setup lang="ts">
 import { computed, h, onMounted, ref, watch } from 'vue'
-import { getSpaceVoByIdUsingGet } from '@/api/spaceController.ts'
+import { useRouter } from 'vue-router'
+import { getSpaceVoByIdUsingGet, deleteSpaceUsingPost } from '@/api/spaceController.ts'
 import { message } from 'ant-design-vue'
 import {
   listPictureVoByPageUsingPost,
@@ -123,7 +136,7 @@ import PictureList from '@/components/PictureList.vue'
 import OmniSearchBar from '@/components/OmniSearchBar.vue'
 import SearchFilterDrawer, { type FilterValues } from '@/components/SearchFilterDrawer.vue'
 import BatchEditPictureModal from '@/components/BatchEditPictureModal.vue'
-import { BarChartOutlined, EditOutlined, TeamOutlined } from '@ant-design/icons-vue'
+import { BarChartOutlined, DeleteOutlined, EditOutlined, TeamOutlined } from '@ant-design/icons-vue'
 import { SPACE_LEVEL_MAP, SPACE_PERMISSION_ENUM, SPACE_TYPE_MAP } from '../constants/space.ts'
 
 interface Props {
@@ -132,6 +145,7 @@ interface Props {
 
 const props = defineProps<Props>()
 const space = ref<API.SpaceVO>({})
+const router = useRouter()
 
 // 通用权限检查函数
 function createPermissionChecker(permission: string) {
@@ -142,9 +156,28 @@ function createPermissionChecker(permission: string) {
 
 // 定义权限检查
 const canManageSpaceUser = createPermissionChecker(SPACE_PERMISSION_ENUM.SPACE_USER_MANAGE)
+const canDeleteSpace = createPermissionChecker(SPACE_PERMISSION_ENUM.SPACE_DELETE)
 const canUploadPicture = createPermissionChecker(SPACE_PERMISSION_ENUM.PICTURE_UPLOAD)
 const canEditPicture = createPermissionChecker(SPACE_PERMISSION_ENUM.PICTURE_EDIT)
 const canDeletePicture = createPermissionChecker(SPACE_PERMISSION_ENUM.PICTURE_DELETE)
+
+// 删除空间
+const doDeleteSpace = async () => {
+  if (!props.id) {
+    return
+  }
+  try {
+    const res = await deleteSpaceUsingPost({ id: props.id })
+    if (res.data.code === 0) {
+      message.success('删除成功')
+      router.push('/')
+    } else {
+      message.error('删除失败，' + res.data.message)
+    }
+  } catch (e) {
+    message.error('删除失败')
+  }
+}
 
 // 空间版本颜色
 const getSpaceLevelColor = (level: number) => {

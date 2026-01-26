@@ -69,6 +69,7 @@ export const SPACE_ROLE_OPTIONS = Object.keys(SPACE_ROLE_MAP).map((key) => {
  */
 export const SPACE_PERMISSION_ENUM = {
   SPACE_USER_MANAGE: "spaceUser:manage",
+  SPACE_DELETE: "space:delete",
   PICTURE_VIEW: "picture:view",
   PICTURE_UPLOAD: "picture:upload",
   PICTURE_EDIT: "picture:edit",
