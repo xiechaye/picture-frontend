@@ -137,7 +137,8 @@ import OmniSearchBar from '@/components/OmniSearchBar.vue'
 import SearchFilterDrawer, { type FilterValues } from '@/components/SearchFilterDrawer.vue'
 import BatchEditPictureModal from '@/components/BatchEditPictureModal.vue'
 import { BarChartOutlined, DeleteOutlined, EditOutlined, TeamOutlined } from '@ant-design/icons-vue'
-import { SPACE_LEVEL_MAP, SPACE_PERMISSION_ENUM, SPACE_TYPE_MAP } from '../constants/space.ts'
+import { SPACE_LEVEL_MAP, SPACE_PERMISSION_ENUM, SPACE_TYPE_ENUM, SPACE_TYPE_MAP } from '../constants/space.ts'
+import { useLoginUserStore } from '@/stores/useLoginUserStore.ts'
 
 interface Props {
   id: string
@@ -146,6 +147,7 @@ interface Props {
 const props = defineProps<Props>()
 const space = ref<API.SpaceVO>({})
 const router = useRouter()
+const loginUserStore = useLoginUserStore()
 
 // 通用权限检查函数
 function createPermissionChecker(permission: string) {
@@ -156,7 +158,12 @@ function createPermissionChecker(permission: string) {
 
 // 定义权限检查
 const canManageSpaceUser = createPermissionChecker(SPACE_PERMISSION_ENUM.SPACE_USER_MANAGE)
-const canDeleteSpace = createPermissionChecker(SPACE_PERMISSION_ENUM.SPACE_DELETE)
+// 判断是否为团队空间的创建者（只有创建者可以删除团队空间）
+const canDeleteSpace = computed(() => {
+  const isTeamSpace = space.value.spaceType === SPACE_TYPE_ENUM.TEAM
+  const isCreator = space.value.userId === loginUserStore.loginUser?.id
+  return isTeamSpace && isCreator
+})
 const canUploadPicture = createPermissionChecker(SPACE_PERMISSION_ENUM.PICTURE_UPLOAD)
 const canEditPicture = createPermissionChecker(SPACE_PERMISSION_ENUM.PICTURE_EDIT)
 const canDeletePicture = createPermissionChecker(SPACE_PERMISSION_ENUM.PICTURE_DELETE)
