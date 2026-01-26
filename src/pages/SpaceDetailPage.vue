@@ -9,7 +9,12 @@
     <template v-else>
       <!-- 空间信息 -->
       <a-flex justify="space-between">
-        <h2>{{ space.spaceName }}（{{ SPACE_TYPE_MAP[space.spaceType ?? 0] }}）</h2>
+        <h2>
+          {{ space.spaceName }}（{{ SPACE_TYPE_MAP[space.spaceType ?? 0] }}）
+          <a-tag :color="getSpaceLevelColor(space.spaceLevel ?? 0)" style="margin-left: 8px">
+            {{ SPACE_LEVEL_MAP[space.spaceLevel ?? 0] }}
+          </a-tag>
+        </h2>
         <a-space size="middle">
           <a-button
             v-if="canUploadPicture"
@@ -119,7 +124,7 @@ import OmniSearchBar from '@/components/OmniSearchBar.vue'
 import SearchFilterDrawer, { type FilterValues } from '@/components/SearchFilterDrawer.vue'
 import BatchEditPictureModal from '@/components/BatchEditPictureModal.vue'
 import { BarChartOutlined, EditOutlined, TeamOutlined } from '@ant-design/icons-vue'
-import { SPACE_PERMISSION_ENUM, SPACE_TYPE_MAP } from '../constants/space.ts'
+import { SPACE_LEVEL_MAP, SPACE_PERMISSION_ENUM, SPACE_TYPE_MAP } from '../constants/space.ts'
 
 interface Props {
   id: string
@@ -140,6 +145,16 @@ const canManageSpaceUser = createPermissionChecker(SPACE_PERMISSION_ENUM.SPACE_U
 const canUploadPicture = createPermissionChecker(SPACE_PERMISSION_ENUM.PICTURE_UPLOAD)
 const canEditPicture = createPermissionChecker(SPACE_PERMISSION_ENUM.PICTURE_EDIT)
 const canDeletePicture = createPermissionChecker(SPACE_PERMISSION_ENUM.PICTURE_DELETE)
+
+// 空间版本颜色
+const getSpaceLevelColor = (level: number) => {
+  const colorMap: Record<number, string> = {
+    0: 'default',
+    1: 'blue',
+    2: 'purple',
+  }
+  return colorMap[level] || 'default'
+}
 
 // -------- 搜索相关状态 --------
 const searchText = ref('')

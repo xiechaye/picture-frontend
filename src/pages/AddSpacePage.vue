@@ -36,8 +36,9 @@
             class="level-card"
             :class="{
               active: spaceForm.spaceLevel === level.value,
+              disabled: isLevelDisabled(level.value ?? 0),
             }"
-            @click="selectLevel(level)"
+            @click="!isLevelDisabled(level.value ?? 0) && selectLevel(level)"
           >
             <div class="level-icon">
               <RocketOutlined v-if="level.value === 2" />
@@ -56,6 +57,9 @@
               </div>
             </div>
             <div v-if="level.value === 0" class="level-badge free">免费</div>
+            <div v-if="isLevelDisabled(level.value ?? 0)" class="level-badge upgrade">
+              联系管理员升级
+            </div>
           </div>
         </div>
       </a-form-item>
@@ -119,6 +123,14 @@ const spaceType = computed(() => {
   }
   return SPACE_TYPE_ENUM.PRIVATE
 })
+
+// 是否为新增模式（非编辑模式）
+const isCreateMode = computed(() => !route.query?.id)
+
+// 判断套餐是否禁用（新增模式下禁用专业版和旗舰版）
+const isLevelDisabled = (levelValue: number) => {
+  return isCreateMode.value && levelValue > 0
+}
 
 const spaceLevelList = ref<API.SpaceLevel[]>([])
 
@@ -292,6 +304,21 @@ onMounted(() => {
 
 .level-badge.free {
   background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+}
+
+.level-badge.upgrade {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+}
+
+.level-card.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  background: #f5f5f5;
+}
+
+.level-card.disabled:hover {
+  border-color: #e5e7eb;
+  background: #f5f5f5;
 }
 
 .submit-btn {
