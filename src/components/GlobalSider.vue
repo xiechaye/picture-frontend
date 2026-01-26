@@ -143,21 +143,18 @@ const current = ref<string[]>([])
 
 // 更新菜单高亮状态（异步处理以解决时序问题）
 const updateCurrentHighlight = async (path: string) => {
+  // 每次路由变化都刷新团队空间列表（处理删除等操作后的数据同步）
+  if (shouldShowSider.value) {
+    await fetchTeamSpaceList()
+  }
+
   if (path.startsWith('/space/')) {
     const spaceId = path.replace('/space/', '')
 
-    // 先用本地数据检查
-    let isTeamSpace = teamSpaceList.value.some(
+    // 检查是否是团队空间（数据已在函数开始处刷新）
+    const isTeamSpace = teamSpaceList.value.some(
       (item) => String(item.spaceId) === spaceId
     )
-
-    // 如果本地数据中找不到，刷新后再检查（解决新创建空间的时序问题）
-    if (!isTeamSpace && shouldShowSider.value) {
-      await fetchTeamSpaceList()
-      isTeamSpace = teamSpaceList.value.some(
-        (item) => String(item.spaceId) === spaceId
-      )
-    }
 
     if (isTeamSpace) {
       // 团队空间，高亮对应的团队空间项
