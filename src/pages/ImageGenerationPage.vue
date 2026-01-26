@@ -276,8 +276,6 @@ const loadSpaces = async () => {
     if (spaceList.value.length > 0 && !spaceId.value) {
       spaceId.value = spaceList.value[0].id
       debug(`默认选中空间: ${spaceList.value[0].spaceName}`)
-    } else if (spaceList.value.length === 0) {
-      message.warning('您还没有创建空间，请先创建一个空间')
     }
   } catch (err) {
     handleException(err, { operation: '加载空间列表' })
@@ -346,6 +344,16 @@ const saveToSpace = async () => {
     return
   }
 
+  // 延迟加载空间列表
+  if (spaceList.value.length === 0) {
+    await loadSpaces()
+    // 如果加载后仍然没有空间，提示用户创建
+    if (spaceList.value.length === 0) {
+      message.warning('您还没有创建空间，请先创建一个空间')
+      return
+    }
+  }
+
   if (!spaceId.value) {
     message.warning('请先选择空间')
     return
@@ -390,7 +398,6 @@ const saveToSpace = async () => {
 }
 
 onMounted(() => {
-  loadSpaces()
   fetchRandomPrompts()
 })
 </script>
