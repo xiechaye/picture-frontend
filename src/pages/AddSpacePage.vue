@@ -217,7 +217,7 @@ onMounted(() => {
 }
 
 .title-icon {
-  color: #059669;
+  color: #2E7D32;
 }
 
 .space-form {
@@ -246,21 +246,21 @@ onMounted(() => {
 }
 
 .level-card:hover {
-  border-color: #059669;
+  border-color: #2E7D32;
   background: #f0fdf4;
 }
 
 .level-card.active {
-  border-color: #059669;
+  border-color: #2E7D32;
   background: #f0fdf4;
-  box-shadow: 0 0 0 4px rgba(5, 150, 105, 0.1);
+  box-shadow: 0 0 0 4px rgba(46, 125, 50, 0.1);
 }
 
 .level-icon {
   width: 48px;
   height: 48px;
   margin: 0 auto 12px;
-  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+  background: linear-gradient(135deg, #2E7D32 0%, #43A047 100%);
   border-radius: 12px;
   display: flex;
   align-items: center;
@@ -303,7 +303,7 @@ onMounted(() => {
 }
 
 .level-badge.free {
-  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+  background: linear-gradient(135deg, #2E7D32 0%, #43A047 100%);
 }
 
 .level-badge.upgrade {
@@ -322,7 +322,7 @@ onMounted(() => {
 }
 
 .submit-btn {
-  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+  background: linear-gradient(135deg, #2E7D32 0%, #43A047 100%);
   border: none;
   border-radius: 12px;
   height: 48px;
@@ -331,7 +331,7 @@ onMounted(() => {
 }
 
 .submit-btn:hover {
-  background: linear-gradient(135deg, #047857 0%, #059669 100%);
+  background: linear-gradient(135deg, #388E3C 0%, #2E7D32 100%);
 }
 
 /* 响应式 */

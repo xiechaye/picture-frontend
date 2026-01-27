@@ -32,12 +32,12 @@ withDefaults(defineProps<Props>(), {
 
 <style scoped>
 .gradient-button.gradient-bg {
-  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+  background: linear-gradient(135deg, #2E7D32 0%, #43A047 100%);
   border: none;
 }
 
 .gradient-button.gradient-bg:hover:not(:disabled) {
-  background: linear-gradient(135deg, #047857 0%, #059669 100%);
+  background: linear-gradient(135deg, #388E3C 0%, #2E7D32 100%);
 }
 
 .gradient-button.gradient-bg:disabled {

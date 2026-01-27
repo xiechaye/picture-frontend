@@ -47,13 +47,13 @@ const isAdminUser = computed(() => {
 }
 
 #basicLayout .main-layout {
-  background: #f3f4f6;
+  background: #FAFAF9;
 }
 
 #basicLayout .content {
   padding: 24px;
   padding-left: 104px; /* 侧边栏宽度64px + 左边距16px + 间距24px */
-  background: #f3f4f6;
+  background: #FAFAF9;
   margin-bottom: 60px;
   min-height: calc(100vh - 64px - 60px);
 }
@@ -76,13 +76,13 @@ const isAdminUser = computed(() => {
 }
 
 #basicLayout .footer a {
-  color: #059669;
+  color: #2E7D32;
   text-decoration: none;
   transition: color 200ms ease;
 }
 
 #basicLayout .footer a:hover {
-  color: #047857;
+  color: #1B5E20;
 }
 
 /* 响应式：移动端隐藏侧边栏时调整内容区 */

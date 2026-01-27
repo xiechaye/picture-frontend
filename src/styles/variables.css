@@ -1,0 +1,66 @@
+/**
+ * 茶叶云图库 - 配色方案
+ * 以茶绿色为主题，营造自然清新的茶叶意象
+ */
+
+:root {
+  /* ===== 品牌色 ===== */
+  --color-primary: #2E7D32;
+  --color-primary-hover: #388E3C;
+  --color-primary-active: #1B5E20;
+
+  --color-secondary: #43A047;
+  --color-secondary-hover: #4CAF50;
+
+  --color-accent: #66BB6A;
+  --color-accent-hover: #81C784;
+
+  --color-deep: #1B5E20;
+  --color-light: #C8E6C9;
+
+  /* ===== 文字色 ===== */
+  --color-text-primary: #1F2937;
+  --color-text-secondary: #6B7280;
+  --color-text-tertiary: #9CA3AF;
+  --color-text-white: #FFFFFF;
+
+  /* ===== 背景色 ===== */
+  --color-bg-primary: #FAFAF9;
+  --color-bg-secondary: #FFFFFF;
+  --color-bg-tertiary: #F1F8E9;
+  --color-bg-deep: #1B5E20;
+  --color-bg-overlay: rgba(27, 94, 32, 0.4);
+
+  /* ===== 边框与分割线 ===== */
+  --color-border-primary: #E0E0E0;
+  --color-border-secondary: #DCEEC8;
+  --color-divider: #F1F1F1;
+
+  /* ===== 渐变 ===== */
+  --gradient-primary: linear-gradient(135deg, #2E7D32 0%, #43A047 100%);
+  --gradient-hover: linear-gradient(135deg, #388E3C 0%, #4CAF50 100%);
+  --gradient-active: linear-gradient(135deg, #1B5E20 0%, #2E7D32 100%);
+  --gradient-bg-soft: linear-gradient(180deg, #FAFAF9 0%, #F1F8E9 100%);
+  --gradient-card-hover: linear-gradient(
+    135deg,
+    rgba(46, 125, 50, 0.05) 0%,
+    rgba(102, 187, 106, 0.05) 100%
+  );
+
+  /* ===== 玻璃态效果 ===== */
+  --glass-bg: rgba(255, 255, 255, 0.7);
+  --glass-border: rgba(255, 255, 255, 0.5);
+  --glass-shadow: 0 8px 32px 0 rgba(46, 125, 50, 0.1);
+
+  /* ===== 阴影 ===== */
+  --shadow-primary: 0 4px 12px rgba(46, 125, 50, 0.3);
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --shadow-card-hover: 0 8px 24px rgba(0, 0, 0, 0.12);
+
+  /* ===== 圆角 ===== */
+  --radius-sm: 4px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-full: 9999px;
+}

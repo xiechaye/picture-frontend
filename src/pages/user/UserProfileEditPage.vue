@@ -270,7 +270,7 @@ const handleSubmit = async () => {
 }
 
 .submit-btn {
-  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+  background: linear-gradient(135deg, #2E7D32 0%, #43A047 100%);
   border: none;
   border-radius: 12px;
   height: 48px;
@@ -279,6 +279,6 @@ const handleSubmit = async () => {
 }
 
 .submit-btn:hover {
-  background: linear-gradient(135deg, #047857 0%, #059669 100%);
+  background: linear-gradient(135deg, #388E3C 0%, #2E7D32 100%);
 }
 </style>

@@ -261,14 +261,14 @@ const doMenuClick = (key: string) => {
 }
 
 .menu-item:hover {
-  background: rgba(5, 150, 105, 0.1);
-  color: #059669;
+  background: rgba(46, 125, 50, 0.1);
+  color: #2E7D32;
 }
 
 .menu-item.active {
-  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+  background: linear-gradient(135deg, #2E7D32 0%, #43A047 100%);
   color: white;
-  box-shadow: 0 4px 12px rgba(5, 150, 105, 0.3);
+  box-shadow: 0 4px 12px rgba(46, 125, 50, 0.3);
 }
 
 .team-section {
@@ -302,7 +302,7 @@ const doMenuClick = (key: string) => {
 .team-avatar {
   font-size: 14px;
   font-weight: 600;
-  color: #059669;
+  color: #2E7D32;
 }
 
 .user-section {

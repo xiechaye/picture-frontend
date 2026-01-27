@@ -467,8 +467,8 @@ onMounted(() => {
 }
 
 .example-tag:hover {
-  background: #059669;
-  border-color: #059669;
+  background: #2E7D32;
+  border-color: #2E7D32;
   color: white;
 }
 

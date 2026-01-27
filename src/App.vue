@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <a-config-provider :locale="zhCN">
+    <a-config-provider :locale="zhCN" :theme="theme">
       <BasicLayout />
     </a-config-provider>
   </div>
@@ -13,16 +13,29 @@ import 'dayjs/locale/zh-cn';
 dayjs.locale('zh-cn');
 
 import BasicLayout from '@/layouts/BasicLayout.vue'
-// import { healthUsingGet } from '@/api/mainController.ts'
-// import {useLoginUserStore} from "@/stores/useLoginUserStore.ts";
 
-// 已经改为在权限校验文件中获取
-// const loginUserStore = useLoginUserStore()
-// loginUserStore.fetchLoginUser()
-
-// healthUsingGet().then((res) => {
-//   console.log(res)
-// })
+// 茶叶云图库 - 主题配置
+const theme = {
+  token: {
+    colorPrimary: '#2E7D32',
+    colorSuccess: '#43A047',
+    colorWarning: '#F9A825',
+    colorError: '#D32F2F',
+    colorInfo: '#1976D2',
+    colorText: '#1F2937',
+    colorTextSecondary: '#6B7280',
+    colorBorder: '#E0E0E0',
+    borderRadius: 8,
+  },
+  components: {
+    Button: {
+      primaryShadow: '0 4px 12px rgba(46, 125, 50, 0.3)',
+    },
+    Card: {
+      borderRadiusLG: 12,
+    },
+  },
+}
 </script>
 
 <style scoped></style>
