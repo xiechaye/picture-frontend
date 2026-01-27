@@ -124,7 +124,7 @@
       />
       <!-- 分页 -->
       <a-pagination
-        style="text-align: right"
+        style="text-align: right; margin-top: 16px"
         v-model:current="searchParams.current"
         v-model:pageSize="searchParams.pageSize"
         :total="total"
@@ -500,6 +500,20 @@ onUnmounted(() => {
 watch(
   () => props.id,
   () => {
+    // 重置筛选状态，避免跨空间状态污染
+    filterValues.value = {
+      category: undefined,
+      tags: [],
+      dateRange: null,
+      picWidth: undefined,
+      picHeight: undefined,
+      picFormat: undefined,
+      picColor: undefined,
+    }
+    // 重置搜索文本和AI模式
+    searchText.value = ''
+    isAiMode.value = false
+
     fetchSpaceDetail()
     fetchData()
   },
