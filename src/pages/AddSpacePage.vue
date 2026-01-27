@@ -188,7 +188,7 @@ const handleSubmit = async () => {
 const getOldSpace = async () => {
   const id = route.query?.id
   if (id) {
-    const idValue: string = Array.isArray(id) ? id[0] : (id as string)
+    const idValue: string = Array.isArray(id) ? (id[0] || '') : id
     const res = await getSpaceVoByIdUsingGet({ id: idValue })
     if (res.data.code === 0 && res.data.data) {
       const data = res.data.data

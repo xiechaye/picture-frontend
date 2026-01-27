@@ -55,7 +55,7 @@ const route = useRoute()
 const spaceId = computed<string | number | undefined>(() => {
   const id = route.query?.spaceId
   if (Array.isArray(id)) {
-    return id[0]
+    return id[0] || undefined
   }
   if (typeof id === 'string') {
     return id
