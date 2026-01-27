@@ -24,14 +24,6 @@ const theme: ThemeConfig = {
     colorBorder: '#E0E0E0',
     borderRadius: 8,
   },
-  components: {
-    Button: {
-      primaryShadow: '0 4px 12px rgba(46, 125, 50, 0.3)',
-    },
-    Card: {
-      borderRadiusLG: 12,
-    },
-  },
 }
 
 const app = createApp(App)
