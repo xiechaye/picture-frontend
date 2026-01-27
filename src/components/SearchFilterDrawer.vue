@@ -51,6 +51,33 @@
           allow-clear
         />
       </a-form-item>
+      <!-- 按颜色搜图 -->
+      <a-form-item v-if="showColorPicker" label="按颜色搜图">
+        <div class="color-picker-wrapper">
+          <ColorPicker
+            v-model:pureColor="localFilters.picColor"
+            format="hex"
+            shape="circle"
+            :disable-alpha="true"
+          />
+          <a-button
+            v-if="localFilters.picColor"
+            type="link"
+            size="small"
+            @click="clearColor"
+          >
+            清除颜色
+          </a-button>
+        </div>
+        <div v-if="localFilters.picColor" class="color-preview">
+          <span>已选颜色：</span>
+          <span
+            class="color-block"
+            :style="{ backgroundColor: localFilters.picColor }"
+          ></span>
+          <span>{{ localFilters.picColor }}</span>
+        </div>
+      </a-form-item>
     </a-form>
     <template #footer>
       <a-space>
@@ -64,6 +91,8 @@
 <script setup lang="ts">
 import { computed, reactive, ref, watch } from 'vue'
 import type { Dayjs } from 'dayjs'
+import { ColorPicker } from 'vue3-colorpicker'
+import 'vue3-colorpicker/style.css'
 
 export interface FilterValues {
   category?: string
@@ -80,6 +109,7 @@ interface Props {
   filters?: FilterValues
   categoryList?: string[]
   tagList?: string[]
+  showColorPicker?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -87,6 +117,7 @@ const props = withDefaults(defineProps<Props>(), {
   filters: () => ({}),
   categoryList: () => [],
   tagList: () => [],
+  showColorPicker: false,
 })
 
 const emit = defineEmits<{
@@ -104,6 +135,7 @@ const localFilters = reactive<FilterValues>({
   picWidth: undefined,
   picHeight: undefined,
   picFormat: undefined,
+  picColor: undefined,
 })
 
 // 计算分类选项
@@ -148,8 +180,14 @@ const handleReset = () => {
   localFilters.picWidth = undefined
   localFilters.picHeight = undefined
   localFilters.picFormat = undefined
+  localFilters.picColor = undefined
   emit('update:filters', { ...localFilters })
   emit('reset')
+}
+
+// 清除颜色选择
+const clearColor = () => {
+  localFilters.picColor = undefined
 }
 
 const handleApply = () => {
@@ -163,5 +201,28 @@ const handleApply = () => {
 :deep(.ant-drawer-footer) {
   display: flex;
   justify-content: flex-end;
+}
+
+.color-picker-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.color-preview {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  font-size: 13px;
+  color: #666;
+}
+
+.color-block {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  border: 1px solid #d9d9d9;
 }
 </style>

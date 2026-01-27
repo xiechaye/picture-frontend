@@ -17,7 +17,7 @@
 
     <!-- 分页 -->
     <a-pagination
-      v-if="!isAiMode"
+      v-if="!isAiMode && !filterValues.picColor"
       style="text-align: right; margin-top: 16px"
       v-model:current="searchParams.current"
       v-model:pageSize="searchParams.pageSize"
@@ -31,6 +31,7 @@
       v-model:filters="filterValues"
       :categoryList="categoryList"
       :tagList="tagList"
+      :showColorPicker="true"
       @apply="handleFilterApply"
       @reset="handleFilterReset"
     />
@@ -43,6 +44,7 @@ import {
   listPictureTagCategoryUsingGet,
   listPictureVoByPageUsingPost,
   searchPictureBySemantic,
+  searchPictureByColorUsingPost,
 } from '@/api/pictureController.ts'
 import { message } from 'ant-design-vue'
 import PictureList from '@/components/PictureList.vue'
@@ -64,6 +66,7 @@ const filterValues = ref<FilterValues>({
   picWidth: undefined,
   picHeight: undefined,
   picFormat: undefined,
+  picColor: undefined,
 })
 
 // 计算活跃筛选数量
@@ -75,6 +78,7 @@ const activeFilterCount = computed(() => {
   if (filterValues.value.picWidth) count++
   if (filterValues.value.picHeight) count++
   if (filterValues.value.picFormat) count++
+  if (filterValues.value.picColor) count++
   return count
 })
 
@@ -165,11 +169,29 @@ const onPageChange = (page: number, pageSize: number) => {
 // 搜索
 const doSearch = () => {
   searchParams.current = 1
-  if (isAiMode.value) {
+  // 如果有颜色筛选，使用颜色搜索
+  if (filterValues.value.picColor) {
+    fetchColorData()
+  } else if (isAiMode.value) {
     fetchSemanticData()
   } else {
     fetchData()
   }
+}
+
+// 按颜色搜索（公共图库不传spaceId）
+const fetchColorData = async () => {
+  loading.value = true
+  const res = await searchPictureByColorUsingPost({
+    picColor: filterValues.value.picColor,
+  })
+  if (res.data.code === 0 && res.data.data) {
+    dataList.value = res.data.data ?? []
+    total.value = res.data.data.length ?? 0
+  } else {
+    message.error('按颜色搜索失败，' + res.data.message)
+  }
+  loading.value = false
 }
 
 // 筛选应用
@@ -186,6 +208,7 @@ const handleFilterReset = () => {
     picWidth: undefined,
     picHeight: undefined,
     picFormat: undefined,
+    picColor: undefined,
   }
   doSearch()
 }
