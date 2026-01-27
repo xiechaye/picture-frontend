@@ -7,6 +7,20 @@
 
     <!-- 空间内容 - 只在数据加载完成后显示 -->
     <template v-else>
+      <!-- 选择模式工具栏 -->
+      <div v-if="isSelectionMode" class="selection-toolbar">
+        <a-button @click="exitSelectionMode">
+          <CloseOutlined /> 退出选择
+        </a-button>
+        <a-button @click="selectAll">
+          全选
+        </a-button>
+        <span class="selection-count">已选 {{ selectedCount }} 张</span>
+        <a-button type="primary" :disabled="selectedCount === 0" @click="openBatchEditModal">
+          批量编辑
+        </a-button>
+      </div>
+
       <!-- 空间信息 -->
       <a-flex justify="space-between">
         <h2>
@@ -44,8 +58,12 @@
           >
             空间分析
           </a-button>
-          <a-button v-if="canEditPicture" :icon="h(EditOutlined)" @click="doBatchEdit">
-            批量编辑
+          <a-button
+            v-if="canEditPicture && !isSelectionMode"
+            :icon="h(EditOutlined)"
+            @click="enterSelectionMode"
+          >
+            {{ batchEditButtonText }}
           </a-button>
           <a-popconfirm
             v-if="canDeleteSpace"
@@ -100,7 +118,9 @@
         :showOp="true"
         :canEdit="canEditPicture"
         :canDelete="canDeletePicture"
+        :isSelectionMode="isSelectionMode"
         :onReload="fetchData"
+        @selectionChange="handleSelectionChange"
       />
       <!-- 分页 -->
       <a-pagination
@@ -113,7 +133,7 @@
       <BatchEditPictureModal
         ref="batchEditPictureModalRef"
         :spaceId="id"
-        :pictureList="dataList"
+        :pictureList="selectedPictures"
         :onSuccess="onBatchEditPictureSuccess"
       />
     </template>
@@ -121,7 +141,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, h, onMounted, ref, watch } from 'vue'
+import { computed, h, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { getSpaceVoByIdUsingGet, deleteSpaceUsingPost } from '@/api/spaceController.ts'
 import { message } from 'ant-design-vue'
@@ -136,9 +156,10 @@ import PictureList from '@/components/PictureList.vue'
 import OmniSearchBar from '@/components/OmniSearchBar.vue'
 import SearchFilterDrawer, { type FilterValues } from '@/components/SearchFilterDrawer.vue'
 import BatchEditPictureModal from '@/components/BatchEditPictureModal.vue'
-import { BarChartOutlined, DeleteOutlined, EditOutlined, TeamOutlined } from '@ant-design/icons-vue'
+import { BarChartOutlined, CloseOutlined, DeleteOutlined, EditOutlined, TeamOutlined } from '@ant-design/icons-vue'
 import { SPACE_LEVEL_MAP, SPACE_PERMISSION_ENUM, SPACE_TYPE_ENUM, SPACE_TYPE_MAP } from '../constants/space.ts'
 import { useLoginUserStore } from '@/stores/useLoginUserStore.ts'
+import { usePictureSelectionStore } from '@/stores/usePictureSelectionStore.ts'
 
 interface Props {
   id: string
@@ -148,6 +169,28 @@ const props = defineProps<Props>()
 const space = ref<API.SpaceVO>({})
 const router = useRouter()
 const loginUserStore = useLoginUserStore()
+const pictureSelectionStore = usePictureSelectionStore()
+
+// 选择模式状态
+const isSelectionMode = ref(false)
+
+// 获取选中的图片列表（从当前 dataList 中筛选）
+const selectedPictures = computed(() => {
+  return dataList.value.filter((picture) => picture.id && pictureSelectionStore.isSelected(picture.id))
+})
+
+// 选中的图片数量
+const selectedCount = computed(() => pictureSelectionStore.selectedCount)
+
+// 批量编辑按钮文字（根据模式显示不同文字）
+const batchEditButtonText = computed(() => {
+  if (isSelectionMode.value) {
+    // 选择模式：显示批量编辑操作
+    return selectedCount.value > 0 ? `批量编辑 (已选 ${selectedCount.value} 张)` : '批量编辑'
+  }
+  // 正常模式：显示进入选择
+  return '选择'
+})
 
 // 通用权限检查函数
 function createPermissionChecker(permission: string) {
@@ -181,7 +224,7 @@ const doDeleteSpace = async () => {
     } else {
       message.error('删除失败，' + res.data.message)
     }
-  } catch (e) {
+  } catch {
     message.error('删除失败')
   }
 }
@@ -401,17 +444,57 @@ const fetchSemanticData = async () => {
 // ---- 批量编辑图片 -----
 const batchEditPictureModalRef = ref()
 
-// 批量编辑图片成功
-const onBatchEditPictureSuccess = () => {
-  fetchData()
+// 进入选择模式
+const enterSelectionMode = () => {
+  isSelectionMode.value = true
 }
 
-// 打开批量编辑图片弹窗
-const doBatchEdit = () => {
+// 退出选择模式
+const exitSelectionMode = () => {
+  isSelectionMode.value = false
+  pictureSelectionStore.clearSelection()
+}
+
+// 全选当前页
+const selectAll = () => {
+  dataList.value.forEach((picture) => {
+    if (picture.id) {
+      pictureSelectionStore.togglePicture(picture.id)
+    }
+  })
+}
+
+// 打开批量编辑弹窗
+const openBatchEditModal = () => {
   if (batchEditPictureModalRef.value) {
     batchEditPictureModalRef.value.openModal()
   }
 }
+
+// 批量编辑图片成功
+const onBatchEditPictureSuccess = () => {
+  // 清空选中状态并退出选择模式
+  pictureSelectionStore.clearSelection()
+  isSelectionMode.value = false
+  fetchData()
+}
+
+// ---- 图片选择管理 ----
+
+/**
+ * 处理图片选择变化
+ * @param picture 图片对象
+ */
+const handleSelectionChange = (picture: API.PictureVO) => {
+  if (picture.id) {
+    pictureSelectionStore.togglePicture(picture.id)
+  }
+}
+
+// 页面卸载时清空选中状态
+onUnmounted(() => {
+  pictureSelectionStore.clearSelection()
+})
 
 // 空间 id 改变时，必须重新获取数据
 watch(
@@ -431,5 +514,34 @@ watch(
 .search-section {
   margin-bottom: 20px;
   padding: 8px 0;
+}
+
+/* 选择模式工具栏 */
+.selection-toolbar {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  background: #f0f2ff;
+  border-radius: 8px;
+  margin-bottom: 16px;
+  animation: slide-down 0.3s ease-out;
+}
+
+@keyframes slide-down {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.selection-count {
+  margin: 0 12px;
+  color: #1890ff;
+  font-weight: 500;
 }
 </style>

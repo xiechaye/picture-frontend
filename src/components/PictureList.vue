@@ -15,11 +15,13 @@
             :can-edit="canEdit"
             :can-delete="canDelete"
             :show-op="showOp"
+            :is-selection-mode="isSelectionMode"
             @click="doClickPicture"
             @share="doShare"
             @search="doSearch"
             @edit="doEdit"
             @delete="doDelete"
+            @check-change="handleSelectionChange"
           />
         </template>
       </MasonryGrid>
@@ -43,6 +45,7 @@ interface Props {
   showOp?: boolean
   canEdit?: boolean
   canDelete?: boolean
+  isSelectionMode?: boolean
   onReload?: () => void
 }
 
@@ -52,9 +55,22 @@ const props = withDefaults(defineProps<Props>(), {
   showOp: false,
   canEdit: false,
   canDelete: false,
+  isSelectionMode: false,
 })
 
+const emit = defineEmits<{
+  selectionChange: [picture: API.PictureVO]
+}>()
+
 const router = useRouter()
+
+/**
+ * 处理图片选择变化
+ * @param picture 图片对象
+ */
+const handleSelectionChange = (picture: API.PictureVO) => {
+  emit('selectionChange', picture)
+}
 
 // 跳转至图片详情页
 const doClickPicture = (picture: API.PictureVO) => {

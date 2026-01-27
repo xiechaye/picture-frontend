@@ -1,7 +1,9 @@
 <template>
   <div class="batch-edit-picture-modal">
     <a-modal v-model:visible="visible" title="批量编辑图片" :footer="false" @cancel="closeModal">
-      <a-typography-paragraph type="secondary">* 只对当前页面的图片生效</a-typography-paragraph>
+      <a-typography-paragraph type="secondary">
+        * 已选择 {{ pictureCount }} 张图片
+      </a-typography-paragraph>
       <!-- 批量创建表单 -->
       <a-form name="formData" layout="vertical" :model="formData" @finish="handleSubmit">
         <a-form-item name="category" label="分类">
@@ -36,7 +38,7 @@
   </div>
 </template>
 <script lang="ts" setup>
-import { onMounted, reactive, ref } from 'vue'
+import { computed, onMounted, reactive, ref } from 'vue'
 import {
   editPictureByBatchUsingPost,
   listPictureTagCategoryUsingGet,
@@ -50,6 +52,9 @@ interface Props {
 }
 
 const props = withDefaults(defineProps<Props>(), {})
+
+// 选中的图片数量
+const pictureCount = computed(() => props.pictureList?.length ?? 0)
 
 // 是否可见
 const visible = ref(false)
