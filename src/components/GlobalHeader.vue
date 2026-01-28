@@ -18,7 +18,7 @@
         />
       </a-col>
       <!-- 用户信息展示栏 -->
-      <a-col flex="0 0 auto">
+      <a-col flex="0 0 auto" style="min-width: 150px">
         <div class="user-login-status">
           <div v-if="loginUserStore.loginUser.id">
             <a-dropdown placement="bottomLeft">
