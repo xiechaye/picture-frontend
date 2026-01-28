@@ -331,4 +331,20 @@ const doLogout = async () => {
   display: flex;
   justify-content: flex-end;
 }
+
+/* 修复用户下拉菜单换行问题 */
+#globalHeader :deep(.ant-dropdown-menu) {
+  min-width: 180px;
+}
+
+#globalHeader :deep(.ant-dropdown-menu-item) {
+  white-space: nowrap;
+}
+
+#globalHeader :deep(.ant-dropdown-menu-item a) {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  white-space: nowrap;
+}
 </style>
