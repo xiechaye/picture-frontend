@@ -336,7 +336,8 @@ const doLogout = async () => {
 <style>
 /* 修复用户下拉菜单换行问题 - 使用全局样式 */
 .ant-dropdown-menu {
-  min-width: 180px !important;
+  width: auto !important;
+  min-width: unset !important;
 }
 
 .ant-dropdown-menu-item {
