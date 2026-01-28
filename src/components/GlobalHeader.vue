@@ -156,11 +156,6 @@ const adminMenuItems = [
     label: '提示词管理',
     title: '提示词管理',
   },
-  {
-    key: 'others',
-    label: h('a', { href: 'https://github.com/xiechaye', target: '_blank' }, '茶叶'),
-    title: '茶叶',
-  },
 ]
 
 // 普通用户菜单项
@@ -191,19 +186,50 @@ const userMenuItems = computed(() => {
     },
   ]
 
-  // 添加团队空间下拉菜单
+  // 添加团队空间下拉菜单（分类显示）
   if (teamSpaceList.value.length > 0) {
-    items.push({
-      key: 'team',
-      icon: () => h(TeamOutlined),
-      label: '团队空间',
-      title: '团队空间',
-      children: teamSpaceList.value.map((spaceUser) => ({
-        key: `/space/${spaceUser.spaceId}`,
-        label: spaceUser.space?.spaceName ?? '未命名空间',
-        title: spaceUser.space?.spaceName ?? '未命名空间',
-      })),
-    })
+    // 分组：我创建的和我加入的
+    const createdSpaces = teamSpaceList.value.filter((s) => s.spaceRole === 'admin')
+    const joinedSpaces = teamSpaceList.value.filter((s) => s.spaceRole !== 'admin')
+
+    // 构建嵌套菜单结构
+    const teamChildren: MenuProps['items'] = []
+
+    // 我创建的团队
+    if (createdSpaces.length > 0) {
+      teamChildren.push({
+        type: 'group',
+        label: '我创建的',
+        children: createdSpaces.map((spaceUser) => ({
+          key: `/space/${spaceUser.spaceId}`,
+          label: spaceUser.space?.spaceName ?? '未命名空间',
+          title: spaceUser.space?.spaceName ?? '未命名空间',
+        })),
+      })
+    }
+
+    // 我加入的团队
+    if (joinedSpaces.length > 0) {
+      teamChildren.push({
+        type: 'group',
+        label: '我加入的',
+        children: joinedSpaces.map((spaceUser) => ({
+          key: `/space/${spaceUser.spaceId}`,
+          label: spaceUser.space?.spaceName ?? '未命名空间',
+          title: spaceUser.space?.spaceName ?? '未命名空间',
+        })),
+      })
+    }
+
+    if (teamChildren.length > 0) {
+      items.push({
+        key: 'team',
+        icon: () => h(TeamOutlined),
+        label: '团队空间',
+        title: '团队空间',
+        children: teamChildren,
+      })
+    }
   }
 
   // 添加创建团队菜单
@@ -212,13 +238,6 @@ const userMenuItems = computed(() => {
     icon: () => h(AppstoreOutlined),
     label: '创建团队',
     title: '创建团队',
-  })
-
-  // 添加外部链接
-  items.push({
-    key: 'others',
-    label: h('a', { href: 'https://github.com/xiechaye', target: '_blank' }, '茶叶'),
-    title: '茶叶',
   })
 
   return items
