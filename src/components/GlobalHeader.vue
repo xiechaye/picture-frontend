@@ -331,20 +331,22 @@ const doLogout = async () => {
   display: flex;
   justify-content: flex-end;
 }
+</style>
 
-/* 修复用户下拉菜单换行问题 */
-#globalHeader :deep(.ant-dropdown-menu) {
-  min-width: 180px;
+<style>
+/* 修复用户下拉菜单换行问题 - 使用全局样式 */
+.ant-dropdown-menu {
+  min-width: 180px !important;
 }
 
-#globalHeader :deep(.ant-dropdown-menu-item) {
-  white-space: nowrap;
+.ant-dropdown-menu-item {
+  white-space: nowrap !important;
 }
 
-#globalHeader :deep(.ant-dropdown-menu-item a) {
-  display: flex;
+.ant-dropdown-menu-item a {
+  display: flex !important;
   align-items: center;
   gap: 8px;
-  white-space: nowrap;
+  white-space: nowrap !important;
 }
 </style>
