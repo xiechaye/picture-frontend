@@ -72,11 +72,11 @@ const beforeUpload = (file: UploadProps['fileList'] extends (infer U)[] | undefi
     message.error('不支持上传该格式的图片，推荐 jpg 或 png')
   }
   // 校验图片大小
-  const isLt2M = (file.size ?? 0) / 1024 / 1024 < 2
-  if (!isLt2M) {
-    message.error('不能上传超过 2M 的图片')
+  const isLt50M = (file.size ?? 0) / 1024 / 1024 < 50
+  if (!isLt50M) {
+    message.error('不能上传超过 50MB 的图片')
   }
-  return isJpgOrPng && isLt2M
+  return isJpgOrPng && isLt50M
 }
 </script>
 <style scoped>

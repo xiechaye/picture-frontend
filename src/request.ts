@@ -7,7 +7,7 @@ const BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:8123";
 // 创建 Axios 实例
 const myAxios = axios.create({
     baseURL: BASE_URL,
-    timeout: 10000,
+    timeout: 120000,  // 2 分钟超时，适配大文件上传
     withCredentials: true,
 });
 

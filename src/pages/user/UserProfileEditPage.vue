@@ -147,11 +147,11 @@ const beforeUpload = (file: File) => {
   if (!isJpgOrPng) {
     message.error('只能上传 JPG/PNG 文件！')
   }
-  const isLt2M = file.size / 1024 / 1024 < 2
-  if (!isLt2M) {
-    message.error('图片大小不能超过 2MB！')
+  const isLt50M = file.size / 1024 / 1024 < 50
+  if (!isLt50M) {
+    message.error('图片大小不能超过 50MB！')
   }
-  return isJpgOrPng && isLt2M
+  return isJpgOrPng && isLt50M
 }
 
 const handleUpload = async ({ file, onSuccess, onError }: {
