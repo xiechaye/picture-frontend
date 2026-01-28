@@ -2,8 +2,14 @@
   <div id="userRegisterPage">
     <h2 class="title">茶叶云图库 - 用户注册</h2>
     <a-form :model="formState" name="basic" autocomplete="off" @finish="handleSubmit">
-      <a-form-item name="userAccount" :rules="[{ required: true, message: '请输入账号' }]">
-        <a-input v-model:value="formState.userAccount" placeholder="请输入账号" />
+      <a-form-item
+        name="userAccount"
+        :rules="[
+          { required: true, message: '请输入账号' },
+          { min: 4, message: '账号长度不能小于 4 位' },
+        ]"
+      >
+        <a-input v-model:value="formState.userAccount" placeholder="请输入账号（至少4位，不能重复）" />
       </a-form-item>
       <a-form-item
         name="userPassword"
