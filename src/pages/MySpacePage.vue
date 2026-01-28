@@ -35,9 +35,9 @@ const checkUserSpace = async () => {
       const space = res.data.data.records[0]
       router.replace(`/space/${space.id}`)
     } else {
-      // 如果没有，则跳转到创建空间页面
-      router.replace('/add_space')
-      message.warn('请先创建空间')
+      // 如果没有，则跳转到创建空间页面（明确创建私有空间）
+      router.replace('/add_space?type=' + SPACE_TYPE_ENUM.PRIVATE)
+      message.warn('请先创建私人空间')
     }
   } else {
     message.error('加载我的空间失败，' + res.data.message)

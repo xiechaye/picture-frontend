@@ -287,9 +287,12 @@ router.afterEach((to) => {
 
 // 路由跳转事件
 const doMenuClick = ({ key }: { key: string }) => {
-  router.push({
-    path: key,
-  })
+  // 如果 key 包含查询参数，直接使用字符串形式保留参数
+  if (key.includes('?')) {
+    router.push(key)
+  } else {
+    router.push({ path: key })
+  }
 }
 
 // 用户注销
