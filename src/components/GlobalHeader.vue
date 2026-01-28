@@ -18,7 +18,7 @@
         />
       </a-col>
       <!-- 用户信息展示栏 -->
-      <a-col flex="0 0 auto" style="min-width: 150px">
+      <a-col flex="0 0 auto" style="min-width: 200px">
         <div class="user-login-status">
           <div v-if="loginUserStore.loginUser.id">
             <a-dropdown placement="bottomLeft">
@@ -330,6 +330,7 @@ const doLogout = async () => {
   white-space: nowrap;
   display: flex;
   justify-content: flex-end;
+  padding-right: 16px;
 }
 </style>
 
