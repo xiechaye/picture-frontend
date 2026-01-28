@@ -13,7 +13,7 @@
         <a-menu
           v-model:selectedKeys="current"
           mode="horizontal"
-          :items="items"
+          :items="headerItems"
           @click="doMenuClick"
         />
       </a-col>
@@ -56,19 +56,75 @@
     </a-row>
   </div>
 </template>
+
 <script lang="ts" setup>
-import { computed, h, ref } from 'vue'
-import { HomeOutlined, LogoutOutlined, UserOutlined, InboxOutlined } from '@ant-design/icons-vue'
+import { computed, h, ref, watchEffect, watch } from 'vue'
+import {
+  HomeOutlined,
+  LogoutOutlined,
+  UserOutlined,
+  InboxOutlined,
+  BulbOutlined,
+  FolderOutlined,
+  TeamOutlined,
+  AppstoreOutlined,
+} from '@ant-design/icons-vue'
 import type { MenuProps } from 'ant-design-vue'
 import { message } from 'ant-design-vue'
-import { useRouter } from 'vue-router'
+import { useRouter, useRoute } from 'vue-router'
 import { useLoginUserStore } from '@/stores/useLoginUserStore.ts'
 import { userLogoutUsingPost } from '@/api/userController.ts'
+import { SPACE_TYPE_ENUM } from '@/constants/space.ts'
+import { listMyTeamSpaceUsingPost } from '@/api/spaceUserController.ts'
 
 const loginUserStore = useLoginUserStore()
+const router = useRouter()
+const route = useRoute()
 
-// 未经过滤的菜单项
-const originItems = [
+// 团队空间列表
+const teamSpaceList = ref<API.SpaceUserVO[]>([])
+
+// 加载团队空间列表
+const fetchTeamSpaceList = async () => {
+  try {
+    const res = await listMyTeamSpaceUsingPost()
+    if (res.data.code === 0) {
+      teamSpaceList.value = res.data.data ?? []
+      return res.data.data
+    }
+  } catch (e) {
+    console.error('加载团队空间列表失败', e)
+  }
+  return null
+}
+
+// 监听登录状态变化，加载团队空间
+watchEffect(() => {
+  const { id, userRole } = loginUserStore.loginUser
+  if (id && userRole !== 'admin') {
+    fetchTeamSpaceList()
+  }
+})
+
+// 监听路由变化，刷新团队空间列表
+watch(
+  () => route.path,
+  () => {
+    const { id, userRole } = loginUserStore.loginUser
+    if (id && userRole !== 'admin') {
+      fetchTeamSpaceList()
+    }
+  }
+)
+
+// 判断是否是管理员
+const isAdminUser = computed(() => {
+  const { userRole } = loginUserStore.loginUser
+  return userRole === 'admin'
+})
+
+// 管理员菜单项
+const adminMenuItems = [
   {
     key: '/',
     icon: () => h(HomeOutlined),
@@ -107,29 +163,107 @@ const originItems = [
   },
 ]
 
-// 根据权限过滤菜单项
-const filterMenus = (menus = [] as MenuProps['items']) => {
-  return menus?.filter((menu) => {
-    // 管理员才能看到 /admin 开头的菜单
-    if (typeof menu?.key === 'string' && menu.key.startsWith('/admin')) {
-      const loginUser = loginUserStore.loginUser
-      if (!loginUser || loginUser.userRole !== 'admin') {
-        return false
-      }
-    }
-    return true
+// 普通用户菜单项
+const userMenuItems = computed(() => {
+  const items: MenuProps['items'] = [
+    {
+      key: '/',
+      icon: () => h(HomeOutlined),
+      label: '主页',
+      title: '主页',
+    },
+    {
+      key: '/add_picture',
+      label: '上传图片',
+      title: '上传图片',
+    },
+    {
+      key: '/image_generation',
+      icon: () => h(BulbOutlined),
+      label: 'AI 创作',
+      title: 'AI 创作',
+    },
+    {
+      key: '/my_space',
+      icon: () => h(FolderOutlined),
+      label: '我的空间',
+      title: '我的空间',
+    },
+  ]
+
+  // 添加团队空间下拉菜单
+  if (teamSpaceList.value.length > 0) {
+    items.push({
+      key: 'team',
+      icon: () => h(TeamOutlined),
+      label: '团队空间',
+      title: '团队空间',
+      children: teamSpaceList.value.map((spaceUser) => ({
+        key: `/space/${spaceUser.spaceId}`,
+        label: spaceUser.space?.spaceName ?? '未命名空间',
+        title: spaceUser.space?.spaceName ?? '未命名空间',
+      })),
+    })
+  }
+
+  // 添加创建团队菜单
+  items.push({
+    key: '/add_space?type=' + SPACE_TYPE_ENUM.TEAM,
+    icon: () => h(AppstoreOutlined),
+    label: '创建团队',
+    title: '创建团队',
   })
-}
 
-// 展示在菜单的路由数组
-const items = computed(() => filterMenus(originItems))
+  // 添加外部链接
+  items.push({
+    key: 'others',
+    label: h('a', { href: 'https://github.com/xiechaye', target: '_blank' }, '茶叶'),
+    title: '茶叶',
+  })
 
-const router = useRouter()
+  return items
+})
+
+// 根据用户角色返回不同的菜单项
+const headerItems = computed(() => {
+  return isAdminUser.value ? adminMenuItems : userMenuItems.value
+})
+
 // 当前要高亮的菜单项
 const current = ref<string[]>([])
+
+// 更新菜单高亮状态
+const updateCurrentHighlight = (path: string) => {
+  if (path.startsWith('/space/')) {
+    const spaceId = path.replace('/space/', '')
+    const isTeamSpace = teamSpaceList.value.some(
+      (item) => String(item.spaceId) === spaceId
+    )
+    if (isTeamSpace) {
+      current.value = [path]
+    } else {
+      current.value = ['/my_space']
+    }
+  } else if (path === '/add_space') {
+    const type = route.query.type
+    if (String(type) === '1') {
+      current.value = ['/add_space?type=' + SPACE_TYPE_ENUM.TEAM]
+    } else {
+      current.value = ['/my_space']
+    }
+  } else {
+    current.value = [path]
+  }
+}
+
 // 监听路由变化，更新高亮菜单项
 router.afterEach((to) => {
-  current.value = [to.path]
+  const path = to.path
+  if (isAdminUser.value) {
+    current.value = [path]
+  } else {
+    updateCurrentHighlight(path)
+  }
 })
 
 // 路由跳转事件
