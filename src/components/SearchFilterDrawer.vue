@@ -33,14 +33,14 @@
       <a-form-item label="图片宽度">
         <a-input-number
           v-model:value="localFilters.picWidth"
-          placeholder="宽度"
+          placeholder="1920"
           style="width: 100%"
         />
       </a-form-item>
       <a-form-item label="图片高度">
         <a-input-number
           v-model:value="localFilters.picHeight"
-          placeholder="高度"
+          placeholder="1080"
           style="width: 100%"
         />
       </a-form-item>
