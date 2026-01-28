@@ -6,28 +6,22 @@
         name="userAccount"
         :rules="[
           { required: true, message: '请输入账号' },
-          { min: 4, message: '账号长度不能小于 4 位' },
+          { min: 4, max: 20, message: '用户账号长度必须在 4-20 个字符之间' },
+          { pattern: /^[a-zA-Z0-9_]+$/, message: '用户账号仅包含字母、数字、下划线' },
         ]"
       >
-        <a-input v-model:value="formState.userAccount" placeholder="请输入账号（至少4位，不能重复）" />
+        <a-input v-model:value="formState.userAccount" placeholder="请输入账号（4-20位，仅字母、数字、下划线）" />
       </a-form-item>
-      <a-form-item
-        name="userPassword"
-        :rules="[
-          { required: true, message: '请输入密码' },
-          { min: 8, message: '密码长度不能小于 8 位' },
-        ]"
-      >
-        <a-input-password v-model:value="formState.userPassword" placeholder="请输入密码" />
+      <a-form-item name="userPassword" :rules="[{ validator: validatePassword }]">
+        <a-input-password v-model:value="formState.userPassword" placeholder="请输入密码（8-32位，必须包含字母和数字）" />
       </a-form-item>
       <a-form-item
         name="checkPassword"
         :rules="[
           { required: true, message: '请输入确认密码' },
-          { min: 8, message: '确认密码长度不能小于 8 位' },
         ]"
       >
-        <a-input-password v-model:value="formState.checkPassword" placeholder="请输入确认密码" />
+        <a-input-password v-model:value="formState.checkPassword" placeholder="请再次输入密码" />
       </a-form-item>
       <div class="tips">
         已有账号？
@@ -51,6 +45,22 @@ const formState = reactive<API.UserRegisterRequest>({
   userPassword: '',
   checkPassword: '',
 })
+
+/**
+ * 密码验证函数
+ */
+const validatePassword = async (_rule: any, value: string) => {
+  if (!value) {
+    return Promise.reject('请输入密码')
+  }
+  if (value.length < 8 || value.length > 32) {
+    return Promise.reject('密码长度必须在 8-32 个字符之间')
+  }
+  if (!/(?=.*[a-zA-Z])(?=.*\d)/.test(value)) {
+    return Promise.reject('密码必须包含字母和数字')
+  }
+  return Promise.resolve()
+}
 
 /**
  * 提交表单
