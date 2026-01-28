@@ -21,7 +21,7 @@
       <a-col flex="0 0 auto">
         <div class="user-login-status">
           <div v-if="loginUserStore.loginUser.id">
-            <a-dropdown>
+            <a-dropdown placement="bottomLeft">
               <a-space>
                 <a-avatar :src="loginUserStore.loginUser.userAvatar" />
                 {{ loginUserStore.loginUser.userName ?? '无名' }}
