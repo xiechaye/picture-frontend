@@ -31,7 +31,7 @@
                   <a-menu-item>
                     <router-link to="/user/profile">
                       <UserOutlined />
-                      我的信息
+                      个人信息
                     </router-link>
                   </a-menu-item>
                   <a-menu-item>
@@ -42,7 +42,7 @@
                   </a-menu-item>
                   <a-menu-item @click="doLogout">
                     <LogoutOutlined />
-                    退出登录
+                    退出
                   </a-menu-item>
                 </a-menu>
               </template>
@@ -346,7 +346,13 @@ const doLogout = async () => {
 .ant-dropdown-menu-item a {
   display: flex !important;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   white-space: nowrap !important;
+  font-size: 14px;
+  color: #333;
+}
+
+.ant-dropdown-menu-item a:hover {
+  color: #2E7D32;
 }
 </style>
