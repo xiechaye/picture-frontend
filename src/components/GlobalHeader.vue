@@ -18,7 +18,7 @@
         />
       </a-col>
       <!-- 用户信息展示栏 -->
-      <a-col flex="120px">
+      <a-col flex="auto">
         <div class="user-login-status">
           <div v-if="loginUserStore.loginUser.id">
             <a-dropdown>
@@ -168,5 +168,9 @@ const doLogout = async () => {
 
 .logo {
   height: 48px;
+}
+
+.user-login-status {
+  white-space: nowrap;
 }
 </style>
