@@ -2,6 +2,9 @@ import router from '@/router'
 import { useLoginUserStore } from '@/stores/useLoginUserStore.ts'
 import { message } from 'ant-design-vue'
 
+// 公开路由白名单（不需要登录即可访问）
+const publicRoutes = ['/', '/user/login', '/user/register']
+
 // 是否为首次获取登录用户
 let firstFetchLoginUser = true
 
@@ -18,7 +21,18 @@ router.beforeEach(async (to, from, next) => {
     firstFetchLoginUser = false
   }
   const toUrl = to.fullPath
-  // 可以自己定义权限校验逻辑，比如管理员才能访问 /admin 开头的页面
+
+  // 检查是否在公开路由白名单中
+  if (!publicRoutes.includes(to.path)) {
+    // 未登录检查
+    if (!loginUser || loginUser.userName === '未登录') {
+      message.warning('请先登录')
+      next(`/user/login?redirect=${to.fullPath}`)
+      return
+    }
+  }
+
+  // 管理员权限校验
   if (toUrl.startsWith('/admin')) {
     if (!loginUser || loginUser.userRole !== 'admin') {
       message.error('没有权限')

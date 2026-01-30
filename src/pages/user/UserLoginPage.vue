@@ -26,10 +26,13 @@
 </template>
 <script lang="ts" setup>
 import { reactive } from 'vue'
+import { useRoute } from 'vue-router'
 import { userLoginUsingPost } from '@/api/userController.ts'
 import { useLoginUserStore } from '@/stores/useLoginUserStore.ts'
 import { message } from 'ant-design-vue'
 import router from '@/router' // 用于接受表单输入的值
+
+const route = useRoute()
 
 // 用于接受表单输入的值
 const formState = reactive<API.UserLoginRequest>({
@@ -49,8 +52,10 @@ const handleSubmit = async (values: API.UserLoginRequest) => {
   if (res.data.code === 0 && res.data.data) {
     await loginUserStore.fetchLoginUser()
     message.success('登录成功')
+    // 获取 redirect 参数，登录成功后跳转回原页面
+    const redirect = route.query.redirect as string
     router.push({
-      path: '/',
+      path: redirect || '/',
       replace: true,
     })
   } else {
