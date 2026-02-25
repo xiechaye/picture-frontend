@@ -683,6 +683,7 @@ declare namespace API {
   type CaptchaVO = {
     captchaKey?: string
     captchaImage?: string
+    captchaImg?: string
   }
 
   type BaseResponseCaptchaVO_ = {

@@ -69,7 +69,8 @@ const fetchCaptcha = async () => {
   if (res.data.code === 0 && res.data.data) {
     formState.captchaKey = res.data.data.captchaKey || ''
     formState.captchaCode = ''
-    captchaImageUrl.value = normalizeCaptchaImage(res.data.data.captchaImage)
+    const rawCaptchaImage = res.data.data.captchaImg || res.data.data.captchaImage
+    captchaImageUrl.value = normalizeCaptchaImage(rawCaptchaImage)
   } else {
     message.error('获取验证码失败，' + res.data.message)
   }
