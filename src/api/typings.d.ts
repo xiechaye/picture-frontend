@@ -680,9 +680,22 @@ declare namespace API {
     userRole?: string
   }
 
+  type CaptchaVO = {
+    captchaKey?: string
+    captchaImage?: string
+  }
+
+  type BaseResponseCaptchaVO_ = {
+    code?: number
+    data?: CaptchaVO
+    message?: string
+  }
+
   type UserLoginRequest = {
     userAccount?: string
     userPassword?: string
+    captchaKey?: string
+    captchaCode?: string
   }
 
   type UserQueryRequest = {

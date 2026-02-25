@@ -96,6 +96,14 @@ export async function listUserVoByPageUsingPost(
   })
 }
 
+/** getCaptcha POST /api/user/captcha */
+export async function getCaptchaUsingPost(options?: { [key: string]: any }) {
+  return request<API.BaseResponseCaptchaVO_>('/api/user/captcha', {
+    method: 'POST',
+    ...(options || {}),
+  })
+}
+
 /** userLogin POST /api/user/login */
 export async function userLoginUsingPost(
   body: API.UserLoginRequest,

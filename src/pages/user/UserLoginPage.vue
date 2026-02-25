@@ -14,6 +14,19 @@
       >
         <a-input-password v-model:value="formState.userPassword" placeholder="请输入密码" />
       </a-form-item>
+      <a-form-item name="captchaCode" :rules="[{ required: true, message: '请输入验证码' }]">
+        <div class="captcha-row">
+          <a-input v-model:value="formState.captchaCode" placeholder="请输入验证码" />
+          <img
+            class="captcha-image"
+            :src="captchaImageUrl"
+            alt="验证码"
+            @click="fetchCaptcha"
+            title="点击刷新验证码"
+          />
+        </div>
+      </a-form-item>
+      <div class="captcha-refresh" @click="fetchCaptcha">看不清？点击刷新验证码</div>
       <div class="tips">
         没有账号？
         <RouterLink to="/user/register">去注册</RouterLink>
@@ -25,41 +38,70 @@
   </div>
 </template>
 <script lang="ts" setup>
-import { reactive } from 'vue'
+import { onMounted, reactive, ref } from 'vue'
 import { useRoute } from 'vue-router'
-import { userLoginUsingPost } from '@/api/userController.ts'
+import { getCaptchaUsingPost, userLoginUsingPost } from '@/api/userController.ts'
 import { useLoginUserStore } from '@/stores/useLoginUserStore.ts'
 import { message } from 'ant-design-vue'
-import router from '@/router' // 用于接受表单输入的值
+import router from '@/router'
 
 const route = useRoute()
 
-// 用于接受表单输入的值
 const formState = reactive<API.UserLoginRequest>({
   userAccount: '',
   userPassword: '',
+  captchaKey: '',
+  captchaCode: '',
 })
 
+const captchaImageUrl = ref('')
 const loginUserStore = useLoginUserStore()
 
-/**
- * 提交表单
- * @param values
- */
-const handleSubmit = async (values: API.UserLoginRequest) => {
-  const res = await userLoginUsingPost(values)
-  // 登录成功，把登录态保存到全局状态中
+const normalizeCaptchaImage = (raw?: string) => {
+  if (!raw) {
+    return ''
+  }
+  return raw.startsWith('data:image') ? raw : `data:image/png;base64,${raw}`
+}
+
+const fetchCaptcha = async () => {
+  const res = await getCaptchaUsingPost()
   if (res.data.code === 0 && res.data.data) {
-    await loginUserStore.fetchLoginUser()
-    message.success('登录成功')
-    // 获取 redirect 参数，登录成功后跳转回原页面
-    const redirect = route.query.redirect as string
-    router.push({
-      path: redirect || '/',
-      replace: true,
-    })
+    formState.captchaKey = res.data.data.captchaKey || ''
+    formState.captchaCode = ''
+    captchaImageUrl.value = normalizeCaptchaImage(res.data.data.captchaImage)
   } else {
+    message.error('获取验证码失败，' + res.data.message)
+  }
+}
+
+onMounted(() => {
+  fetchCaptcha()
+})
+
+const handleSubmit = async (values: API.UserLoginRequest) => {
+  const payload: API.UserLoginRequest = {
+    ...values,
+    captchaKey: formState.captchaKey,
+    captchaCode: formState.captchaCode,
+  }
+  try {
+    const res = await userLoginUsingPost(payload)
+    if (res.data.code === 0 && res.data.data) {
+      await loginUserStore.fetchLoginUser()
+      message.success('登录成功')
+      const redirect = route.query.redirect as string
+      router.push({
+        path: redirect || '/',
+        replace: true,
+      })
+      return
+    }
     message.error('登录失败，' + res.data.message)
+    await fetchCaptcha()
+  } catch (e) {
+    message.error('登录失败，请稍后重试')
+    await fetchCaptcha()
   }
 }
 </script>
@@ -79,6 +121,29 @@ const handleSubmit = async (values: API.UserLoginRequest) => {
   text-align: center;
   color: #bbb;
   margin-bottom: 16px;
+}
+
+.captcha-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.captcha-image {
+  width: 120px;
+  height: 40px;
+  border: 1px solid #f0f0f0;
+  border-radius: 6px;
+  cursor: pointer;
+  object-fit: cover;
+}
+
+.captcha-refresh {
+  color: #999;
+  text-align: right;
+  font-size: 12px;
+  margin-bottom: 12px;
+  cursor: pointer;
 }
 
 .tips {
