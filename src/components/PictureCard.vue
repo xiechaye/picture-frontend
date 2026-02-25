@@ -9,7 +9,9 @@
         :src="picture.thumbnailUrl || picture.url"
         :alt="picture.name"
         class="picture-image"
+        :class="{ 'img-loaded': imgLoaded }"
         loading="lazy"
+        @load="imgLoaded = true"
       />
       <div v-if="showOp" class="picture-actions">
         <a-space>
@@ -54,7 +56,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { computed, ref } from 'vue'
 import {
   ShareAltOutlined,
   SearchOutlined,
@@ -80,6 +82,8 @@ const props = withDefaults(defineProps<Props>(), {
 })
 
 const pictureSelectionStore = usePictureSelectionStore()
+
+const imgLoaded = ref(false)
 
 // 检查图片是否被选中
 const isSelected = computed(() => {
@@ -184,6 +188,12 @@ const handleCardClick = () => {
   display: block;
   object-fit: cover;
   min-height: 100px;
+  opacity: 0;
+  transition: opacity 300ms ease;
+}
+
+.picture-image.img-loaded {
+  opacity: 1;
 }
 
 .picture-actions {

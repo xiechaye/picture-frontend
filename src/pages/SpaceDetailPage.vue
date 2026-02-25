@@ -312,6 +312,9 @@ const dataList = ref<API.PictureVO[]>([])
 const total = ref(0)
 const loading = ref(true)
 
+// 用于取消进行中的请求
+let fetchAbortController: AbortController | null = null
+
 // 搜索条件
 const searchParams = ref<API.PictureQueryRequest>({
   current: 1,
@@ -322,6 +325,11 @@ const searchParams = ref<API.PictureQueryRequest>({
 
 // 获取数据
 const fetchData = async () => {
+  // 取消上一次未完成的请求
+  fetchAbortController?.abort()
+  fetchAbortController = new AbortController()
+  const signal = fetchAbortController.signal
+
   loading.value = true
   // 转换搜索参数
   const params: API.PictureQueryRequest = {
@@ -345,12 +353,18 @@ const fetchData = async () => {
     params.picFormat = filterValues.value.picFormat
   }
 
-  const res = await listPictureVoByPageUsingPost(params)
-  if (res.data.code === 0 && res.data.data) {
-    dataList.value = res.data.data.records ?? []
-    total.value = res.data.data.total ?? 0
-  } else {
-    message.error('获取数据失败，' + res.data.message)
+  try {
+    const res = await listPictureVoByPageUsingPost(params, { signal })
+    if (signal.aborted) return
+    if (res.data.code === 0 && res.data.data) {
+      dataList.value = res.data.data.records ?? []
+      total.value = res.data.data.total ?? 0
+    } else {
+      message.error('获取数据失败，' + res.data.message)
+    }
+  } catch (e: unknown) {
+    if ((e as { name?: string })?.name === 'CanceledError') return
+    message.error('获取数据失败')
   }
   loading.value = false
 }
@@ -364,6 +378,7 @@ onMounted(() => {
 const onPageChange = (page: number, pageSize: number) => {
   searchParams.value.current = page
   searchParams.value.pageSize = pageSize
+  window.scrollTo({ top: 0, behavior: 'smooth' })
   fetchData()
 }
 
