@@ -2,19 +2,19 @@
   <div class="omni-search-bar">
     <a-input-search
       v-model:value="searchValue"
-      :placeholder="placeholder"
+      :placeholder="currentPlaceholder"
       size="large"
       allow-clear
+      :disabled="searchModeValue === 'image'"
       @search="handleSearch"
     >
       <template #prefix>
         <SearchOutlined />
       </template>
       <template #addonBefore v-if="showAiMode">
-        <a-switch
-          v-model:checked="aiModeValue"
-          checked-children="AI"
-          un-checked-children="普通"
+        <a-segmented
+          v-model:value="searchModeValue"
+          :options="modeOptions"
           size="small"
         />
       </template>
@@ -26,7 +26,7 @@
         </a-badge>
       </template>
     </a-input-search>
-    <div v-if="showAiMode && aiModeValue" class="similarity-slider">
+    <div v-if="showAiMode && searchModeValue === 'semantic'" class="similarity-slider">
       <span>相似度阈值:</span>
       <a-slider
         v-model:value="similarityValue"
@@ -41,73 +41,77 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { SearchOutlined, FilterOutlined } from '@ant-design/icons-vue'
+import type { SearchMode } from '@/constants/search'
 
 interface Props {
   modelValue?: string
   placeholder?: string
-  aiMode?: boolean
+  searchMode?: SearchMode
   similarity?: number
   filterCount?: number
   showAiMode?: boolean
   showFilter?: boolean
+  /** 可选：限制展示的搜索模式，默认全部 */
+  modes?: SearchMode[]
 }
 
 const props = withDefaults(defineProps<Props>(), {
   modelValue: '',
   placeholder: '搜索图片...',
-  aiMode: false,
+  searchMode: 'normal',
   similarity: 0.5,
   filterCount: 0,
   showAiMode: true,
   showFilter: true,
+  modes: () => ['normal', 'semantic', 'image'] as SearchMode[],
 })
 
 const emit = defineEmits<{
   'update:modelValue': [value: string]
-  'update:aiMode': [value: boolean]
+  'update:searchMode': [value: SearchMode]
   'update:similarity': [value: number]
   search: [value: string]
   openFilter: []
 }>()
 
 const searchValue = ref(props.modelValue)
-const aiModeValue = ref(props.aiMode)
+const searchModeValue = ref<SearchMode>(props.searchMode)
 const similarityValue = ref(props.similarity)
+
+const ALL_MODE_OPTIONS = [
+  { label: '普通', value: 'normal' },
+  { label: '语义', value: 'semantic' },
+  { label: '以图', value: 'image' },
+] as const
+
+const modeOptions = computed(() =>
+  ALL_MODE_OPTIONS.filter((opt) => props.modes.includes(opt.value as SearchMode)),
+)
+
+const currentPlaceholder = computed(() => {
+  if (searchModeValue.value === 'semantic') return '输入语义描述，如：雪中的宫殿'
+  if (searchModeValue.value === 'image') return '以图搜图模式（从图片列表点击搜索按钮进入）'
+  return props.placeholder
+})
 
 watch(
   () => props.modelValue,
-  (val) => {
-    searchValue.value = val
-  }
+  (val) => { searchValue.value = val },
 )
-
 watch(
-  () => props.aiMode,
-  (val) => {
-    aiModeValue.value = val
-  }
+  () => props.searchMode,
+  (val) => { searchModeValue.value = val },
 )
-
 watch(
   () => props.similarity,
-  (val) => {
-    similarityValue.value = val
-  }
+  (val) => { similarityValue.value = val },
 )
 
-watch(searchValue, (val) => {
-  emit('update:modelValue', val)
-})
-
-watch(aiModeValue, (val) => {
-  emit('update:aiMode', val)
-})
-
-watch(similarityValue, (val) => {
-  emit('update:similarity', val)
-})
+watch(searchValue, (val) => { emit('update:modelValue', val) })
+watch(searchModeValue, (val) => { emit('update:searchMode', val) })
+watch(similarityValue, (val) => { emit('update:similarity', val) })
 
 const handleSearch = (value: string) => {
   emit('search', value)

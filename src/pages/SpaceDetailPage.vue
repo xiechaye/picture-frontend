@@ -93,9 +93,10 @@
       <div class="search-section">
         <OmniSearchBar
           v-model="searchText"
-          v-model:aiMode="isAiMode"
+          v-model:searchMode="searchMode"
           v-model:similarity="similarityThreshold"
           :filterCount="activeFilterCount"
+          :modes="['normal', 'semantic']"
           @search="doSearch"
           @openFilter="filterDrawerOpen = true"
         />
@@ -143,6 +144,7 @@
 <script setup lang="ts">
 import { computed, h, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
+import type { SearchMode } from '@/constants/search'
 import { getSpaceVoByIdUsingGet, deleteSpaceUsingPost } from '@/api/spaceController.ts'
 import { message } from 'ant-design-vue'
 import {
@@ -241,7 +243,7 @@ const getSpaceLevelColor = (level: number) => {
 
 // -------- 搜索相关状态 --------
 const searchText = ref('')
-const isAiMode = ref(false)
+const searchMode = ref<SearchMode>('normal')
 const similarityThreshold = ref(0.5)
 const filterDrawerOpen = ref(false)
 const filterValues = ref<FilterValues>({
@@ -388,7 +390,7 @@ const doSearch = () => {
   // 如果有颜色筛选，使用颜色搜索
   if (filterValues.value.picColor) {
     fetchColorData()
-  } else if (isAiMode.value) {
+  } else if (searchMode.value === 'semantic') {
     fetchSemanticData()
   } else {
     fetchData()
@@ -455,8 +457,6 @@ const fetchSemanticData = async () => {
   }
   loading.value = false
 }
-
-// ---- 批量编辑图片 -----
 const batchEditPictureModalRef = ref()
 
 // 进入选择模式
@@ -525,9 +525,9 @@ watch(
       picFormat: undefined,
       picColor: undefined,
     }
-    // 重置搜索文本和AI模式
+    // 重置搜索文本和搜索模式
     searchText.value = ''
-    isAiMode.value = false
+    searchMode.value = 'normal'
 
     fetchSpaceDetail()
     fetchData()

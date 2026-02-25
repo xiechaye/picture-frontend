@@ -82,7 +82,7 @@ const doClickPicture = (picture: API.PictureVO) => {
 // 搜索
 const doSearch = (picture: API.PictureVO, e: MouseEvent) => {
   e.stopPropagation()
-  window.open(`/search_picture?pictureId=${picture.id}`)
+  window.open(`/?mode=image&pictureId=${picture.id}`)
 }
 
 // 编辑

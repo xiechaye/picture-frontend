@@ -4,17 +4,27 @@
  */
 
 // ============ 搜索模式 ============
-export type SearchMode = 'normal' | 'semantic'
+export type SearchMode = 'normal' | 'semantic' | 'image'
 
 export const SEARCH_MODE = {
   NORMAL: 'normal' as const,
   SEMANTIC: 'semantic' as const,
+  IMAGE: 'image' as const,
 }
 
 export const SEARCH_MODE_OPTIONS = [
   { value: SEARCH_MODE.NORMAL, label: '普通搜索' },
   { value: SEARCH_MODE.SEMANTIC, label: 'AI语义搜索' },
+  { value: SEARCH_MODE.IMAGE, label: '以图搜图' },
 ]
+
+// ============ URL 查询参数键名 ============
+export const SEARCH_URL_PARAMS = {
+  MODE: 'mode',
+  QUERY: 'q',
+  SIMILARITY: 'similarity',
+  PICTURE_ID: 'pictureId',
+}
 
 // ============ 分页配置 ============
 export const PAGINATION = {
