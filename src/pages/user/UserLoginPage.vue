@@ -40,7 +40,7 @@
 <script lang="ts" setup>
 import { onMounted, reactive, ref } from 'vue'
 import { useRoute } from 'vue-router'
-import { getCaptchaUsingPost, userLoginUsingPost } from '@/api/userController.ts'
+import { getCaptchaUsingGet, userLoginUsingPost } from '@/api/userController.ts'
 import { useLoginUserStore } from '@/stores/useLoginUserStore.ts'
 import { message } from 'ant-design-vue'
 import router from '@/router'
@@ -65,14 +65,23 @@ const normalizeCaptchaImage = (raw?: string) => {
 }
 
 const fetchCaptcha = async () => {
-  const res = await getCaptchaUsingPost()
-  if (res.data.code === 0 && res.data.data) {
-    formState.captchaKey = res.data.data.captchaKey || ''
-    formState.captchaCode = ''
-    const rawCaptchaImage = res.data.data.captchaImg || res.data.data.captchaImage
-    captchaImageUrl.value = normalizeCaptchaImage(rawCaptchaImage)
-  } else {
+  try {
+    const res = await getCaptchaUsingGet()
+    if (res.data.code === 0 && res.data.data) {
+      formState.captchaKey = res.data.data.captchaKey || ''
+      formState.captchaCode = ''
+      const rawCaptchaImage = res.data.data.captchaImg || res.data.data.captchaImage
+      captchaImageUrl.value = normalizeCaptchaImage(rawCaptchaImage)
+      return
+    }
     message.error('获取验证码失败，' + res.data.message)
+  } catch (error: any) {
+    const status = error?.response?.status
+    if (status === 405) {
+      message.error('获取验证码失败：接口请求方法不匹配（405）')
+      return
+    }
+    message.error('获取验证码失败，请稍后重试')
   }
 }
 
