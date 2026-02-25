@@ -229,6 +229,11 @@ const fetchData = async () => {
   if (filterValues.value.picFormat) {
     params.picFormat = filterValues.value.picFormat
   }
+  const dateRange = filterValues.value.dateRange
+  if (dateRange?.length === 2) {
+    params.startEditTime = dateRange[0].format('YYYY-MM-DD HH:mm:ss')
+    params.endEditTime = dateRange[1].format('YYYY-MM-DD HH:mm:ss')
+  }
 
   try {
     const res = await listPictureVoByPageUsingPost(params, { signal })
