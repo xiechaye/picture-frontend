@@ -75,7 +75,7 @@ import { computed, onMounted, reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { message } from 'ant-design-vue'
 import { useLoginUserStore } from '@/stores/useLoginUserStore'
-import { updatePasswordMyUsingPost } from '@/api/userController'
+import { changePasswordUsingPost } from '@/api/userController'
 import CenterContainer from '@/components/CenterContainer.vue'
 
 const router = useRouter()
@@ -107,9 +107,10 @@ const handleSubmit = async () => {
   submitting.value = true
   try {
     // 调用修改密码 API
-    const res = await updatePasswordMyUsingPost({
+    const res = await changePasswordUsingPost({
       oldPassword: formState.oldPassword,
       newPassword: formState.newPassword,
+      confirmPassword: formState.confirmPassword,
     })
 
     if (res.data.code === 0) {

@@ -157,12 +157,12 @@ export async function updateUserUsingPost(
   })
 }
 
-/** updatePasswordMy POST /api/user/update/password/my */
-export async function updatePasswordMyUsingPost(
-  body: API.UserUpdatePasswordMyRequest,
+/** changePassword POST /api/user/password/change */
+export async function changePasswordUsingPost(
+  body: API.UserChangePasswordRequest,
   options?: { [key: string]: any }
 ) {
-  return request<API.BaseResponseBoolean_>('/api/user/update/password/my', {
+  return request<API.BaseResponseBoolean_>('/api/user/password/change', {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',

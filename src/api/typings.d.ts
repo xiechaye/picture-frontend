@@ -726,6 +726,12 @@ declare namespace API {
     userRole?: string
   }
 
+  type UserChangePasswordRequest = {
+    confirmPassword?: string
+    newPassword?: string
+    oldPassword?: string
+  }
+
   type UserUpdatePasswordMyRequest = {
     newPassword?: string
     oldPassword?: string
