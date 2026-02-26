@@ -5,6 +5,9 @@ import { message } from 'ant-design-vue'
 // 公开路由白名单（不需要登录即可访问）
 const publicRoutes = ['/', '/user/login', '/user/register']
 
+// 修改密码页面路由
+const CHANGE_PASSWORD_ROUTE = '/user/change-password'
+
 // 是否为首次获取登录用户
 let firstFetchLoginUser = true
 
@@ -40,5 +43,18 @@ router.beforeEach(async (to, from, next) => {
       return
     }
   }
+
+  // 强制修改密码校验
+  // 如果用户需要强制修改密码，且当前不在修改密码页面，则跳转到修改密码页面
+  if (
+    loginUser &&
+    loginUser.forceChangePassword === true &&
+    to.path !== CHANGE_PASSWORD_ROUTE
+  ) {
+    message.warning('为了您的账号安全，请修改密码')
+    next(CHANGE_PASSWORD_ROUTE)
+    return
+  }
+
   next()
 })

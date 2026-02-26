@@ -7,6 +7,7 @@
         :show-upload-list="false"
         :before-upload="beforeUpload"
         :custom-request="handleUpload"
+        :accept="IMAGE_ACCEPT_ATTRIBUTE"
       >
         <div class="avatar-wrapper">
           <a-avatar
@@ -103,6 +104,12 @@ import { message } from 'ant-design-vue'
 import { LoadingOutlined, UserOutlined, CameraOutlined, CopyOutlined } from '@ant-design/icons-vue'
 import { useLoginUserStore } from '@/stores/useLoginUserStore'
 import CenterContainer from '@/components/CenterContainer.vue'
+import {
+  MAX_UPLOAD_SIZE_MB,
+  ALLOWED_IMAGE_MIME_TYPES,
+  ALLOWED_IMAGE_EXTENSIONS,
+  IMAGE_ACCEPT_ATTRIBUTE,
+} from '@/constants/upload'
 
 const editUser = ref<API.UserUpdateRequest>({})
 const userAccount = ref<string>('')
@@ -143,15 +150,26 @@ const copyUserId = async () => {
 }
 
 const beforeUpload = (file: File) => {
-  const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png'
-  if (!isJpgOrPng) {
-    message.error('只能上传 JPG/PNG 文件！')
+  // MIME 类型白名单校验
+  const isAllowedMime = ALLOWED_IMAGE_MIME_TYPES.includes(file.type)
+  // 文件扩展名校验（防止无扩展名或伪装MIME类型的文件）
+  const isAllowedExtension = ALLOWED_IMAGE_EXTENSIONS.some((ext) =>
+    file.name.toLowerCase().endsWith(ext)
+  )
+
+  if (!isAllowedMime || !isAllowedExtension) {
+    message.error('上传失败：仅支持 jpg / png / webp 格式')
+    return false
   }
-  const isLt50M = file.size / 1024 / 1024 < 50
-  if (!isLt50M) {
-    message.error('图片大小不能超过 50MB！')
+
+  // 校验图片大小
+  const isLtMaxSize = file.size / 1024 / 1024 <= MAX_UPLOAD_SIZE_MB
+  if (!isLtMaxSize) {
+    message.error(`上传失败：图片大小不能超过 ${MAX_UPLOAD_SIZE_MB}MB`)
+    return false
   }
-  return isJpgOrPng && isLt50M
+
+  return true
 }
 
 const handleUpload = async ({ file, onSuccess, onError }: {

@@ -5,6 +5,7 @@
       :show-upload-list="false"
       :custom-request="handleUpload"
       :before-upload="beforeUpload"
+      :accept="IMAGE_ACCEPT_ATTRIBUTE"
     >
       <img v-if="picture?.url" :src="picture?.url" alt="avatar" />
       <div v-else>
@@ -22,6 +23,12 @@ import type { UploadProps } from 'ant-design-vue'
 import { message } from 'ant-design-vue'
 import { uploadPictureUsingPost } from '@/api/pictureController.ts'
 import { error } from '@/utils/logger'
+import {
+  MAX_UPLOAD_SIZE_MB,
+  ALLOWED_IMAGE_MIME_TYPES,
+  ALLOWED_IMAGE_EXTENSIONS,
+  IMAGE_ACCEPT_ATTRIBUTE,
+} from '@/constants/upload'
 
 interface Props {
   picture?: API.PictureVO
@@ -66,17 +73,26 @@ const loading = ref<boolean>(false)
  * @param file
  */
 const beforeUpload = (file: UploadProps['fileList'] extends (infer U)[] | undefined ? U : never) => {
-  // 校验图片格式
-  const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png'
-  if (!isJpgOrPng) {
-    message.error('不支持上传该格式的图片，推荐 jpg 或 png')
+  // MIME 类型白名单校验
+  const isAllowedMime = ALLOWED_IMAGE_MIME_TYPES.includes(file.type)
+  // 文件扩展名校验（防止无扩展名或伪装MIME类型的文件）
+  const isAllowedExtension = ALLOWED_IMAGE_EXTENSIONS.some((ext) =>
+    file.name.toLowerCase().endsWith(ext)
+  )
+
+  if (!isAllowedMime || !isAllowedExtension) {
+    message.error('上传失败：仅支持 jpg / png / webp 格式')
+    return false
   }
+
   // 校验图片大小
-  const isLt50M = (file.size ?? 0) / 1024 / 1024 < 50
-  if (!isLt50M) {
-    message.error('不能上传超过 50MB 的图片')
+  const isLtMaxSize = (file.size ?? 0) / 1024 / 1024 <= MAX_UPLOAD_SIZE_MB
+  if (!isLtMaxSize) {
+    message.error(`上传失败：图片大小不能超过 ${MAX_UPLOAD_SIZE_MB}MB`)
+    return false
   }
-  return isJpgOrPng && isLt50M
+
+  return true
 }
 </script>
 <style scoped>

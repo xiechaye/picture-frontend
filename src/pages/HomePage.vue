@@ -17,7 +17,7 @@
       <a-upload-dragger
         name="file"
         :show-upload-list="false"
-        accept="image/jpeg,image/png,image/webp"
+        :accept="IMAGE_ACCEPT_ATTRIBUTE"
         :before-upload="beforeImageUpload"
         :custom-request="handleImageUpload"
       >
@@ -25,7 +25,7 @@
           <InboxOutlined />
         </p>
         <p class="ant-upload-text">点击或拖拽上传参考图</p>
-        <p class="ant-upload-hint">支持 jpg / png / webp，大小不超过 20MB。上传后将自动开始以图搜图</p>
+        <p class="ant-upload-hint">支持 jpg / png / webp，大小不超过 {{ MAX_UPLOAD_SIZE_MB }}MB。上传后将自动开始以图搜图</p>
       </a-upload-dragger>
     </div>
 
@@ -132,6 +132,12 @@ import OmniSearchBar from '@/components/OmniSearchBar.vue'
 import SearchFilterDrawer, { type FilterValues } from '@/components/SearchFilterDrawer.vue'
 import type { SearchMode } from '@/constants/search'
 import { SEARCH_URL_PARAMS } from '@/constants/search'
+import {
+  MAX_UPLOAD_SIZE_MB,
+  ALLOWED_IMAGE_MIME_TYPES,
+  ALLOWED_IMAGE_EXTENSIONS,
+  IMAGE_ACCEPT_ATTRIBUTE,
+} from '@/constants/upload'
 
 const route = useRoute()
 const router = useRouter()
@@ -370,20 +376,25 @@ const fetchSourcePicture = async () => {
   }
 }
 
-const ALLOWED_IMAGE_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp']
-const MAX_IMAGE_SIZE_MB = 20
+// 上传常量已从 @/constants/upload 导入
 
 const beforeImageUpload: UploadProps['beforeUpload'] = (file) => {
-  const isAllowedType =
-    ALLOWED_IMAGE_MIME_TYPES.includes(file.type) || /\.(jpe?g|png|webp)$/i.test(file.name)
-  if (!isAllowedType) {
+  // MIME 类型白名单校验
+  const isAllowedMime = ALLOWED_IMAGE_MIME_TYPES.includes(file.type)
+  // 文件扩展名校验（防止无扩展名或伪装MIME类型的文件）
+  const isAllowedExtension = ALLOWED_IMAGE_EXTENSIONS.some((ext) =>
+    file.name.toLowerCase().endsWith(ext)
+  )
+
+  if (!isAllowedMime || !isAllowedExtension) {
     message.error('上传失败：仅支持 jpg / png / webp 格式')
     return false
   }
 
-  const isLtMaxSize = (file.size ?? 0) / 1024 / 1024 <= MAX_IMAGE_SIZE_MB
+  // 文件大小校验
+  const isLtMaxSize = (file.size ?? 0) / 1024 / 1024 <= MAX_UPLOAD_SIZE_MB
   if (!isLtMaxSize) {
-    message.error(`上传失败：图片大小不能超过 ${MAX_IMAGE_SIZE_MB}MB`)
+    message.error(`上传失败：图片大小不能超过 ${MAX_UPLOAD_SIZE_MB}MB`)
     return false
   }
 

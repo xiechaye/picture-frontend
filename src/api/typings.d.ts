@@ -256,6 +256,7 @@ declare namespace API {
     userName?: string
     userProfile?: string
     userRole?: string
+    forceChangePassword?: boolean
   }
 
   type Output = {
@@ -723,6 +724,11 @@ declare namespace API {
     userName?: string
     userProfile?: string
     userRole?: string
+  }
+
+  type UserUpdatePasswordMyRequest = {
+    newPassword?: string
+    oldPassword?: string
   }
 
   type UserVO = {

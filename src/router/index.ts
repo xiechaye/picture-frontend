@@ -16,6 +16,7 @@ import SpaceAnalyzePage from '@/pages/SpaceAnalyzePage.vue'
 import SpaceUserManagePage from '@/pages/admin/SpaceUserManagePage.vue'
 import UserExchangeVipPage from '@/pages/UserExchangeVipPage.vue'
 import PromptManagePage from '@/pages/admin/PromptManagePage.vue'
+import UserChangePasswordPage from '@/pages/user/UserChangePasswordPage.vue'
 
 // @author chaye
 const router = createRouter({
@@ -40,6 +41,11 @@ const router = createRouter({
       path: '/user/profile',
       name: '个人资料',
       component: () => import('@/pages/user/UserProfileEditPage.vue'),
+    },
+    {
+      path: '/user/change-password',
+      name: '修改密码',
+      component: UserChangePasswordPage,
     },
     {
       path: '/admin/userManage',

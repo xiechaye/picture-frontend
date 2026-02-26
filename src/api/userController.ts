@@ -156,3 +156,18 @@ export async function updateUserUsingPost(
     ...(options || {}),
   })
 }
+
+/** updatePasswordMy POST /api/user/update/password/my */
+export async function updatePasswordMyUsingPost(
+  body: API.UserUpdatePasswordMyRequest,
+  options?: { [key: string]: any }
+) {
+  return request<API.BaseResponseBoolean_>('/api/user/update/password/my', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: body,
+    ...(options || {}),
+  })
+}
