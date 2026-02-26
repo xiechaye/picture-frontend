@@ -12,9 +12,26 @@
       />
     </div>
 
+    <!-- 以图搜图上传入口（点击上传 + 拖拽上传） -->
+    <div v-if="searchMode === 'image'" class="image-search-upload-section">
+      <a-upload-dragger
+        name="file"
+        :show-upload-list="false"
+        accept="image/jpeg,image/png,image/webp"
+        :before-upload="beforeImageUpload"
+        :custom-request="handleImageUpload"
+      >
+        <p class="ant-upload-drag-icon">
+          <InboxOutlined />
+        </p>
+        <p class="ant-upload-text">点击或拖拽上传参考图</p>
+        <p class="ant-upload-hint">支持 jpg / png / webp，大小不超过 20MB。上传后将自动开始以图搜图</p>
+      </a-upload-dragger>
+    </div>
+
     <!-- 以图搜图：原图预览 -->
     <div v-if="searchMode === 'image' && sourcePicture" class="source-picture-section">
-      <h3 style="margin-bottom: 8px">原图</h3>
+      <h3 style="margin-bottom: 8px">参考图</h3>
       <a-card hoverable style="width: 200px; display: inline-block; margin-bottom: 16px">
         <template #cover>
           <img
@@ -27,28 +44,48 @@
     </div>
 
     <!-- 以图搜图结果 -->
-    <a-list
-      v-if="searchMode === 'image'"
-      :grid="{ gutter: 16, xs: 1, sm: 2, md: 3, lg: 4, xl: 5, xxl: 6 }"
-      :data-source="imageSearchResults"
-      :loading="loading"
-    >
-      <template #renderItem="{ item: pic }">
-        <a-list-item style="padding: 0">
-          <a :href="pic.fromUrl" target="_blank">
-            <a-card hoverable>
-              <template #cover>
-                <img
-                  :alt="pic.name"
-                  :src="pic.thumbUrl"
-                  style="height: 180px; object-fit: cover"
-                />
-              </template>
-            </a-card>
-          </a>
-        </a-list-item>
-      </template>
-    </a-list>
+    <template v-if="searchMode === 'image'">
+      <a-alert
+        v-if="imageSearchError"
+        style="margin-bottom: 16px"
+        type="error"
+        show-icon
+        :message="imageSearchError"
+      />
+
+      <a-empty
+        v-if="!loading && !sourcePictureId"
+        description="请先上传参考图开始搜索"
+      />
+
+      <a-list
+        v-else-if="imageSearchResults.length > 0"
+        :grid="{ gutter: 16, xs: 1, sm: 2, md: 3, lg: 4, xl: 5, xxl: 6 }"
+        :data-source="imageSearchResults"
+        :loading="loading"
+      >
+        <template #renderItem="{ item: pic }">
+          <a-list-item style="padding: 0">
+            <a :href="pic.fromUrl" target="_blank">
+              <a-card hoverable>
+                <template #cover>
+                  <img
+                    :alt="pic.name"
+                    :src="pic.thumbUrl"
+                    style="height: 180px; object-fit: cover"
+                  />
+                </template>
+              </a-card>
+            </a>
+          </a-list-item>
+        </template>
+      </a-list>
+
+      <a-empty
+        v-else-if="!loading"
+        description="未找到相似图片，换一张参考图试试"
+      />
+    </template>
 
     <!-- 普通/语义搜索图片列表 -->
     <PictureList v-else :dataList="dataList" :loading="loading" />
@@ -86,8 +123,10 @@ import {
   searchPictureByColorUsingPost,
   searchPictureByPictureUsingPost,
   getPictureVoByIdUsingGet,
+  uploadPictureUsingPost,
 } from '@/api/pictureController.ts'
-import { message } from 'ant-design-vue'
+import { InboxOutlined } from '@ant-design/icons-vue'
+import { message, type UploadProps } from 'ant-design-vue'
 import PictureList from '@/components/PictureList.vue'
 import OmniSearchBar from '@/components/OmniSearchBar.vue'
 import SearchFilterDrawer, { type FilterValues } from '@/components/SearchFilterDrawer.vue'
@@ -107,6 +146,7 @@ const similarityThreshold = ref<number>(0.5)
 const sourcePictureId = ref<string | undefined>(undefined)
 const sourcePicture = ref<API.PictureVO | undefined>(undefined)
 const imageSearchResults = ref<API.ImageSearchResult[]>([])
+const imageSearchError = ref<string>('')
 
 // 筛选抽屉状态
 const filterDrawerOpen = ref(false)
@@ -195,6 +235,7 @@ const syncToUrl = () => {
 
 // 切换模式时同步 URL，离开图片搜索模式时清空图片搜索状态
 watch(searchMode, (newMode) => {
+  imageSearchError.value = ''
   if (newMode !== 'image') {
     sourcePictureId.value = undefined
     sourcePicture.value = undefined
@@ -293,8 +334,9 @@ const fetchColorData = async () => {
 
 // 以图搜图
 const fetchImageData = async () => {
+  imageSearchError.value = ''
   if (!sourcePictureId.value) {
-    message.warning('请从图片列表点击搜索按钮进入以图搜图模式')
+    message.warning('请先上传参考图，再进行以图搜图')
     return
   }
   loading.value = true
@@ -303,10 +345,14 @@ const fetchImageData = async () => {
     if (res.data.code === 0 && res.data.data) {
       imageSearchResults.value = res.data.data ?? []
     } else {
-      message.error('以图搜图失败，' + res.data.message)
+      imageSearchResults.value = []
+      imageSearchError.value = '以图搜图失败，' + res.data.message
+      message.error(imageSearchError.value)
     }
   } catch (e: unknown) {
-    message.error('以图搜图失败：' + (e instanceof Error ? e.message : String(e)))
+    imageSearchResults.value = []
+    imageSearchError.value = '以图搜图失败：' + (e instanceof Error ? e.message : String(e))
+    message.error(imageSearchError.value)
   }
   loading.value = false
 }
@@ -321,6 +367,61 @@ const fetchSourcePicture = async () => {
     }
   } catch {
     // 预览失败不影响搜索结果，静默处理
+  }
+}
+
+const ALLOWED_IMAGE_MIME_TYPES = ['image/jpeg', 'image/png', 'image/webp']
+const MAX_IMAGE_SIZE_MB = 20
+
+const beforeImageUpload: UploadProps['beforeUpload'] = (file) => {
+  const isAllowedType =
+    ALLOWED_IMAGE_MIME_TYPES.includes(file.type) || /\.(jpe?g|png|webp)$/i.test(file.name)
+  if (!isAllowedType) {
+    message.error('上传失败：仅支持 jpg / png / webp 格式')
+    return false
+  }
+
+  const isLtMaxSize = (file.size ?? 0) / 1024 / 1024 <= MAX_IMAGE_SIZE_MB
+  if (!isLtMaxSize) {
+    message.error(`上传失败：图片大小不能超过 ${MAX_IMAGE_SIZE_MB}MB`)
+    return false
+  }
+
+  imageSearchError.value = ''
+  return true
+}
+
+const handleImageUpload: UploadProps['customRequest'] = async (options) => {
+  const rawFile = options.file as File
+  loading.value = true
+  imageSearchError.value = ''
+  try {
+    const uploadRes = await uploadPictureUsingPost({}, {}, rawFile)
+    if (uploadRes.data.code !== 0 || !uploadRes.data.data?.id) {
+      const errMsg = '上传失败，' + (uploadRes.data.message || '请稍后重试')
+      imageSearchError.value = errMsg
+      message.error(errMsg)
+      options.onError?.(new Error(errMsg))
+      return
+    }
+
+    const uploadedPicture = uploadRes.data.data
+    sourcePictureId.value = String(uploadedPicture.id)
+    sourcePicture.value = uploadedPicture
+    imageSearchResults.value = []
+    syncToUrl()
+    await fetchImageData()
+    if (!imageSearchError.value) {
+      message.success('上传成功，已完成以图搜图')
+    }
+    options.onSuccess?.(uploadedPicture)
+  } catch (e) {
+    const errMsg = '上传失败：' + (e instanceof Error ? e.message : String(e))
+    imageSearchError.value = errMsg
+    message.error(errMsg)
+    options.onError?.(e as Error)
+  } finally {
+    loading.value = false
   }
 }
 
@@ -401,6 +502,10 @@ const getTagCategoryOptions = async () => {
 .search-section {
   margin-bottom: 24px;
   padding: 16px 0;
+}
+
+.image-search-upload-section {
+  margin-bottom: 16px;
 }
 
 .source-picture-section {

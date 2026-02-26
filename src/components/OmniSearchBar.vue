@@ -92,7 +92,7 @@ const modeOptions = computed(() =>
 
 const currentPlaceholder = computed(() => {
   if (searchModeValue.value === 'semantic') return '输入语义描述，如：雪中的宫殿'
-  if (searchModeValue.value === 'image') return '以图搜图模式（从图片列表点击搜索按钮进入）'
+  if (searchModeValue.value === 'image') return '以图搜图模式：请上传参考图后自动搜索'
   return props.placeholder
 })
 
