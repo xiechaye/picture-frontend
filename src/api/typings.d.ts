@@ -732,6 +732,12 @@ declare namespace API {
     oldPassword?: string
   }
 
+  type AdminResetPasswordRequest = {
+    id?: number | string
+    newPassword?: string
+    confirmPassword?: string
+  }
+
   type UserUpdatePasswordMyRequest = {
     newPassword?: string
     oldPassword?: string

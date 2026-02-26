@@ -171,3 +171,18 @@ export async function changePasswordUsingPost(
     ...(options || {}),
   })
 }
+
+/** adminResetPassword POST /api/user/admin/reset/password */
+export async function adminResetPasswordUsingPost(
+  body: API.AdminResetPasswordRequest,
+  options?: { [key: string]: any }
+) {
+  return request<API.BaseResponseBoolean_>('/api/user/admin/reset/password', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: body,
+    ...(options || {}),
+  })
+}
