@@ -1,12 +1,14 @@
 <template>
   <div id="basicLayout">
-    <a-layout style="min-height: 100vh">
+    <a-layout class="root-layout">
       <a-layout-header class="header">
         <GlobalHeader />
       </a-layout-header>
       <a-layout class="main-layout">
         <a-layout-content class="content">
-          <router-view />
+          <div class="content-inner">
+            <router-view />
+          </div>
         </a-layout-content>
       </a-layout>
       <a-layout-footer class="footer">
@@ -21,47 +23,62 @@ import GlobalHeader from '@/components/GlobalHeader.vue'
 </script>
 
 <style scoped>
+#basicLayout .root-layout {
+  min-height: 100vh;
+  background: var(--color-bg-primary);
+}
+
 #basicLayout .header {
-  padding-inline: 20px;
-  background: white;
+  height: var(--layout-header-height);
+  line-height: var(--layout-header-height);
+  padding-inline: var(--spacing-md);
+  background: var(--color-bg-secondary);
   color: unset;
   margin-bottom: 1px;
   position: sticky;
   top: 0;
-  z-index: 101;
+  z-index: var(--z-header);
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
 }
 
 #basicLayout .main-layout {
-  background: #FAFAF9;
+  flex: 1;
+  background: var(--color-bg-primary);
 }
 
 #basicLayout .content {
-  padding: 24px;
-  background: #FAFAF9;
-  margin-bottom: 60px;
-  min-height: calc(100vh - 64px - 60px);
+  padding: var(--spacing-md);
+  background: var(--color-bg-primary);
+}
+
+#basicLayout .content-inner {
+  max-width: var(--layout-content-max-width);
+  margin: 0 auto;
+  min-height: calc(100vh - var(--layout-header-height) - var(--layout-footer-height));
 }
 
 #basicLayout .footer {
-  background: white;
-  padding: 16px;
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
+  background: var(--color-bg-secondary);
+  padding: var(--spacing-md);
   text-align: center;
-  border-top: 1px solid #e5e7eb;
-  z-index: 99;
+  border-top: 1px solid var(--color-border-primary);
+  min-height: var(--layout-footer-height);
 }
 
 #basicLayout .footer a {
-  color: #2E7D32;
+  color: var(--color-primary);
   text-decoration: none;
-  transition: color 200ms ease;
+  transition: color var(--transition-base);
 }
 
 #basicLayout .footer a:hover {
-  color: #1B5E20;
+  color: var(--color-primary-active);
+}
+
+@media (min-width: 768px) {
+  #basicLayout .header,
+  #basicLayout .content {
+    padding-inline: var(--spacing-lg);
+  }
 }
 </style>
