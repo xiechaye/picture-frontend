@@ -72,12 +72,15 @@ const loading = ref<boolean>(false)
  * 上传前的校验
  * @param file
  */
-const beforeUpload = (file: UploadProps['fileList'] extends (infer U)[] | undefined ? U : never) => {
+const beforeUpload = (
+  file: UploadProps['fileList'] extends (infer U)[] | undefined ? U : never,
+) => {
   // MIME 类型白名单校验
-  const isAllowedMime = ALLOWED_IMAGE_MIME_TYPES.includes(file.type)
+  const fileType = file.type ?? ''
+  const isAllowedMime = ALLOWED_IMAGE_MIME_TYPES.includes(fileType)
   // 文件扩展名校验（防止无扩展名或伪装MIME类型的文件）
   const isAllowedExtension = ALLOWED_IMAGE_EXTENSIONS.some((ext) =>
-    file.name.toLowerCase().endsWith(ext)
+    file.name.toLowerCase().endsWith(ext),
   )
 
   if (!isAllowedMime || !isAllowedExtension) {

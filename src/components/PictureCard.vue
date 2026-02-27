@@ -4,7 +4,7 @@
     <div v-if="isSelectionMode && isSelected" class="selection-badge">
       <CheckCircleOutlined />
     </div>
-    <div class="picture-image-wrapper">
+    <div class="picture-image-wrapper" :class="{ 'is-loaded': imgLoaded }">
       <img
         :src="picture.thumbnailUrl || picture.url"
         :alt="picture.name"
@@ -18,6 +18,7 @@
           <a-button
             type="text"
             size="small"
+            aria-label="分享图片"
             @click="(e: MouseEvent) => emit('share', picture, e)"
           >
             <ShareAltOutlined />
@@ -25,6 +26,7 @@
           <a-button
             type="text"
             size="small"
+            aria-label="以图搜图"
             @click="(e: MouseEvent) => emit('search', picture, e)"
           >
             <SearchOutlined />
@@ -33,6 +35,7 @@
             v-if="canEdit"
             type="text"
             size="small"
+            aria-label="编辑图片"
             @click="(e: MouseEvent) => emit('edit', picture, e)"
           >
             <EditOutlined />
@@ -42,7 +45,7 @@
             title="确定删除此图片吗？"
             @confirm="(e: MouseEvent) => emit('delete', picture, e)"
           >
-            <a-button type="text" size="small" danger @click.stop>
+            <a-button type="text" size="small" danger aria-label="删除图片" @click.stop>
               <DeleteOutlined />
             </a-button>
           </a-popconfirm>
@@ -87,7 +90,11 @@ const imgLoaded = ref(false)
 
 // 检查图片是否被选中
 const isSelected = computed(() => {
-  return props.picture.id !== undefined && props.picture.id !== null && pictureSelectionStore.isSelected(props.picture.id)
+  return (
+    props.picture.id !== undefined &&
+    props.picture.id !== null &&
+    pictureSelectionStore.isSelected(props.picture.id)
+  )
 })
 
 const emit = defineEmits<{
@@ -117,18 +124,20 @@ const handleCardClick = () => {
 
 <style scoped>
 .picture-card {
-  background: #fff;
-  border-radius: 12px;
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-lg);
   overflow: hidden;
   cursor: pointer;
-  transition: all 200ms ease;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all var(--transition-base);
+  box-shadow: var(--shadow-card);
   position: relative;
 }
 
 /* 选中状态样式 */
 .picture-card.is-selected {
-  box-shadow: 0 0 0 2px #1890ff, 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow:
+    0 0 0 2px var(--color-primary),
+    var(--shadow-card);
 }
 
 .picture-card.is-selected .picture-image {
@@ -137,18 +146,20 @@ const handleCardClick = () => {
 
 .picture-card:hover {
   transform: translateY(-4px);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+  box-shadow: var(--shadow-card-hover);
 }
 
 .picture-card.is-selected:hover {
-  box-shadow: 0 0 0 2px #1890ff, 0 8px 24px rgba(0, 0, 0, 0.12);
+  box-shadow:
+    0 0 0 2px var(--color-primary),
+    var(--shadow-card-hover);
 }
 
 /* 右上角选中图标样式 */
 .selection-badge {
   position: absolute;
-  top: 8px;
-  right: 8px;
+  top: var(--spacing-xs);
+  right: var(--spacing-xs);
   z-index: 10;
   width: 24px;
   height: 24px;
@@ -156,7 +167,7 @@ const handleCardClick = () => {
   align-items: center;
   justify-content: center;
   background: rgba(255, 255, 255, 0.95);
-  border-radius: 50%;
+  border-radius: var(--radius-full);
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
   animation: badge-in 0.2s ease-out;
 }
@@ -175,12 +186,26 @@ const handleCardClick = () => {
 .selection-badge svg {
   width: 16px;
   height: 16px;
-  color: #1890ff;
+  color: var(--color-primary);
 }
 
 .picture-image-wrapper {
   position: relative;
   overflow: hidden;
+  background: #f3f4f6;
+}
+
+.picture-image-wrapper::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, #f3f4f6 20%, #e5e7eb 50%, #f3f4f6 80%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s infinite;
+}
+
+.picture-image-wrapper.is-loaded::before {
+  display: none;
 }
 
 .picture-image {
@@ -189,7 +214,7 @@ const handleCardClick = () => {
   object-fit: cover;
   min-height: 100px;
   opacity: 0;
-  transition: opacity 300ms ease;
+  transition: opacity var(--transition-slow);
 }
 
 .picture-image.img-loaded {
@@ -202,9 +227,9 @@ const handleCardClick = () => {
   left: 0;
   right: 0;
   background: linear-gradient(transparent, rgba(0, 0, 0, 0.6));
-  padding: 24px 8px 8px;
+  padding: var(--spacing-lg) var(--spacing-xs) var(--spacing-xs);
   opacity: 0;
-  transition: opacity 200ms ease;
+  transition: opacity var(--transition-base);
 }
 
 .picture-card:hover .picture-actions {
@@ -212,7 +237,7 @@ const handleCardClick = () => {
 }
 
 .picture-actions :deep(.ant-btn) {
-  color: #fff;
+  color: var(--color-text-white);
 }
 
 .picture-actions :deep(.ant-btn:hover) {
@@ -220,14 +245,23 @@ const handleCardClick = () => {
 }
 
 .picture-info {
-  padding: 12px;
+  padding: var(--spacing-sm);
 }
 
 .picture-name {
   font-size: 14px;
-  color: #333;
+  color: var(--color-text-primary);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }
 </style>

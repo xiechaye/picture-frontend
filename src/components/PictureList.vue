@@ -1,43 +1,44 @@
 <template>
   <div class="picture-list">
-    <a-spin :spinning="loading">
-      <a-empty v-if="dataList.length === 0 && !loading" description="暂无图片" />
-      <MasonryGrid
-        v-else
-        :items="dataList"
-        :column-width="280"
-        :gap="16"
-        :ssr-columns="4"
-      >
-        <template #default="{ item: picture }">
-          <PictureCard
-            :picture="picture as API.PictureVO"
-            :can-edit="canEdit"
-            :can-delete="canDelete"
-            :show-op="showOp"
-            :is-selection-mode="isSelectionMode"
-            @click="doClickPicture"
-            @share="doShare"
-            @search="doSearch"
-            @edit="doEdit"
-            @delete="doDelete"
-            @check-change="handleSelectionChange"
-          />
-        </template>
-      </MasonryGrid>
-    </a-spin>
+    <div v-if="loading" class="picture-skeleton-grid" aria-label="图片加载中">
+      <div v-for="item in skeletonItems" :key="item" class="skeleton-card">
+        <div class="skeleton-image" :style="{ height: `${180 + (item % 4) * 36}px` }" />
+        <div class="skeleton-line" />
+      </div>
+    </div>
+
+    <a-empty v-else-if="dataList.length === 0" description="暂无图片" />
+
+    <MasonryGrid v-else :items="dataList" :column-width="280" :gap="16" :ssr-columns="4">
+      <template #default="{ item: picture }">
+        <PictureCard
+          :picture="picture as API.PictureVO"
+          :can-edit="canEdit"
+          :can-delete="canDelete"
+          :show-op="showOp"
+          :is-selection-mode="isSelectionMode"
+          @click="doClickPicture"
+          @share="doShare"
+          @search="doSearch"
+          @edit="doEdit"
+          @delete="doDelete"
+          @check-change="handleSelectionChange"
+        />
+      </template>
+    </MasonryGrid>
+
     <ShareModal ref="shareModalRef" title="分享图片" :link="shareLink" />
   </div>
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue'
+import { message } from 'ant-design-vue'
 import { useRouter } from 'vue-router'
 import { deletePictureUsingPost } from '@/api/pictureController.ts'
-import { message } from 'ant-design-vue'
-import ShareModal from '@/components/ShareModal.vue'
 import MasonryGrid from '@/components/MasonryGrid.vue'
 import PictureCard from '@/components/PictureCard.vue'
-import { ref } from 'vue'
+import ShareModal from '@/components/ShareModal.vue'
 
 interface Props {
   dataList?: API.PictureVO[]
@@ -63,6 +64,7 @@ const emit = defineEmits<{
 }>()
 
 const router = useRouter()
+const skeletonItems = Array.from({ length: 8 }, (_, index) => index + 1)
 
 /**
  * 处理图片选择变化
@@ -131,11 +133,45 @@ const doShare = (picture: API.PictureVO, e: MouseEvent) => {
   min-height: 200px;
 }
 
-.picture-list :deep(.ant-spin-nested-loading) {
-  min-height: 200px;
+.picture-skeleton-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: var(--spacing-md);
+}
+
+.skeleton-card {
+  background: var(--color-bg-secondary);
+  border-radius: var(--radius-lg);
+  padding: var(--spacing-sm);
+  box-shadow: var(--shadow-card);
+}
+
+.skeleton-image,
+.skeleton-line {
+  position: relative;
+  overflow: hidden;
+  border-radius: var(--radius-md);
+  background: linear-gradient(90deg, #f3f4f6 20%, #e5e7eb 50%, #f3f4f6 80%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s infinite;
+}
+
+.skeleton-line {
+  height: 16px;
+  margin-top: var(--spacing-sm);
+  width: 70%;
 }
 
 .picture-list :deep(.ant-empty) {
   padding: 60px 0;
+}
+
+@keyframes skeleton-shimmer {
+  0% {
+    background-position: 200% 0;
+  }
+  100% {
+    background-position: -200% 0;
+  }
 }
 </style>
