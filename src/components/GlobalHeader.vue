@@ -1,30 +1,39 @@
 <template>
   <div id="globalHeader">
-    <a-row :wrap="false">
-      <a-col flex="200px">
-        <router-link to="/">
-          <div class="title-bar">
-            <img class="logo" src="../assets/logo.svg" alt="logo" />
-            <div class="title">茶叶云图库</div>
-          </div>
-        </router-link>
-      </a-col>
-      <a-col flex="auto">
+    <div class="header-inner">
+      <router-link to="/" class="brand-link" aria-label="返回首页">
+        <div class="title-bar">
+          <img class="logo" src="../assets/logo.svg" alt="茶叶云图库 logo" />
+          <div class="title">茶叶云图库</div>
+        </div>
+      </router-link>
+
+      <div class="desktop-menu">
         <a-menu
           v-model:selectedKeys="current"
           mode="horizontal"
           :items="headerItems"
           @click="doMenuClick"
+          aria-label="主导航菜单"
         />
-      </a-col>
-      <!-- 用户信息展示栏 -->
-      <a-col flex="0 0 auto" style="min-width: 200px">
+      </div>
+
+      <div class="right-actions">
+        <a-button
+          class="mobile-menu-trigger"
+          type="text"
+          aria-label="打开导航菜单"
+          @click="mobileMenuOpen = true"
+        >
+          <MenuOutlined />
+        </a-button>
+
         <div class="user-login-status">
           <div v-if="loginUserStore.loginUser.id">
-            <a-dropdown placement="bottomLeft">
+            <a-dropdown placement="bottomRight">
               <a-space>
                 <a-avatar :src="loginUserStore.loginUser.userAvatar" />
-                {{ loginUserStore.loginUser.userName ?? '无名' }}
+                <span class="user-name">{{ loginUserStore.loginUser.userName ?? '无名' }}</span>
               </a-space>
               <template #overlay>
                 <a-menu>
@@ -52,34 +61,52 @@
             <a-button type="primary" href="/user/login">登录</a-button>
           </div>
         </div>
-      </a-col>
-    </a-row>
+      </div>
+    </div>
+
+    <a-drawer
+      v-model:open="mobileMenuOpen"
+      title="导航菜单"
+      placement="right"
+      :width="260"
+      class="mobile-nav-drawer"
+    >
+      <a-menu
+        v-model:selectedKeys="current"
+        mode="inline"
+        :items="headerItems"
+        @click="doMobileMenuClick"
+        aria-label="移动端导航菜单"
+      />
+    </a-drawer>
   </div>
 </template>
 
 <script lang="ts" setup>
-import { computed, h, ref, watchEffect, watch } from 'vue'
+import { computed, h, ref, watch, watchEffect } from 'vue'
 import {
-  HomeOutlined,
-  LogoutOutlined,
-  UserOutlined,
-  InboxOutlined,
+  AppstoreOutlined,
   BulbOutlined,
   FolderOutlined,
+  HomeOutlined,
+  InboxOutlined,
+  LogoutOutlined,
+  MenuOutlined,
   TeamOutlined,
-  AppstoreOutlined,
+  UserOutlined,
 } from '@ant-design/icons-vue'
-import type { MenuProps } from 'ant-design-vue'
 import { message } from 'ant-design-vue'
-import { useRouter, useRoute } from 'vue-router'
-import { useLoginUserStore } from '@/stores/useLoginUserStore.ts'
+import type { MenuProps } from 'ant-design-vue'
+import { useRoute, useRouter } from 'vue-router'
+import { listMyTeamSpaceUsingPost } from '@/api/spaceUserController.ts'
 import { userLogoutUsingPost } from '@/api/userController.ts'
 import { SPACE_TYPE_ENUM } from '@/constants/space.ts'
-import { listMyTeamSpaceUsingPost } from '@/api/spaceUserController.ts'
+import { useLoginUserStore } from '@/stores/useLoginUserStore.ts'
 
 const loginUserStore = useLoginUserStore()
 const router = useRouter()
 const route = useRoute()
+const mobileMenuOpen = ref(false)
 
 // 团队空间列表
 const teamSpaceList = ref<API.SpaceUserVO[]>([])
@@ -114,7 +141,7 @@ watch(
     if (id && userRole !== 'admin') {
       fetchTeamSpaceList()
     }
-  }
+  },
 )
 
 // 判断是否是管理员
@@ -255,9 +282,7 @@ const current = ref<string[]>([])
 const updateCurrentHighlight = (path: string) => {
   if (path.startsWith('/space/')) {
     const spaceId = path.replace('/space/', '')
-    const isTeamSpace = teamSpaceList.value.some(
-      (item) => String(item.spaceId) === spaceId
-    )
+    const isTeamSpace = teamSpaceList.value.some((item) => String(item.spaceId) === spaceId)
     if (isTeamSpace) {
       current.value = [path]
     } else {
@@ -283,16 +308,21 @@ router.afterEach((to) => {
   } else {
     updateCurrentHighlight(path)
   }
+  mobileMenuOpen.value = false
 })
 
 // 路由跳转事件
 const doMenuClick = ({ key }: { key: string }) => {
-  // 如果 key 包含查询参数，直接使用字符串形式保留参数
   if (key.includes('?')) {
     router.push(key)
   } else {
     router.push({ path: key })
   }
+}
+
+const doMobileMenuClick = ({ key }: { key: string }) => {
+  doMenuClick({ key })
+  mobileMenuOpen.value = false
 }
 
 // 用户注销
@@ -311,26 +341,103 @@ const doLogout = async () => {
 </script>
 
 <style scoped>
-#globalHeader .title-bar {
+#globalHeader {
+  width: 100%;
+}
+
+.header-inner {
+  min-height: var(--layout-header-height);
   display: flex;
   align-items: center;
+  gap: var(--spacing-md);
+}
+
+.brand-link {
+  color: inherit;
+  flex-shrink: 0;
+}
+
+.title-bar {
+  display: flex;
+  align-items: center;
+  min-width: 0;
 }
 
 .title {
-  color: black;
+  color: var(--color-text-primary);
   font-size: 18px;
-  margin-left: 16px;
+  font-weight: 600;
+  margin-left: var(--spacing-md);
+  white-space: nowrap;
 }
 
 .logo {
-  height: 48px;
+  height: 44px;
+}
+
+.desktop-menu {
+  flex: 1;
+  min-width: 0;
+}
+
+.right-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  margin-left: auto;
+}
+
+.mobile-menu-trigger {
+  display: none;
+  color: var(--color-text-primary);
 }
 
 .user-login-status {
   white-space: nowrap;
   display: flex;
   justify-content: flex-end;
-  padding-right: 16px;
+  min-width: 0;
+}
+
+.user-name {
+  display: inline-block;
+  max-width: 120px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.mobile-nav-drawer :deep(.ant-drawer-body) {
+  padding: var(--spacing-sm);
+}
+
+@media (max-width: 900px) {
+  .desktop-menu {
+    display: none;
+  }
+
+  .mobile-menu-trigger {
+    display: inline-flex;
+  }
+
+  .title {
+    font-size: 16px;
+    margin-left: var(--spacing-sm);
+  }
+
+  .logo {
+    height: 38px;
+  }
+}
+
+@media (max-width: 576px) {
+  .title {
+    display: none;
+  }
+
+  .user-name {
+    max-width: 72px;
+  }
 }
 </style>
 
@@ -351,10 +458,10 @@ const doLogout = async () => {
   gap: 6px;
   white-space: nowrap !important;
   font-size: 14px;
-  color: #333;
+  color: var(--color-text-primary);
 }
 
 .ant-dropdown-menu-item a:hover {
-  color: #2E7D32;
+  color: var(--color-primary);
 }
 </style>
