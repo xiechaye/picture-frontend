@@ -346,7 +346,7 @@ const doLogout = async () => {
 }
 
 .header-inner {
-  min-height: var(--layout-header-height);
+  height: var(--layout-header-height);
   display: flex;
   align-items: center;
   gap: var(--spacing-md);
@@ -360,6 +360,7 @@ const doLogout = async () => {
 .title-bar {
   display: flex;
   align-items: center;
+  height: 100%;
   min-width: 0;
 }
 
@@ -385,6 +386,7 @@ const doLogout = async () => {
   align-items: center;
   gap: var(--spacing-sm);
   margin-left: auto;
+  height: 100%;
 }
 
 .mobile-menu-trigger {
@@ -396,6 +398,7 @@ const doLogout = async () => {
   white-space: nowrap;
   display: flex;
   justify-content: flex-end;
+  align-items: center;
   min-width: 0;
 }
 

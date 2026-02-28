@@ -30,7 +30,8 @@ import GlobalHeader from '@/components/GlobalHeader.vue'
 
 #basicLayout .header {
   height: var(--layout-header-height);
-  line-height: var(--layout-header-height);
+  display: flex;
+  align-items: center;
   padding-inline: var(--spacing-md);
   background: var(--color-bg-secondary);
   color: unset;
@@ -60,7 +61,9 @@ import GlobalHeader from '@/components/GlobalHeader.vue'
 #basicLayout .footer {
   background: var(--color-bg-secondary);
   padding: var(--spacing-md);
-  text-align: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
   border-top: 1px solid var(--color-border-primary);
   min-height: var(--layout-footer-height);
 }
