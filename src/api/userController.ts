@@ -28,6 +28,20 @@ export async function deleteUserUsingPost(
   })
 }
 
+/** getCaptcha GET /api/user/captcha */
+export async function getCaptchaUsingGet(options?: { [key: string]: any }) {
+  return request<API.BaseResponseCaptchaVO_>('/api/user/captcha', {
+    method: 'GET',
+    params: {
+      _t: Date.now(), // 防止缓存
+    },
+    headers: {
+      'Cache-Control': 'no-cache',
+    },
+    ...(options || {}),
+  })
+}
+
 /** exchangeVip POST /api/user/exchange/vip */
 export async function exchangeVipUsingPost(
   body: API.VipExchangeRequest,

@@ -5,6 +5,12 @@ declare namespace API {
     message?: string
   }
 
+  type BaseResponseCaptchaVO_ = {
+    code?: number
+    data?: CaptchaVO
+    message?: string
+  }
+
   type BaseResponseCreateOutPaintingTaskResponse_ = {
     code?: number
     data?: CreateOutPaintingTaskResponse
@@ -193,6 +199,16 @@ declare namespace API {
   }
 
   type CreatePictureOutPaintingTaskRequest = {
+    parameters?: Parameters
+    pictureId?: string
+  }
+
+  type CaptchaVO = {
+    captchaId?: string
+    captchaImage?: string
+  }
+
+  type DeleteRequest = {
     parameters?: Parameters
     pictureId?: string
   }
@@ -681,6 +697,8 @@ declare namespace API {
   }
 
   type UserLoginRequest = {
+    captchaCode?: string
+    captchaId?: string
     userAccount?: string
     userPassword?: string
   }
@@ -698,6 +716,8 @@ declare namespace API {
   }
 
   type UserRegisterRequest = {
+    captchaCode?: string
+    captchaId?: string
     checkPassword?: string
     userAccount?: string
     userPassword?: string

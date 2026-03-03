@@ -23,6 +23,9 @@
       >
         <a-input-password v-model:value="formState.checkPassword" placeholder="请再次输入密码" />
       </a-form-item>
+      <a-form-item name="captchaCode" :rules="captchaRules">
+        <CaptchaInput v-model:captchaCode="formState.captchaCode" v-model:captchaId="formState.captchaId" ref="captchaRef" />
+      </a-form-item>
       <div class="tips">
         已有账号？
         <RouterLink to="/user/login">去登录</RouterLink>
@@ -34,17 +37,28 @@
   </div>
 </template>
 <script lang="ts" setup>
-import { reactive } from 'vue'
+import { reactive, ref } from 'vue'
 import { userRegisterUsingPost } from '@/api/userController.ts'
 import { message } from 'ant-design-vue'
-import router from '@/router' // 用于接受表单输入的值
+import router from '@/router'
+import CaptchaInput from '@/components/CaptchaInput.vue'
 
 // 用于接受表单输入的值
 const formState = reactive<API.UserRegisterRequest>({
   userAccount: '',
   userPassword: '',
   checkPassword: '',
+  captchaCode: '',
+  captchaId: '',
 })
+
+const captchaRef = ref<InstanceType<typeof CaptchaInput>>()
+
+// 验证码验证规则
+const captchaRules = [
+  { required: true, message: '请输入验证码' },
+  { type: 'string', min: 4, max: 4, message: '请输入 4 位验证码' },
+]
 
 /**
  * 密码验证函数
@@ -72,7 +86,14 @@ const handleSubmit = async (values: API.UserRegisterRequest) => {
     message.error('两次输入的密码不一致')
     return
   }
-  const res = await userRegisterUsingPost(values)
+
+  // 确保包含 captchaId（表单验证可能不会自动包含它）
+  const submitData: API.UserRegisterRequest = {
+    ...values,
+    captchaId: formState.captchaId,
+  }
+
+  const res = await userRegisterUsingPost(submitData)
   // 注册成功，跳转到登录页面
   if (res.data.code === 0 && res.data.data) {
     message.success('注册成功')
@@ -82,6 +103,8 @@ const handleSubmit = async (values: API.UserRegisterRequest) => {
     })
   } else {
     message.error('注册失败，' + res.data.message)
+    // 注册失败后刷新验证码
+    captchaRef.value?.refresh()
   }
 }
 </script>

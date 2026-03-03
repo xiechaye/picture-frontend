@@ -14,6 +14,9 @@
       >
         <a-input-password v-model:value="formState.userPassword" placeholder="请输入密码" />
       </a-form-item>
+      <a-form-item name="captchaCode" :rules="captchaRules">
+        <CaptchaInput v-model:captchaCode="formState.captchaCode" v-model:captchaId="formState.captchaId" ref="captchaRef" />
+      </a-form-item>
       <div class="tips">
         没有账号？
         <RouterLink to="/user/register">去注册</RouterLink>
@@ -25,12 +28,13 @@
   </div>
 </template>
 <script lang="ts" setup>
-import { reactive } from 'vue'
+import { reactive, ref } from 'vue'
 import { useRoute } from 'vue-router'
 import { userLoginUsingPost } from '@/api/userController.ts'
 import { useLoginUserStore } from '@/stores/useLoginUserStore.ts'
 import { message } from 'ant-design-vue'
-import router from '@/router' // 用于接受表单输入的值
+import router from '@/router'
+import CaptchaInput from '@/components/CaptchaInput.vue'
 
 const route = useRoute()
 
@@ -38,16 +42,31 @@ const route = useRoute()
 const formState = reactive<API.UserLoginRequest>({
   userAccount: '',
   userPassword: '',
+  captchaCode: '',
+  captchaId: '',
 })
 
 const loginUserStore = useLoginUserStore()
+const captchaRef = ref<InstanceType<typeof CaptchaInput>>()
+
+// 验证码验证规则
+const captchaRules = [
+  { required: true, message: '请输入验证码' },
+  { type: 'string', min: 4, max: 4, message: '请输入 4 位验证码' },
+]
 
 /**
  * 提交表单
  * @param values
  */
 const handleSubmit = async (values: API.UserLoginRequest) => {
-  const res = await userLoginUsingPost(values)
+  // 确保包含 captchaId（表单验证不会自动包含它）
+  const submitData: API.UserLoginRequest = {
+    ...values,
+    captchaId: formState.captchaId,
+  }
+
+  const res = await userLoginUsingPost(submitData)
   // 登录成功，把登录态保存到全局状态中
   if (res.data.code === 0 && res.data.data) {
     await loginUserStore.fetchLoginUser()
@@ -60,6 +79,8 @@ const handleSubmit = async (values: API.UserLoginRequest) => {
     })
   } else {
     message.error('登录失败，' + res.data.message)
+    // 登录失败后刷新验证码
+    captchaRef.value?.refresh()
   }
 }
 </script>
