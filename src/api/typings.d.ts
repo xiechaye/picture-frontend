@@ -723,6 +723,11 @@ declare namespace API {
     userPassword?: string
   }
 
+  type UserResetPasswordRequest = {
+    id?: number | string
+    userPassword?: string
+  }
+
   type UserUpdateRequest = {
     id?: number | string
     userAvatar?: string

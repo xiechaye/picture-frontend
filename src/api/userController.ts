@@ -162,3 +162,18 @@ export async function updateUserUsingPost(
     ...(options || {}),
   })
 }
+
+/** resetUserPassword POST /api/user/reset/password */
+export async function resetUserPasswordUsingPost(
+  body: API.UserResetPasswordRequest,
+  options?: { [key: string]: any }
+) {
+  return request<API.BaseResponseBoolean_>('/api/user/reset/password', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: body,
+    ...(options || {}),
+  })
+}
