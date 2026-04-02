@@ -115,6 +115,11 @@ const router = createRouter({
       component: () => import('@/pages/ImageGenerationPage.vue'),
     },
     {
+      path: '/ai_picture_edit',
+      name: 'AI图片编辑',
+      component: () => import('@/pages/AIPictureEditPage.vue'),
+    },
+    {
       path: '/user_exchange_vip',
       name: '用户兑换会员',
       component: UserExchangeVipPage,

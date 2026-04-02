@@ -310,3 +310,65 @@ export async function searchPictureBySemantic(
     ...(options || {}),
   })
 }
+
+/** segmentPicture POST /api/picture/edit/segment */
+export async function segmentPictureUsingPost(
+  body: API.SegmentPictureRequest,
+  options?: { [key: string]: any }
+) {
+  return request<API.BaseResponsePictureEditTaskVO_>('/api/picture/edit/segment', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: body,
+    ...(options || {}),
+  })
+}
+
+/** removeWatermark POST /api/picture/edit/remove-watermark */
+export async function removeWatermarkUsingPost(
+  body: API.RemoveWatermarkRequest,
+  options?: { [key: string]: any }
+) {
+  return request<API.BaseResponsePictureEditTaskVO_>(
+    '/api/picture/edit/remove-watermark',
+    {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      data: body,
+      ...(options || {}),
+    }
+  )
+}
+
+/** enhancePicture POST /api/picture/edit/enhance */
+export async function enhancePictureUsingPost(
+  body: API.EnhancePictureRequest,
+  options?: { [key: string]: any }
+) {
+  return request<API.BaseResponsePictureEditTaskVO_>('/api/picture/edit/enhance', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: body,
+    ...(options || {}),
+  })
+}
+
+/** getEditTask GET /api/picture/edit/task/{taskId} */
+export async function getEditTaskUsingGet(
+  params: API.getEditTaskUsingGETParams,
+  options?: { [key: string]: any }
+) {
+  return request<API.BaseResponsePictureEditTaskVO_>(
+    `/api/picture/edit/task/${params.taskId}`,
+    {
+      method: 'GET',
+      ...(options || {}),
+    }
+  )
+}

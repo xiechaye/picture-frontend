@@ -68,6 +68,7 @@ import {
   FolderOutlined,
   TeamOutlined,
   AppstoreOutlined,
+  BgColorsOutlined,
 } from '@ant-design/icons-vue'
 import type { MenuProps } from 'ant-design-vue'
 import { message } from 'ant-design-vue'
@@ -179,6 +180,12 @@ const userMenuItems = computed(() => {
       title: 'AI 创作',
     },
     {
+      key: '/ai_picture_edit',
+      icon: () => h(BgColorsOutlined, { style: { color: '#2E7D32' } }),
+      label: 'AI 编辑',
+      title: 'AI 编辑',
+    },
+    {
       key: '/my_space',
       icon: () => h(FolderOutlined),
       label: '我的空间',
@@ -287,6 +294,7 @@ router.afterEach((to) => {
 
 // 路由跳转事件
 const doMenuClick = ({ key }: { key: string }) => {
+  console.log('Menu clicked, key:', key)
   // 如果 key 包含查询参数，直接使用字符串形式保留参数
   if (key.includes('?')) {
     router.push(key)

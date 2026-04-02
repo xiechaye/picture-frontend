@@ -857,4 +857,50 @@ declare namespace API {
     data: T
     message: string
   }
+
+  // AI 图片编辑相关类型
+  type WatermarkArea = {
+    x?: number
+    y?: number
+    width?: number
+    height?: number
+  }
+
+  type SegmentPictureRequest = {
+    pictureId: number | string
+    type?: string
+  }
+
+  type RemoveWatermarkRequest = {
+    pictureId: number | string
+    watermarkArea?: WatermarkArea
+  }
+
+  type EnhancePictureRequest = {
+    pictureId: number | string
+    enhanceType: string
+  }
+
+  type PictureEditTaskVO = {
+    id?: number
+    taskId?: string
+    pictureId?: number | string
+    userId?: number | string
+    editType?: string
+    status?: string
+    resultUrl?: string
+    errorMessage?: string
+    createTime?: string
+    updateTime?: string
+  }
+
+  type BaseResponsePictureEditTaskVO_ = {
+    code?: number
+    data?: PictureEditTaskVO
+    message?: string
+  }
+
+  type getEditTaskUsingGETParams = {
+    taskId: string
+  }
 }

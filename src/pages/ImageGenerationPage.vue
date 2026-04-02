@@ -438,7 +438,7 @@ onMounted(() => {
 }
 
 .title-icon {
-  color: #6366f1;
+  color: #2E7D32;
 }
 
 .prompt-textarea :deep(textarea) {

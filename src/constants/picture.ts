@@ -68,3 +68,67 @@ export const PICTURE_EDIT_ACTION_MAP = {
   ROTATE_LEFT: '左旋操作',
   ROTATE_RIGHT: '右旋操作',
 };
+
+/**
+ * AI 图片编辑类型枚举
+ */
+export const AI_EDIT_TYPE_ENUM = {
+  SEGMENT: 'SEGMENT',
+  REMOVE_WATERMARK: 'REMOVE_WATERMARK',
+  ENHANCE: 'ENHANCE',
+  REPLACE_BACKGROUND: 'REPLACE_BACKGROUND',
+} as const;
+
+/**
+ * AI 编辑类型文本映射
+ */
+export const AI_EDIT_TYPE_MAP: Record<string, string> = {
+  SEGMENT: '智能抠图',
+  REMOVE_WATERMARK: '去除水印',
+  ENHANCE: '图片增强',
+  REPLACE_BACKGROUND: '背景替换',
+};
+
+/**
+ * 抠图类型选项
+ */
+export const SEGMENT_TYPE_OPTIONS = [
+  { label: '人像抠图', value: 'human' },
+  { label: '物体抠图', value: 'object' },
+];
+
+/**
+ * 增强类型选项
+ */
+export const ENHANCE_TYPE_OPTIONS = [
+  { label: '质量提升', value: 'quality' },
+  { label: '降噪', value: 'denoise' },
+  { label: '锐化', value: 'sharpen' },
+];
+
+/**
+ * 背景类型选项
+ */
+export const BACKGROUND_TYPE_OPTIONS = [
+  { label: '纯色背景', value: 'color' },
+  { label: '图片背景', value: 'image' },
+  { label: '透明背景', value: 'transparent' },
+];
+
+/**
+ * 编辑任务状态枚举
+ */
+export const EDIT_TASK_STATUS_ENUM = {
+  PROCESSING: 'PROCESSING',
+  SUCCESS: 'SUCCESS',
+  FAILED: 'FAILED',
+} as const;
+
+/**
+ * 编辑任务状态文本映射
+ */
+export const EDIT_TASK_STATUS_MAP: Record<string, string> = {
+  PROCESSING: '处理中',
+  SUCCESS: '成功',
+  FAILED: '失败',
+};
