@@ -22,8 +22,8 @@ export interface UseSSEOptions {
  * @example
  * const { messages, isConnected, connect, disconnect } = useSSE()
  * connect(url, {
- *   onMessage: (data) => console.log(data),
- *   onComplete: () => console.log('完成')
+ *   onMessage: (data) => { /* 处理消息 */ },
+ *   onComplete: () => { /* 完成回调 */ }
  * })
  */
 export function useSSE() {

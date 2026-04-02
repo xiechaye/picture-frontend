@@ -176,7 +176,7 @@ const fetchData = async () => {
     })
     if (handleApiResponse(res, { operation: '获取用户列表' })) {
       dataList.value = res.data.data?.records ?? []
-      total.value = res.data.data?.total ?? 0
+      total.value = Number(res.data.data?.total ?? 0)
     }
   } catch (error) {
     handleException(error, { operation: '获取用户列表' })

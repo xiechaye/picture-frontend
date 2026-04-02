@@ -123,7 +123,6 @@ const fetchTeamSpaceList = async () => {
     }
   } catch (e) {
     // 静默处理错误，避免频繁提示
-    console.error('加载团队空间列表失败', e)
   }
   return null
 }

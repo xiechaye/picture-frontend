@@ -19,7 +19,7 @@
           <!-- 已选择的图片预览 -->
           <div v-if="selectedPicture" class="selected-preview">
             <img :src="selectedPicture.url" :alt="selectedPicture.name" />
-            <a-typography-text ellipsis>{{ selectedPicture.name }}</a-typography-text>
+            <a-typography-text :ellipsis="{ tooltip: selectedPicture.name }" :content="selectedPicture.name" />
           </div>
 
           <!-- 编辑功能选项卡 -->
@@ -63,7 +63,6 @@
                     <a-empty
                       v-else
                       description="请先选择图片"
-                      :image="null"
                       style="margin: 20px 0;"
                     />
 

@@ -94,7 +94,7 @@ const fetchTeamSpaceList = async () => {
       return res.data.data
     }
   } catch (e) {
-    console.error('加载团队空间列表失败', e)
+    // 忽略错误
   }
   return null
 }
@@ -294,7 +294,6 @@ router.afterEach((to) => {
 
 // 路由跳转事件
 const doMenuClick = ({ key }: { key: string }) => {
-  console.log('Menu clicked, key:', key)
   // 如果 key 包含查询参数，直接使用字符串形式保留参数
   if (key.includes('?')) {
     router.push(key)

@@ -229,7 +229,7 @@ const updateResize = (event: MouseEvent) => {
   const dx = event.clientX - startPos.value.x
   const dy = event.clientY - startPos.value.y
 
-  let newSelection = { ...selection.value }
+  const newSelection = { ...selection.value }
 
   switch (resizeDirection.value) {
     case 'bottom-right':

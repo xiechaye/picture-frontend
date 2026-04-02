@@ -216,7 +216,6 @@ import { useImageGeneration } from '@/composables/useImageGeneration'
 import { uploadPictureByUrlUsingPost } from '@/api/pictureController'
 import { getRandomPromptsUsingGet } from '@/api/promptController'
 import { handleApiResponse, handleException } from '@/utils/errorHandler'
-import { SPACE_TYPE_MAP } from '@/constants/space'
 import { useRouter } from 'vue-router'
 import { debug } from '@/utils/logger'
 import GlassCard from '@/components/GlassCard.vue'
@@ -296,20 +295,11 @@ const fetchRandomPrompts = async () => {
     } else {
       message.error('获取示例提示词失败')
     }
-  } catch (e) {
+  } catch {
     message.error('获取示例提示词失败')
   } finally {
     loadingPrompts.value = false
   }
-}
-
-/**
- * 空间搜索过滤
- */
-const filterSpaceOption = (input: string, option: { children?: { children?: string }[] }) => {
-  return option.children?.[0]?.children
-    ?.toLowerCase()
-    .includes(input.toLowerCase()) ?? false
 }
 
 /**
@@ -326,13 +316,6 @@ const downloadImage = () => {
   link.click()
   document.body.removeChild(link)
   message.success('开始下载图片')
-}
-
-/**
- * 前往创建空间页面
- */
-const goToCreateSpace = () => {
-  router.push('/add_space')
 }
 
 /**

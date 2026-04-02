@@ -34,7 +34,6 @@ export const useSpaceStore = defineStore('space', () => {
       }
       return spaceList.value
     } catch (err) {
-      console.error('获取空间列表失败', err)
       throw err
     } finally {
       loading.value = false

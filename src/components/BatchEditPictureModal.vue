@@ -1,6 +1,6 @@
 <template>
   <div class="batch-edit-picture-modal">
-    <a-modal v-model:visible="visible" title="批量编辑图片" :footer="false" @cancel="closeModal">
+    <a-modal v-model:open="visible" title="批量编辑图片" :footer="false" @cancel="closeModal">
       <a-typography-paragraph type="secondary">
         * 已选择 {{ pictureCount }} 张图片
       </a-typography-paragraph>

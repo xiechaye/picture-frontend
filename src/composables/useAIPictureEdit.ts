@@ -136,7 +136,6 @@ export function useAIPictureEdit() {
         }
       } catch (err) {
         // 静默处理轮询错误，继续轮询
-        console.error('轮询任务状态失败', err)
       }
     }, 3000) // 每3秒轮询一次
   }

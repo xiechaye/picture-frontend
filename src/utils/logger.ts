@@ -21,6 +21,7 @@ interface LoggerConfig {
 
 /**
  * 日志工具类
+ * （生产环境不输出日志）
  */
 class Logger {
   private config: LoggerConfig
@@ -69,51 +70,35 @@ class Logger {
    * 检查是否应该输出日志
    */
   private shouldLog(level: LogLevel): boolean {
-    return level >= this.config.level
+    return false // 禁用所有日志
   }
 
   /**
    * 调试日志（开发环境）
    */
   debug(...args: unknown[]): void {
-    if (this.shouldLog(LogLevel.DEBUG)) {
-      console.log(...this.format('DEBUG', ...args))
-    }
+    // 禁用日志输出
   }
 
   /**
    * 信息日志
    */
   info(...args: unknown[]): void {
-    if (this.shouldLog(LogLevel.INFO)) {
-      console.info(...this.format('INFO', ...args))
-    }
+    // 禁用日志输出
   }
 
   /**
    * 警告日志
    */
   warn(...args: unknown[]): void {
-    if (this.shouldLog(LogLevel.WARN)) {
-      console.warn(...this.format('WARN', ...args))
-    }
+    // 禁用日志输出
   }
 
   /**
    * 错误日志
    */
   error(...args: unknown[]): void {
-    if (this.shouldLog(LogLevel.ERROR)) {
-      console.error(...this.format('ERROR', ...args))
-
-      // 如果启用堆栈跟踪，输出错误堆栈
-      if (this.config.enableStackTrace) {
-        const error = args.find((arg) => arg instanceof Error)
-        if (error) {
-          console.error(error.stack)
-        }
-      }
-    }
+    // 禁用日志输出
   }
 
   /**
@@ -151,9 +136,20 @@ export function createLogger(config?: Partial<LoggerConfig>): Logger {
 }
 
 // 导出常用的日志方法（便捷使用）
-export const debug = (...args: unknown[]) => logger.debug(...args)
-export const info = (...args: unknown[]) => logger.info(...args)
-export const warn = (...args: unknown[]) => logger.warn(...args)
-export const error = (...args: unknown[]) => logger.error(...args)
+export const debug = (...args: unknown[]) => {
+  // 禁用日志输出
+}
+
+export const info = (...args: unknown[]) => {
+  // 禁用日志输出
+}
+
+export const warn = (...args: unknown[]) => {
+  // 禁用日志输出
+}
+
+export const error = (...args: unknown[]) => {
+  // 禁用日志输出
+}
 
 export default logger

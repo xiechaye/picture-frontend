@@ -209,11 +209,6 @@ declare namespace API {
   }
 
   type DeleteRequest = {
-    parameters?: Parameters
-    pictureId?: string
-  }
-
-  type DeleteRequest = {
     id?: number | string
   }
 

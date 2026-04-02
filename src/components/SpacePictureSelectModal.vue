@@ -147,7 +147,7 @@ const loadSpaceList = async () => {
     const privateSpace = spaceList.value.find(
       (s) => s.spaceType === SPACE_TYPE_ENUM.PRIVATE
     )
-    selectedSpaceId.value = privateSpace?.id || spaceList.value[0].id
+    selectedSpaceId.value = String(privateSpace?.id || spaceList.value[0].id)
     loadPictureList()
   }
 }
@@ -167,7 +167,7 @@ const loadPictureList = async () => {
 
     if (res.data.code === 0 && res.data.data) {
       pictureList.value = res.data.data.records || []
-      total.value = res.data.data.total || 0
+      total.value = Number(res.data.data.total || 0)
     }
   } finally {
     loading.value = false
