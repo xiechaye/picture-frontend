@@ -108,4 +108,89 @@ const handleSubmit = async (values: API.UserLoginRequest) => {
   font-size: 13px;
   margin-bottom: 16px;
 }
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  #userLoginPage {
+    max-width: 100%;
+    padding: calc(24px + env(safe-area-inset-top, 0px)) 16px calc(32px + env(safe-area-inset-bottom, 0px));
+  }
+
+  .title {
+    font-size: 20px;
+    margin-bottom: 20px;
+  }
+
+  /* 确保输入框有足够的触摸目标 */
+  :deep(.ant-input),
+  :deep(.ant-input-password) {
+    height: 44px;
+    font-size: 16px;
+    border-radius: 12px;
+  }
+
+  /* 确保密码输入框容器高度正确 */
+  :deep(.ant-input-password) {
+    display: flex;
+    align-items: center;
+  }
+
+  /* 密码输入框内部元素 */
+  :deep(.ant-input-password .ant-input) {
+    height: 44px;
+    font-size: 16px;
+    border-radius: 12px;
+    background: transparent;
+    border: none;
+    box-shadow: none;
+  }
+
+  /* 密码输入框容器背景 */
+  :deep(.ant-input-password) {
+    background: #fff;
+    border: 1px solid #d9d9d9;
+    border-radius: 12px;
+    transition: all 0.3s;
+  }
+
+  :deep(.ant-input-password:focus),
+  :deep(.ant-input-password-focused) {
+    border-color: #2E7D32;
+    box-shadow: 0 0 0 2px rgba(46, 125, 50, 0.1);
+  }
+
+  /* 密码显示/隐藏按钮 */
+  :deep(.ant-input-password-icon) {
+    color: rgba(0, 0, 0, 0.45);
+    transition: color 0.3s;
+    background: transparent;
+    border: none;
+  }
+
+  :deep(.ant-input-password-icon:hover) {
+    color: rgba(0, 0, 0, 0.88);
+  }
+
+  /* 提交按钮 */
+  :deep(.ant-btn-primary) {
+    height: 48px;
+    font-size: 16px;
+    font-weight: 600;
+    border-radius: 12px;
+  }
+
+  /* 表单项间距 */
+  :deep(.ant-form-item) {
+    margin-bottom: 16px;
+  }
+
+  :deep(.ant-form-item-control-input) {
+    min-height: 44px;
+  }
+
+  /* 验证码输入框增加上边距 - 第三个表单项 */
+  :deep(.ant-form-item:nth-child(3)) {
+    margin-top: 24px;
+  }
+}
 </style>

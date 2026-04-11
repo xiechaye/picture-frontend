@@ -1,5 +1,22 @@
 <template>
-  <a-input-group compact>
+  <!-- 移动端使用纵向布局 -->
+  <div v-if="isMobile" class="captcha-mobile">
+    <a-input
+      v-model:value="innerCode"
+      placeholder="请输入验证码"
+      @pressEnter="handlePressEnter"
+    />
+    <div class="captcha-image-container" @click="refresh" title="点击刷新验证码">
+      <div v-if="loading" class="captcha-loading">
+        <a-spin />
+      </div>
+      <img v-if="imageData && !loading" :src="imageData" class="captcha-image" alt="验证码" />
+      <div v-if="!imageData && !loading" class="captcha-placeholder">点击获取</div>
+    </div>
+  </div>
+
+  <!-- 桌面端使用横向紧凑布局 -->
+  <a-input-group v-else compact>
     <a-input
       v-model:value="innerCode"
       placeholder="请输入验证码"
@@ -19,6 +36,10 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { getCaptchaUsingGet } from '@/api/userController.ts'
+import { useBreakpoint } from '@/composables/useBreakpoint.ts'
+
+// 移动端检测
+const { isMobile } = useBreakpoint(768)
 
 interface Props {
   captchaCode?: string
@@ -97,6 +118,25 @@ defineExpose({
 </script>
 
 <style scoped>
+/* 移动端纵向布局 */
+.captcha-mobile {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.captcha-mobile :deep(.ant-input) {
+  height: 44px;
+  font-size: 16px;
+}
+
+.captcha-mobile .captcha-image-container {
+  width: 110px;
+  height: 44px;
+  align-self: flex-start;
+}
+
+/* 桌面端横向布局 */
 .captcha-image-container {
   display: inline-block;
   width: 110px;
@@ -118,7 +158,7 @@ defineExpose({
 .captcha-image {
   width: 100%;
   height: 100%;
-  object-fit: cover;
+  object-fit: contain;
   display: block;
 }
 

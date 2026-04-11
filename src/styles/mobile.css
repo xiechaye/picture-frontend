@@ -1,0 +1,113 @@
+/* ========================================
+   茶叶云图库 - 移动端优化样式
+   ======================================== */
+
+:root {
+  /* 安全区域 */
+  --sat: env(safe-area-inset-top, 0px);
+  --sar: env(safe-area-inset-right, 0px);
+  --sab: env(safe-area-inset-bottom, 0px);
+  --sal: env(safe-area-inset-left, 0px);
+
+  /* 间距 */
+  --s-1: 4px;
+  --s-2: 8px;
+  --s-3: 12px;
+  --s-4: 16px;
+  --s-5: 20px;
+  --s-6: 24px;
+  --s-8: 32px;
+
+  /* 触摸目标 */
+  --touch: 44px;
+  --touch-lg: 48px;
+
+  /* 字体大小 */
+  --font-xs: 12px;
+  --font-sm: 14px;
+  --font-base: 16px;
+  --font-lg: 18px;
+  --font-xl: 20px;
+}
+
+/* === 移动端基础重置 === */
+@media (max-width: 767px) {
+  /* 防止文本选择干扰触摸操作 */
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  /* 允许文本输入选择 */
+  input, textarea, [contenteditable] {
+    user-select: text;
+  }
+
+  /* 16px 字体防止 iOS 自动缩放 */
+  input, textarea, select {
+    font-size: 16px !important;
+  }
+}
+
+/* === 触摸反馈 === */
+@media (hover: none) {
+  .touch-feedback:active {
+    transform: scale(0.96);
+    opacity: 0.8;
+    transition: transform 0.15s ease, opacity 0.15s ease;
+  }
+}
+
+/* === 安全区域工具类 === */
+.safe-top { padding-top: var(--sat); }
+.safe-right { padding-right: var(--sar); }
+.safe-bottom { padding-bottom: var(--sab); }
+.safe-left { padding-left: var(--sal); }
+.safe-all {
+  padding-top: var(--sat);
+  padding-right: var(--sar);
+  padding-bottom: var(--sab);
+  padding-left: var(--sal);
+}
+
+/* === 触摸目标工具类 === */
+.touch-target {
+  min-height: var(--touch);
+  min-width: var(--touch);
+}
+
+.touch-target-lg {
+  min-height: var(--touch-lg);
+  min-width: var(--touch-lg);
+}
+
+/* === Ant Design 移动端覆盖 === */
+@media (max-width: 767px) {
+  /* 按钮 */
+  .ant-btn {
+    min-height: var(--touch);
+    border-radius: 8px;
+  }
+
+  /* 输入框 */
+  .ant-input {
+    border-radius: 8px;
+  }
+
+  /* 抽屉 */
+  .ant-drawer-body {
+    padding-bottom: calc(var(--s-4) + var(--sab)) !important;
+  }
+
+  /* 模态框 */
+  .ant-modal {
+    max-width: calc(100vw - var(--s-8)) !important;
+  }
+}
+
+/* === 优化滚动体验 === */
+@media (max-width: 767px) {
+  .smooth-scroll {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+}

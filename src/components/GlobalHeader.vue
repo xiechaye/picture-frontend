@@ -24,6 +24,7 @@
           v-model:selectedKeys="current"
           mode="horizontal"
           :items="headerItems"
+          :key="teamSpaceList.length"
           @click="doMenuClick"
         />
       </a-col>
@@ -62,7 +63,7 @@
             </a-dropdown>
           </div>
           <div v-else>
-            <a-button type="primary" size="small" href="/user/login">登录</a-button>
+            <a-button type="primary" href="/user/login">登录</a-button>
           </div>
         </div>
       </a-col>
@@ -314,50 +315,48 @@ const userMenuItems = computed(() => {
   ]
 
   // 添加团队空间下拉菜单（分类显示）
-  if (teamSpaceList.value.length > 0) {
-    // 分组：我创建的和我加入的
-    const createdSpaces = teamSpaceList.value.filter((s) => s.spaceRole === 'admin')
-    const joinedSpaces = teamSpaceList.value.filter((s) => s.spaceRole !== 'admin')
+  // 始终显示团队空间菜单项，保持菜单结构稳定
+  // 分组：我创建的和我加入的
+  const createdSpaces = teamSpaceList.value.filter((s) => s.spaceRole === 'admin')
+  const joinedSpaces = teamSpaceList.value.filter((s) => s.spaceRole !== 'admin')
 
-    // 构建嵌套菜单结构
-    const teamChildren: MenuProps['items'] = []
+  // 构建嵌套菜单结构
+  const teamChildren: MenuProps['items'] = []
 
-    // 我创建的团队
-    if (createdSpaces.length > 0) {
-      teamChildren.push({
-        type: 'group',
-        label: '我创建的',
-        children: createdSpaces.map((spaceUser) => ({
-          key: `/space/${spaceUser.spaceId}`,
-          label: spaceUser.space?.spaceName ?? '未命名空间',
-          title: spaceUser.space?.spaceName ?? '未命名空间',
-        })),
-      })
-    }
-
-    // 我加入的团队
-    if (joinedSpaces.length > 0) {
-      teamChildren.push({
-        type: 'group',
-        label: '我加入的',
-        children: joinedSpaces.map((spaceUser) => ({
-          key: `/space/${spaceUser.spaceId}`,
-          label: spaceUser.space?.spaceName ?? '未命名空间',
-          title: spaceUser.space?.spaceName ?? '未命名空间',
-        })),
-      })
-    }
-
-    if (teamChildren.length > 0) {
-      items.push({
-        key: 'team',
-        icon: () => h(TeamOutlined),
-        label: '团队空间',
-        title: '团队空间',
-        children: teamChildren,
-      })
-    }
+  // 我创建的团队
+  if (createdSpaces.length > 0) {
+    teamChildren.push({
+      type: 'group',
+      label: '我创建的',
+      children: createdSpaces.map((spaceUser) => ({
+        key: `/space/${spaceUser.spaceId}`,
+        label: spaceUser.space?.spaceName ?? '未命名空间',
+        title: spaceUser.space?.spaceName ?? '未命名空间',
+      })),
+    })
   }
+
+  // 我加入的团队
+  if (joinedSpaces.length > 0) {
+    teamChildren.push({
+      type: 'group',
+      label: '我加入的',
+      children: joinedSpaces.map((spaceUser) => ({
+        key: `/space/${spaceUser.spaceId}`,
+        label: spaceUser.space?.spaceName ?? '未命名空间',
+        title: spaceUser.space?.spaceName ?? '未命名空间',
+      })),
+    })
+  }
+
+  // 始终添加团队空间菜单项，如果没有团队空间则显示提示
+  items.push({
+    key: 'team',
+    icon: () => h(TeamOutlined),
+    label: '团队空间',
+    title: '团队空间',
+    children: teamChildren.length > 0 ? teamChildren : [{ key: '_empty_', label: '暂无团队空间', disabled: true }],
+  })
 
   // 添加创建团队菜单
   items.push({
@@ -405,20 +404,36 @@ const mobileMenuItems = computed(() => {
     },
   ]
 
-  // 移动端：扁平化团队空间列表
-  if (teamSpaceList.value.length > 0) {
-    // 添加团队空间标题
-    items.push({
-      type: 'divider',
-    })
+  // 移动端：扁平化团队空间列表（始终显示，保持菜单结构稳定）
+  // 添加团队空间分隔符
+  items.push({
+    type: 'divider',
+  })
 
-    // 直接列出所有团队空间，不使用分组
+  // 添加团队空间标题
+  items.push({
+    key: '_team_header_',
+    icon: () => h(TeamOutlined),
+    label: '团队空间',
+    disabled: true,
+  })
+
+  // 直接列出所有团队空间，不使用分组
+  if (teamSpaceList.value.length > 0) {
     teamSpaceList.value.forEach((spaceUser) => {
       items.push({
         key: `/space/${spaceUser.spaceId}`,
         icon: () => h(TeamOutlined),
         label: spaceUser.space?.spaceName ?? '未命名空间',
       })
+    })
+  } else {
+    // 没有团队空间时显示提示
+    items.push({
+      key: '_no_team_',
+      label: '暂无团队空间',
+      disabled: true,
+      style: { color: '#999', fontSize: '12px' },
     })
   }
 
@@ -532,6 +547,37 @@ const doLogout = async () => {
   height: 64px;
 }
 
+/* 移动端导航栏优化 */
+@media (max-width: 767px) {
+  #globalHeader {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 1000;
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06);
+  }
+
+  .header-row {
+    height: calc(56px + env(safe-area-inset-top, 0px));
+    padding: 0 16px;
+    padding-top: env(safe-area-inset-top, 0px);
+  }
+
+  /* 汉堡菜单按钮 - 触摸友好 */
+  .hamburger-btn {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+  }
+
+  .hamburger-btn:active {
+    background: rgba(46, 125, 50, 0.1);
+  }
+}
+
 #globalHeader .title-bar {
   display: flex;
   align-items: center;
@@ -571,13 +617,8 @@ const doLogout = async () => {
 }
 
 /* 移动端样式 */
-.mobile-logo .title-bar {
-  /* 移除 justify-content: center，让 logo 左对齐紧邻汉堡按钮 */
-}
-
-.mobile-logo .logo {
-  height: 36px;
-  margin-left: 4px;
+.mobile-logo {
+  display: none;
 }
 
 .mobile-user {
@@ -587,6 +628,22 @@ const doLogout = async () => {
 
 .mobile-user .user-login-status {
   padding-right: 0;
+  display: flex;
+  align-items: center;
+}
+
+/* 移动端登录按钮 */
+.mobile-user :deep(.ant-btn) {
+  height: 28px !important;
+  padding: 0 10px !important;
+  font-size: 12px !important;
+  line-height: 26px !important;
+  margin: 0 !important;
+}
+
+.mobile-user :deep(.ant-btn-primary) {
+  background: #2E7D32;
+  border-color: #2E7D32;
 }
 
 /* 汉堡按钮 */
@@ -785,5 +842,23 @@ const doLogout = async () => {
 .mobile-drawer .ant-drawer-body {
   display: flex;
   flex-direction: column;
+}
+
+/* 移动端抽屉安全区域优化 */
+@media (max-width: 767px) {
+  .drawer-header {
+    padding-top: calc(16px + env(safe-area-inset-top, 0px));
+  }
+
+  .drawer-footer {
+    padding-bottom: calc(8px + env(safe-area-inset-bottom, 0px));
+  }
+
+  /* 触摸反馈 */
+  .drawer-menu :deep(.ant-menu-item):active,
+  .footer-menu :deep(.ant-menu-item):active {
+    background: rgba(46, 125, 50, 0.1);
+    transform: scale(0.98);
+  }
 }
 </style>

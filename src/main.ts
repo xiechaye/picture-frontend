@@ -10,6 +10,7 @@ import 'vue-cropper/dist/index.css'
 import 'ant-design-vue/dist/reset.css'
 import '@/access.ts'
 import '@/styles/variables.css'
+import '@/styles/mobile.css'
 
 // 茶叶云图库 - Ant Design 主题配置
 const theme: ThemeConfig = {
