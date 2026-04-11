@@ -30,6 +30,8 @@ import GlobalHeader from '@/components/GlobalHeader.vue'
   top: 0;
   z-index: 101;
   box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.03);
+  height: 64px;
+  line-height: 64px;
 }
 
 #basicLayout .main-layout {
@@ -37,7 +39,7 @@ import GlobalHeader from '@/components/GlobalHeader.vue'
 }
 
 #basicLayout .content {
-  padding: 24px;
+  padding: var(--desktop-padding, 24px);
   background: #FAFAF9;
   margin-bottom: 60px;
   min-height: calc(100vh - 64px - 60px);
@@ -63,5 +65,26 @@ import GlobalHeader from '@/components/GlobalHeader.vue'
 
 #basicLayout .footer a:hover {
   color: #1B5E20;
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  #basicLayout .header {
+    padding-inline: 0;
+    height: 56px;
+    line-height: 56px;
+  }
+
+  #basicLayout .content {
+    padding: var(--mobile-padding, 16px);
+    padding-bottom: 56px;
+    margin-bottom: 40px;
+    min-height: calc(100vh - 56px - 40px);
+  }
+
+  #basicLayout .footer {
+    padding: 10px;
+    font-size: 12px;
+  }
 }
 </style>

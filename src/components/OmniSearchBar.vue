@@ -136,4 +136,41 @@ const handleSearch = (value: string) => {
   font-size: 14px;
   color: #666;
 }
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  .omni-search-bar :deep(.ant-input-search) {
+    font-size: 14px;
+  }
+
+  .omni-search-bar :deep(.ant-input-search-large .ant-input) {
+    font-size: 14px;
+    padding: 8px 12px;
+  }
+
+  .omni-search-bar :deep(.ant-input-search-button) {
+    height: auto;
+    padding: 0 12px;
+  }
+
+  .omni-search-bar :deep(.ant-input-group-addon) {
+    padding: 0 8px;
+  }
+
+  .omni-search-bar :deep(.ant-btn-text) {
+    padding: 4px 8px;
+  }
+
+  .similarity-slider {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .similarity-slider :deep(.ant-slider) {
+    width: 100% !important;
+    margin: 0 !important;
+    flex: 1;
+    min-width: 120px;
+  }
+}
 </style>

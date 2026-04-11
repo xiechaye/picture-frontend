@@ -4,6 +4,16 @@
  */
 
 :root {
+  /* ===== 响应式断点 ===== */
+  --breakpoint-xs: 480px;
+  --breakpoint-sm: 768px;
+  --breakpoint-md: 992px;
+  --breakpoint-lg: 1200px;
+  --breakpoint-xl: 1600px;
+
+  /* ===== 响应式间距 ===== */
+  --mobile-padding: 16px;
+  --desktop-padding: 24px;
   /* ===== 品牌色 ===== */
   --color-primary: #2E7D32;
   --color-primary-hover: #388E3C;

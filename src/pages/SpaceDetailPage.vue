@@ -8,28 +8,48 @@
     <!-- 空间内容 - 只在数据加载完成后显示 -->
     <template v-else>
       <!-- 选择模式工具栏 -->
-      <div v-if="isSelectionMode" class="selection-toolbar">
+      <div v-if="isSelectionMode" class="selection-toolbar" :class="{ 'is-mobile': isMobile }">
         <a-button @click="exitSelectionMode">
-          <CloseOutlined /> 退出选择
+          <CloseOutlined /> {{ isMobile ? '退出' : '退出选择' }}
         </a-button>
         <a-button @click="selectAll">
-          全选
+          {{ isMobile ? '全选' : '全选' }}
         </a-button>
         <span class="selection-count">已选 {{ selectedCount }} 张</span>
         <a-button type="primary" :disabled="selectedCount === 0" @click="openBatchEditModal">
-          批量编辑
+          {{ isMobile ? '批量编辑' : '批量编辑' }}
         </a-button>
       </div>
 
       <!-- 空间信息 -->
-      <a-flex justify="space-between">
-        <h2>
-          {{ space.spaceName }}（{{ SPACE_TYPE_MAP[space.spaceType ?? 0] }}）
-          <a-tag :color="getSpaceLevelColor(space.spaceLevel ?? 0)" style="margin-left: 8px">
-            {{ SPACE_LEVEL_MAP[space.spaceLevel ?? 0] }}
-          </a-tag>
-        </h2>
-        <a-space size="middle">
+      <div class="space-header">
+        <!-- 桌面端: 空间信息（内联标签） -->
+        <div v-if="!isMobile" class="space-info">
+          <h2 class="space-name-desktop">
+            {{ space.spaceName }}（{{ SPACE_TYPE_MAP[space.spaceType ?? 0] }}）
+            <a-tag :color="getSpaceLevelColor(space.spaceLevel ?? 0)" style="margin-left: 8px">
+              {{ SPACE_LEVEL_MAP[space.spaceLevel ?? 0] }}
+            </a-tag>
+          </h2>
+        </div>
+
+        <!-- 移动端: 空间信息（换行标签） -->
+        <div v-else class="space-info">
+          <h2 class="space-name">
+            {{ space.spaceName }}
+          </h2>
+          <div class="space-meta">
+            <a-tag :color="getSpaceTypeColor(space.spaceType ?? 0)">
+              {{ SPACE_TYPE_MAP[space.spaceType ?? 0] }}
+            </a-tag>
+            <a-tag :color="getSpaceLevelColor(space.spaceLevel ?? 0)">
+              {{ SPACE_LEVEL_MAP[space.spaceLevel ?? 0] }}
+            </a-tag>
+          </div>
+        </div>
+
+        <!-- 桌面端: 水平按钮组 -->
+        <a-space v-if="!isMobile" class="desktop-actions" size="middle">
           <a-button
             v-if="canUploadPicture"
             type="primary"
@@ -87,7 +107,49 @@
             />
           </a-tooltip>
         </a-space>
-      </a-flex>
+
+        <!-- 移动端: 主按钮 + 下拉菜单 -->
+        <div v-else class="mobile-actions">
+          <a-button
+            v-if="canUploadPicture"
+            type="primary"
+            size="large"
+            :href="`/add_picture?spaceId=${id}`"
+            target="_blank"
+          >
+            <PlusOutlined /> 上传图片
+          </a-button>
+          <a-dropdown>
+            <a-button size="large">
+              更多 <DownOutlined />
+            </a-button>
+            <template #overlay>
+              <a-menu>
+                <a-menu-item v-if="canManageSpaceUser" :href="`/spaceUserManage/${id}`" target="_blank">
+                  <TeamOutlined /> 成员管理
+                </a-menu-item>
+                <a-menu-item v-if="canManageSpaceUser" :href="`/space_analyze?spaceId=${id}`" target="_blank">
+                  <BarChartOutlined /> 空间分析
+                </a-menu-item>
+                <a-menu-item v-if="canEditPicture && !isSelectionMode" @click="enterSelectionMode">
+                  <EditOutlined /> 批量编辑
+                </a-menu-item>
+                <a-menu-item
+                  v-if="canEditPicture && isSelectionMode"
+                  :disabled="selectedCount === 0"
+                  @click="openBatchEditModal"
+                >
+                  <EditOutlined /> 批量编辑 ({{ selectedCount }})
+                </a-menu-item>
+                <a-menu-divider v-if="canDeleteSpace" />
+                <a-menu-item v-if="canDeleteSpace" danger @click="doDeleteSpace">
+                  <DeleteOutlined /> 删除空间
+                </a-menu-item>
+              </a-menu>
+            </template>
+          </a-dropdown>
+        </div>
+      </div>
       <div style="margin-bottom: 16px" />
       <!-- 全能搜索栏 -->
       <div class="search-section">
@@ -156,10 +218,11 @@ import PictureList from '@/components/PictureList.vue'
 import OmniSearchBar from '@/components/OmniSearchBar.vue'
 import SearchFilterDrawer, { type FilterValues } from '@/components/SearchFilterDrawer.vue'
 import BatchEditPictureModal from '@/components/BatchEditPictureModal.vue'
-import { BarChartOutlined, CloseOutlined, DeleteOutlined, EditOutlined, TeamOutlined } from '@ant-design/icons-vue'
+import { BarChartOutlined, CloseOutlined, DeleteOutlined, DownOutlined, EditOutlined, PlusOutlined, TeamOutlined } from '@ant-design/icons-vue'
 import { SPACE_LEVEL_MAP, SPACE_PERMISSION_ENUM, SPACE_TYPE_ENUM, SPACE_TYPE_MAP } from '../constants/space.ts'
 import { useLoginUserStore } from '@/stores/useLoginUserStore.ts'
 import { usePictureSelectionStore } from '@/stores/usePictureSelectionStore.ts'
+import { useBreakpoint } from '@/composables/useBreakpoint.ts'
 
 interface Props {
   id: string
@@ -170,6 +233,9 @@ const space = ref<API.SpaceVO>({})
 const router = useRouter()
 const loginUserStore = useLoginUserStore()
 const pictureSelectionStore = usePictureSelectionStore()
+
+// 移动端检测
+const { isMobile } = useBreakpoint(768)
 
 // 选择模式状态
 const isSelectionMode = ref(false)
@@ -237,6 +303,15 @@ const getSpaceLevelColor = (level: number) => {
     2: 'purple',
   }
   return colorMap[level] || 'default'
+}
+
+// 空间类型颜色
+const getSpaceTypeColor = (type: number) => {
+  const colorMap: Record<number, string> = {
+    0: 'blue', // PRIVATE
+    1: 'green', // TEAM
+  }
+  return colorMap[type] || 'default'
 }
 
 // -------- 搜索相关状态 --------
@@ -530,6 +605,77 @@ watch(
   padding: 8px 0;
 }
 
+/* 空间头部 */
+.space-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+  gap: 16px;
+}
+
+.space-info {
+  flex: 1;
+  min-width: 0;
+}
+
+/* 桌面端空间名称（内联标签） */
+.space-name-desktop {
+  margin: 0;
+  font-size: 20px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 移动端空间名称 */
+.space-name {
+  margin: 0;
+  font-size: 20px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-right: 16px;
+}
+
+.space-meta {
+  display: flex;
+  gap: 8px;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+/* 桌面端操作按钮 */
+.desktop-actions {
+  flex-shrink: 0;
+}
+
+/* 移动端操作按钮 */
+.mobile-actions {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 8px;
+  width: 100%;
+}
+
+.mobile-actions :deep(.ant-btn) {
+  height: 44px;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mobile-actions :deep(.ant-btn .anticon) {
+  font-size: 16px;
+}
+
+@media (max-width: 375px) {
+  .mobile-actions {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* 选择模式工具栏 */
 .selection-toolbar {
   display: flex;
@@ -557,5 +703,43 @@ watch(
   margin: 0 12px;
   color: #1890ff;
   font-weight: 500;
+}
+
+/* 移动端选择工具栏 */
+.selection-toolbar.is-mobile {
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 10px 12px;
+}
+
+.selection-toolbar.is-mobile :deep(.ant-btn) {
+  font-size: 13px;
+  padding: 4px 12px;
+  height: auto;
+}
+
+.selection-toolbar.is-mobile .selection-count {
+  width: 100%;
+  margin: 4px 0;
+  text-align: center;
+}
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  .space-header {
+    display: block;
+  }
+
+  .space-info {
+    margin-bottom: 12px;
+  }
+
+  .space-name {
+    font-size: 18px;
+  }
+
+  .desktop-actions {
+    display: none;
+  }
 }
 </style>

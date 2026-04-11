@@ -220,4 +220,51 @@ const handleCardClick = () => {
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* 移动端适配 */
+@media (max-width: 768px) {
+  /* 移动端禁用 hover 效果 */
+  .picture-card:hover {
+    transform: none;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  }
+
+  /* 移动端始终显示操作按钮（使用半透明背景） */
+  .picture-actions {
+    opacity: 1;
+    background: linear-gradient(transparent, rgba(0, 0, 0, 0.5));
+    padding: 20px 8px 8px;
+  }
+
+  /* 移动端增大按钮触摸区域 */
+  .picture-actions :deep(.ant-btn) {
+    min-width: 40px;
+    height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  /* 减小信息区域 padding */
+  .picture-info {
+    padding: 8px 10px;
+  }
+
+  .picture-name {
+    font-size: 13px;
+  }
+
+  /* 调整选中标记位置 */
+  .selection-badge {
+    top: 6px;
+    right: 6px;
+    width: 26px;
+    height: 26px;
+  }
+
+  .selection-badge svg {
+    width: 18px;
+    height: 18px;
+  }
+}
 </style>

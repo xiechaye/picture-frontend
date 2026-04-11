@@ -12,22 +12,37 @@
       </a-button>
     </template>
 
-    <!-- 搜索表单 -->
-    <SearchForm
-      :form-items="searchFormItems"
-      :initial-values="searchParams"
-      @search="handleSearch"
-      @reset="handleReset"
-    />
+    <!-- 搜索表单 - 移动端可折叠 -->
+    <div class="search-section">
+      <div
+        class="search-header"
+        :class="{ 'is-collapsed': isSearchCollapsed }"
+        @click="toggleSearch"
+      >
+        <SearchOutlined class="search-icon" />
+        <span class="search-title">搜索筛选</span>
+        <DownOutlined :class="{ 'is-collapsed': isSearchCollapsed }" class="collapse-icon" />
+      </div>
+      <div v-show="!isSearchCollapsed" class="search-content">
+        <SearchForm
+          :form-items="searchFormItems"
+          :initial-values="searchParams"
+          @search="handleSearch"
+          @reset="handleReset"
+        />
+      </div>
+    </div>
 
     <!-- 数据表格 -->
     <a-table
-      :columns="columns"
+      :columns="responsiveColumns"
       :data-source="dataList"
       :pagination="pagination"
       :loading="loading"
       @change="doTableChange"
       row-key="id"
+      :scroll="{ x: isMobile ? 500 : 'max-content' }"
+      class="prompt-table"
     >
       <template #bodyCell="{ column, record }">
         <template v-if="column.dataIndex === 'category'">
@@ -36,15 +51,15 @@
         <template v-else-if="column.key === 'prompt'">
           <a-tooltip :title="record.prompt">
             <span class="prompt-text">
-              {{ record.prompt.substring(0, 50) }}{{ record.prompt.length > 50 ? '...' : '' }}
+              {{ record.prompt.substring(0, isMobile ? 30 : 50) }}{{ record.prompt.length > (isMobile ? 30 : 50) ? '...' : '' }}
             </span>
           </a-tooltip>
         </template>
         <template v-else-if="column.key === 'createTime'">
-          {{ dayjs(record.createTime).format('YYYY-MM-DD HH:mm:ss') }}
+          {{ isMobile ? dayjs(record.createTime).format('MM-DD HH:mm') : dayjs(record.createTime).format('YYYY-MM-DD HH:mm:ss') }}
         </template>
         <template v-else-if="column.key === 'action'">
-          <a-space wrap>
+          <a-space :size="isMobile ? 4 : 8" wrap>
             <a-button type="link" size="small" @click="showEditModal(record)">编辑</a-button>
             <a-popconfirm
               title="确定要删除该提示词吗？"
@@ -67,7 +82,7 @@
     :confirm-loading="submitting"
     @ok="handleSubmit"
     @cancel="handleCancel"
-    width="600px"
+    :width="isMobile ? '90%' : 600"
   >
     <a-form :model="formData" layout="vertical">
       <a-form-item label="标题" required>
@@ -113,9 +128,20 @@ import {
   getPromptCategoriesUsingGet,
 } from '@/api/promptController'
 import { handleException } from '@/utils/errorHandler'
-import { PlusOutlined } from '@ant-design/icons-vue'
+import { PlusOutlined, SearchOutlined, DownOutlined } from '@ant-design/icons-vue'
 import AdminPageContainer from '@/components/admin/AdminPageContainer.vue'
 import SearchForm from '@/components/admin/SearchForm.vue'
+import { useBreakpoint } from '@/composables/useBreakpoint.ts'
+
+// 移动端检测
+const { isMobile } = useBreakpoint(768)
+
+// 搜索表单折叠状态
+const isSearchCollapsed = ref(false)
+
+const toggleSearch = () => {
+  isSearchCollapsed.value = !isSearchCollapsed.value
+}
 
 // 搜索表单配置
 const searchFormItems = computed(() => [
@@ -140,15 +166,29 @@ const searchFormItems = computed(() => [
   }
 ])
 
-// 表格列定义
-const columns = [
+// 所有列定义（桌面端）
+const allColumns = [
   { title: 'ID', dataIndex: 'id', width: 80 },
   { title: '标题', dataIndex: 'title', width: 150 },
   { title: '分类', dataIndex: 'category', width: 120 },
   { title: '提示词内容', key: 'prompt', ellipsis: true },
   { title: '创建时间', key: 'createTime', width: 180 },
-  { title: '操作', key: 'action', width: 150, fixed: 'right' },
+  { title: '操作', key: 'action', width: 150, fixed: 'right' as const },
 ]
+
+// 移动端列定义（精简）
+const mobileColumns = [
+  { title: '标题', dataIndex: 'title', width: 100, ellipsis: true },
+  { title: '分类', dataIndex: 'category', width: 80 },
+  { title: '内容', key: 'prompt', ellipsis: true },
+  { title: '创建时间', key: 'createTime', width: 90 },
+  { title: '操作', key: 'action', width: 120, fixed: 'right' as const },
+]
+
+// 响应式列
+const responsiveColumns = computed(() => {
+  return isMobile.value ? mobileColumns : allColumns
+})
 
 // 数据列表
 const dataList = ref<API.SamplePrompt[]>([])
@@ -245,8 +285,9 @@ const pagination = computed(() => ({
   current: searchParams.current,
   pageSize: searchParams.pageSize,
   total: total.value,
-  showSizeChanger: true,
+  showSizeChanger: !isMobile.value,
   showTotal: (total: number) => `共 ${total} 条`,
+  simple: isMobile.value,
 }))
 
 // 显示新增弹窗
@@ -358,5 +399,98 @@ onMounted(() => {
   text-overflow: ellipsis;
   white-space: nowrap;
   display: inline-block;
+}
+
+/* 搜索区域 */
+.search-section {
+  margin-bottom: 16px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fafafa;
+  border: 1px solid #f0f0f0;
+}
+
+.search-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: white;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.2s;
+}
+
+.search-header:hover {
+  background: #f9f9f9;
+}
+
+.search-header.is-collapsed {
+  border-bottom: none;
+}
+
+.search-icon {
+  color: #2E7D32;
+}
+
+.search-title {
+  flex: 1;
+  font-weight: 500;
+  color: #333;
+}
+
+.collapse-icon {
+  transition: transform 0.2s;
+}
+
+.collapse-icon.is-collapsed {
+  transform: rotate(-90deg);
+}
+
+.search-content {
+  padding-top: 12px;
+}
+
+/* 移动端优化 */
+@media (max-width: 768px) {
+  .search-section {
+    background: transparent;
+    border: none;
+  }
+
+  .search-header {
+    background: #f5f5f5;
+    padding: 10px 12px;
+    border-radius: 6px;
+  }
+
+  .search-content {
+    padding: 12px 0;
+  }
+
+  /* 表格优化 */
+  .prompt-table :deep(.ant-table) {
+    font-size: 13px;
+  }
+
+  .prompt-table :deep(.ant-table-thead > tr > th),
+  .prompt-table :deep(.ant-table-tbody > tr > td) {
+    padding: 8px 10px;
+  }
+
+  .prompt-table :deep(.ant-table-cell) {
+    padding: 8px 10px !important;
+  }
+
+  /* 标签缩小 */
+  .prompt-table :deep(.ant-tag) {
+    font-size: 11px;
+    padding: 0 4px;
+  }
+
+  /* Modal 优化 */
+  .prompt-table :deep(.ant-modal) {
+    margin: 16px auto;
+  }
 }
 </style>

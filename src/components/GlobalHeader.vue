@@ -1,15 +1,25 @@
 <template>
   <div id="globalHeader">
-    <a-row :wrap="false">
-      <a-col flex="200px">
-        <router-link to="/">
+    <a-row :wrap="false" align="middle" class="header-row">
+      <!-- 移动端汉堡菜单按钮 -->
+      <a-col v-if="isMobile" flex="auto">
+        <a-button class="hamburger-btn" type="text" @click="openDrawer">
+          <MenuOutlined />
+        </a-button>
+      </a-col>
+
+      <!-- Logo -->
+      <a-col :flex="isMobile ? 'auto' : '200px'" :class="{ 'mobile-logo': isMobile }">
+        <router-link to="/" @click="handleLogoClick">
           <div class="title-bar">
             <img class="logo" src="../assets/logo.svg" alt="logo" />
-            <div class="title">茶叶云图库</div>
+            <div v-if="!isMobile" class="title">茶叶云图库</div>
           </div>
         </router-link>
       </a-col>
-      <a-col flex="auto">
+
+      <!-- 桌面端水平菜单 -->
+      <a-col v-if="!isMobile" flex="auto">
         <a-menu
           v-model:selectedKeys="current"
           mode="horizontal"
@@ -17,14 +27,17 @@
           @click="doMenuClick"
         />
       </a-col>
+
       <!-- 用户信息展示栏 -->
-      <a-col flex="0 0 auto" style="min-width: 200px">
+      <a-col flex="0 0 auto" :class="{ 'mobile-user': isMobile }">
         <div class="user-login-status">
           <div v-if="loginUserStore.loginUser.id">
             <a-dropdown placement="bottomLeft">
-              <a-space>
-                <a-avatar :src="loginUserStore.loginUser.userAvatar" />
-                {{ loginUserStore.loginUser.userName ?? '无名' }}
+              <a-space :size="isMobile ? 4 : 8" class="user-trigger">
+                <a-avatar :size="isMobile ? 28 : 32" :src="loginUserStore.loginUser.userAvatar" />
+                <span v-if="!isMobile" class="user-name">{{
+                  loginUserStore.loginUser.userName ?? '无名'
+                }}</span>
               </a-space>
               <template #overlay>
                 <a-menu>
@@ -49,11 +62,83 @@
             </a-dropdown>
           </div>
           <div v-else>
-            <a-button type="primary" href="/user/login">登录</a-button>
+            <a-button type="primary" size="small" href="/user/login">登录</a-button>
           </div>
         </div>
       </a-col>
     </a-row>
+
+    <!-- 移动端导航抽屉 -->
+    <a-drawer
+      v-if="isMobile"
+      v-model:open="drawerVisible"
+      placement="left"
+      :closable="false"
+      :width="280"
+      class="mobile-drawer"
+      :body-style="{ padding: 0, display: 'flex', flexDirection: 'column' }"
+    >
+      <!-- 抽屉头部 -->
+      <div class="drawer-header">
+        <div class="drawer-title">
+          <img class="drawer-logo" src="../assets/logo.svg" alt="logo" />
+          <span class="drawer-title-text">茶叶云图库</span>
+        </div>
+        <a-button type="text" class="drawer-close-btn" @click="closeDrawer">
+          <CloseOutlined />
+        </a-button>
+      </div>
+
+      <!-- 抽屉内容区域 -->
+      <div class="drawer-content">
+        <!-- 用户信息卡片 -->
+        <div v-if="loginUserStore.loginUser.id" class="user-card">
+          <a-avatar :size="48" :src="loginUserStore.loginUser.userAvatar" />
+          <div class="user-card-info">
+            <div class="user-card-name">{{ loginUserStore.loginUser.userName ?? '无名' }}</div>
+            <div class="user-card-role">{{ getRoleText(loginUserStore.loginUser.userRole) }}</div>
+          </div>
+        </div>
+
+        <!-- 导航菜单 -->
+        <div class="drawer-menu-section">
+          <div class="section-title">导航</div>
+          <a-menu
+            v-model:selectedKeys="current"
+            v-model:openKeys="openKeys"
+            mode="inline"
+            :items="mobileMenuItems"
+            @click="handleMobileMenuClick"
+            class="drawer-menu"
+          />
+        </div>
+      </div>
+
+      <!-- 抽屉底部用户操作 -->
+      <div v-if="loginUserStore.loginUser.id" class="drawer-footer">
+        <a-menu mode="inline" class="footer-menu" @click="handleFooterMenuClick">
+          <a-menu-item key="/user/profile">
+            <UserOutlined />
+            <span>个人信息</span>
+          </a-menu-item>
+          <a-menu-item key="/my_space">
+            <InboxOutlined />
+            <span>我的空间</span>
+          </a-menu-item>
+          <a-menu-item key="logout" class="logout-item">
+            <LogoutOutlined />
+            <span>退出登录</span>
+          </a-menu-item>
+        </a-menu>
+      </div>
+
+      <!-- 未登录提示 -->
+      <div v-else class="drawer-footer">
+        <a-button type="primary" block href="/user/login" @click="closeDrawer">
+          登录 / 注册
+        </a-button>
+      </div>
+    </a-drawer>
   </div>
 </template>
 
@@ -69,6 +154,8 @@ import {
   TeamOutlined,
   AppstoreOutlined,
   BgColorsOutlined,
+  MenuOutlined,
+  CloseOutlined,
 } from '@ant-design/icons-vue'
 import type { MenuProps } from 'ant-design-vue'
 import { message } from 'ant-design-vue'
@@ -77,10 +164,43 @@ import { useLoginUserStore } from '@/stores/useLoginUserStore.ts'
 import { userLogoutUsingPost } from '@/api/userController.ts'
 import { SPACE_TYPE_ENUM } from '@/constants/space.ts'
 import { listMyTeamSpaceUsingPost } from '@/api/spaceUserController.ts'
+import { useBreakpoint } from '@/composables/useBreakpoint.ts'
 
 const loginUserStore = useLoginUserStore()
 const router = useRouter()
 const route = useRoute()
+
+// 移动端断点检测
+const { isMobile } = useBreakpoint(768)
+
+// 移动端抽屉状态
+const drawerVisible = ref(false)
+
+// 移动端子菜单展开状态
+const openKeys = ref<string[]>([])
+
+const openDrawer = () => {
+  drawerVisible.value = true
+}
+
+const closeDrawer = () => {
+  drawerVisible.value = false
+}
+
+const handleLogoClick = () => {
+  if (isMobile.value) {
+    closeDrawer()
+  }
+}
+
+// 获取角色文本
+const getRoleText = (role: string) => {
+  const roleMap: Record<string, string> = {
+    admin: '管理员',
+    user: '普通用户',
+  }
+  return roleMap[role] || '用户'
+}
 
 // 团队空间列表
 const teamSpaceList = ref<API.SpaceUserVO[]>([])
@@ -255,6 +375,63 @@ const headerItems = computed(() => {
   return isAdminUser.value ? adminMenuItems : userMenuItems.value
 })
 
+// 移动端菜单项（扁平化的团队空间）
+const mobileMenuItems = computed(() => {
+  const items: MenuProps['items'] = [
+    {
+      key: '/',
+      icon: () => h(HomeOutlined),
+      label: '主页',
+    },
+    {
+      key: '/add_picture',
+      icon: () => h(AppstoreOutlined),
+      label: '上传图片',
+    },
+    {
+      key: '/image_generation',
+      icon: () => h(BulbOutlined),
+      label: 'AI 创作',
+    },
+    {
+      key: '/ai_picture_edit',
+      icon: () => h(BgColorsOutlined, { style: { color: '#2E7D32' } }),
+      label: 'AI 编辑',
+    },
+    {
+      key: '/my_space',
+      icon: () => h(FolderOutlined),
+      label: '我的空间',
+    },
+  ]
+
+  // 移动端：扁平化团队空间列表
+  if (teamSpaceList.value.length > 0) {
+    // 添加团队空间标题
+    items.push({
+      type: 'divider',
+    })
+
+    // 直接列出所有团队空间，不使用分组
+    teamSpaceList.value.forEach((spaceUser) => {
+      items.push({
+        key: `/space/${spaceUser.spaceId}`,
+        icon: () => h(TeamOutlined),
+        label: spaceUser.space?.spaceName ?? '未命名空间',
+      })
+    })
+  }
+
+  // 添加创建团队
+  items.push({
+    key: '/add_space?type=' + SPACE_TYPE_ENUM.TEAM,
+    icon: () => h(AppstoreOutlined),
+    label: '创建团队',
+  })
+
+  return items
+})
+
 // 当前要高亮的菜单项
 const current = ref<string[]>([])
 
@@ -292,7 +469,7 @@ router.afterEach((to) => {
   }
 })
 
-// 路由跳转事件
+// 桌面端路由跳转事件
 const doMenuClick = ({ key }: { key: string }) => {
   // 如果 key 包含查询参数，直接使用字符串形式保留参数
   if (key.includes('?')) {
@@ -300,6 +477,34 @@ const doMenuClick = ({ key }: { key: string }) => {
   } else {
     router.push({ path: key })
   }
+}
+
+// 移动端菜单点击处理
+const handleMobileMenuClick = ({ key }: { key: string }) => {
+  // 如果是子菜单标题（如 team），不关闭抽屉
+  if (key === 'team') {
+    return
+  }
+
+  // 关闭抽屉并导航
+  closeDrawer()
+
+  if (key.includes('?')) {
+    router.push(key)
+  } else {
+    router.push({ path: key })
+  }
+}
+
+// 移动端底部菜单点击处理
+const handleFooterMenuClick = ({ key }: { key: string }) => {
+  if (key === 'logout') {
+    doLogout()
+    return
+  }
+
+  closeDrawer()
+  router.push({ path: key })
 }
 
 // 用户注销
@@ -310,6 +515,7 @@ const doLogout = async () => {
       userName: '未登录',
     })
     message.success('退出登录成功')
+    closeDrawer()
     await router.push('/user/login')
   } else {
     message.error('退出登录失败，' + res.data.message)
@@ -318,6 +524,14 @@ const doLogout = async () => {
 </script>
 
 <style scoped>
+#globalHeader {
+  background: white;
+}
+
+.header-row {
+  height: 64px;
+}
+
 #globalHeader .title-bar {
   display: flex;
   align-items: center;
@@ -327,6 +541,7 @@ const doLogout = async () => {
   color: black;
   font-size: 18px;
   margin-left: 16px;
+  font-weight: 500;
 }
 
 .logo {
@@ -338,6 +553,207 @@ const doLogout = async () => {
   display: flex;
   justify-content: flex-end;
   padding-right: 16px;
+}
+
+.user-name {
+  font-size: 14px;
+}
+
+.user-trigger {
+  cursor: pointer;
+  padding: 4px 8px;
+  border-radius: 8px;
+  transition: background-color 0.2s;
+}
+
+.user-trigger:hover {
+  background-color: #f5f5f5;
+}
+
+/* 移动端样式 */
+.mobile-logo .title-bar {
+  /* 移除 justify-content: center，让 logo 左对齐紧邻汉堡按钮 */
+}
+
+.mobile-logo .logo {
+  height: 36px;
+  margin-left: 4px;
+}
+
+.mobile-user {
+  min-width: auto !important;
+  padding-right: 8px;
+}
+
+.mobile-user .user-login-status {
+  padding-right: 0;
+}
+
+/* 汉堡按钮 */
+.hamburger-btn {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+}
+
+.hamburger-btn:hover {
+  background-color: #f5f5f5;
+}
+
+.hamburger-btn :deep(.anticon) {
+  font-size: 20px !important;
+}
+
+/* 抽屉头部 */
+.drawer-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  border-bottom: 1px solid var(--color-border-primary, #f0f0f0);
+}
+
+.drawer-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.drawer-logo {
+  height: 28px;
+}
+
+.drawer-title-text {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--color-text-primary, #1f2937);
+}
+
+.drawer-close-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+}
+
+.drawer-close-btn:hover {
+  background-color: #f5f5f5;
+}
+
+/* 抽屉内容区域 */
+.drawer-content {
+  flex: 1;
+  overflow-y: auto;
+}
+
+/* 用户卡片 */
+.user-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  margin: 12px 16px;
+  background: linear-gradient(135deg, #2E7D32 0%, #43A047 100%);
+  border-radius: 12px;
+  color: white;
+}
+
+.user-card-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.user-card-name {
+  font-size: 15px;
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-card-role {
+  font-size: 12px;
+  opacity: 0.9;
+  margin-top: 2px;
+}
+
+/* 抽屉菜单区域 */
+.drawer-menu-section {
+  padding: 8px 0;
+}
+
+.section-title {
+  padding: 8px 16px;
+  font-size: 12px;
+  color: var(--color-text-secondary, #6b7280);
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.drawer-menu {
+  border: none;
+}
+
+.drawer-menu :deep(.ant-menu-item) {
+  height: 44px;
+  line-height: 44px;
+  padding: 0 16px;
+  margin: 2px 8px;
+  border-radius: 8px;
+}
+
+.drawer-menu :deep(.ant-menu-item-selected) {
+  background-color: #f1f8e9;
+  color: #2E7D32;
+}
+
+.drawer-menu :deep(.ant-menu-item .anticon) {
+  font-size: 16px;
+}
+
+.drawer-menu :deep(.ant-menu-submenu-title) {
+  height: 44px;
+  line-height: 44px;
+  padding: 0 16px;
+  margin: 2px 8px;
+  border-radius: 8px;
+}
+
+/* 抽屉底部 */
+.drawer-footer {
+  border-top: 1px solid var(--color-border-primary, #f0f0f0);
+  padding: 8px 0;
+  background: #fafafa;
+}
+
+.footer-menu {
+  border: none;
+  background: transparent;
+}
+
+.footer-menu :deep(.ant-menu-item) {
+  height: 44px;
+  line-height: 44px;
+  padding: 0 16px;
+  margin: 2px 0;
+}
+
+.footer-menu :deep(.logout-item) {
+  color: #ef4444;
+}
+
+.footer-menu :deep(.logout-item .anticon) {
+  color: #ef4444;
+}
+
+.footer-menu :deep(.anticon) {
+  margin-right: 8px;
 }
 </style>
 
@@ -363,5 +779,11 @@ const doLogout = async () => {
 
 .ant-dropdown-menu-item a:hover {
   color: #2E7D32;
+}
+
+/* 移动端抽屉覆盖样式 */
+.mobile-drawer .ant-drawer-body {
+  display: flex;
+  flex-direction: column;
 }
 </style>

@@ -4,7 +4,8 @@
     description="管理系统中的所有图片，支持审核、编辑和删除操作"
   >
     <template #extra>
-      <a-space>
+      <!-- 桌面端：显示所有按钮 -->
+      <a-space v-if="!isMobile" class="desktop-actions">
         <a-button type="primary" href="/add_picture" target="_blank">
           <template #icon>
             <PlusOutlined />
@@ -18,31 +19,77 @@
           批量上传
         </a-button>
       </a-space>
+
+      <!-- 移动端：下拉菜单 -->
+      <a-dropdown v-else placement="bottomRight">
+        <a-button type="primary">
+          <template #icon>
+            <AppstoreOutlined />
+          </template>
+          操作
+          <DownOutlined />
+        </a-button>
+        <template #overlay>
+          <a-menu>
+            <a-menu-item>
+              <a href="/add_picture" target="_blank" @click.stop>
+                <PlusOutlined />
+                上传图片
+              </a>
+            </a-menu-item>
+            <a-menu-item>
+              <a href="/add_picture/batch" target="_blank" @click.stop>
+                <UploadOutlined />
+                批量上传
+              </a>
+            </a-menu-item>
+          </a-menu>
+        </template>
+      </a-dropdown>
     </template>
 
-    <!-- 搜索表单 -->
-    <SearchForm
-      :form-items="searchFormItems"
-      :initial-values="searchParams"
-      @search="handleSearch"
-      @reset="handleReset"
-    />
+    <!-- 搜索表单 - 移动端可折叠 -->
+    <div class="search-section">
+      <div
+        class="search-header"
+        :class="{ 'is-collapsed': isSearchCollapsed }"
+        @click="toggleSearch"
+      >
+        <SearchOutlined class="search-icon" />
+        <span class="search-title">搜索筛选</span>
+        <DownOutlined :class="{ 'is-collapsed': isSearchCollapsed }" class="collapse-icon" />
+      </div>
+      <div v-show="!isSearchCollapsed" class="search-content">
+        <SearchForm
+          :form-items="searchFormItems"
+          :initial-values="searchParams"
+          @search="handleSearch"
+          @reset="handleReset"
+        />
+      </div>
+    </div>
 
     <!-- 表格 -->
     <a-table
-      :columns="columns"
+      :columns="responsiveColumns"
       :data-source="dataList"
       :pagination="pagination"
       :loading="loading"
       @change="doTableChange"
       row-key="id"
+      :scroll="{ x: isMobile ? 700 : 'max-content' }"
+      class="picture-table"
     >
       <template #bodyCell="{ column, record }">
         <template v-if="column.dataIndex === 'url'">
-          <a-image :src="record.url" :width="80" :preview="{ src: record.url }" />
+          <a-image
+            :src="record.url"
+            :width="isMobile ? 50 : 80"
+            :preview="{ src: record.url }"
+          />
         </template>
         <template v-else-if="column.dataIndex === 'tags'">
-          <a-space wrap>
+          <a-space :size="isMobile ? 2 : 4" wrap>
             <a-tag v-for="tag in JSON.parse(record.tags || '[]')" :key="tag" color="blue">
               {{ tag }}
             </a-tag>
@@ -52,7 +99,7 @@
           <div class="pic-info">
             <span>{{ record.picFormat }}</span>
             <span>{{ record.picWidth }}×{{ record.picHeight }}</span>
-            <span>{{ (record.picSize / 1024).toFixed(2) }}KB</span>
+            <span>{{ (record.picSize / 1024).toFixed(1) }}KB</span>
           </div>
         </template>
         <template v-else-if="column.dataIndex === 'reviewMessage'">
@@ -64,13 +111,13 @@
           </div>
         </template>
         <template v-else-if="column.dataIndex === 'createTime'">
-          {{ dayjs(record.createTime).format('YYYY-MM-DD HH:mm:ss') }}
+          {{ isMobile ? dayjs(record.createTime).format('MM-DD HH:mm') : dayjs(record.createTime).format('YYYY-MM-DD HH:mm:ss') }}
         </template>
         <template v-else-if="column.dataIndex === 'editTime'">
-          {{ record.editTime ? dayjs(record.editTime).format('YYYY-MM-DD HH:mm:ss') : '-' }}
+          {{ record.editTime ? (isMobile ? dayjs(record.editTime).format('MM-DD HH:mm') : dayjs(record.editTime).format('YYYY-MM-DD HH:mm:ss')) : '-' }}
         </template>
         <template v-else-if="column.key === 'action'">
-          <a-space wrap>
+          <a-space :size="isMobile ? 4 : 8" wrap>
             <a-button
               v-if="record.reviewStatus === PIC_REVIEW_STATUS_ENUM.REVIEWING"
               type="link"
@@ -110,6 +157,7 @@
     </a-table>
   </AdminPageContainer>
 </template>
+
 <script lang="ts" setup>
 import { computed, onMounted, reactive, ref } from 'vue'
 import {
@@ -124,9 +172,26 @@ import {
   PIC_REVIEW_STATUS_OPTIONS,
 } from '../../constants/picture.ts'
 import dayjs from 'dayjs'
-import { PlusOutlined, UploadOutlined } from '@ant-design/icons-vue'
+import {
+  PlusOutlined,
+  UploadOutlined,
+  SearchOutlined,
+  DownOutlined,
+  AppstoreOutlined,
+} from '@ant-design/icons-vue'
 import AdminPageContainer from '@/components/admin/AdminPageContainer.vue'
 import SearchForm from '@/components/admin/SearchForm.vue'
+import { useBreakpoint } from '@/composables/useBreakpoint.ts'
+
+// 移动端检测
+const { isMobile } = useBreakpoint(768)
+
+// 搜索表单折叠状态
+const isSearchCollapsed = ref(false)
+
+const toggleSearch = () => {
+  isSearchCollapsed.value = !isSearchCollapsed.value
+}
 
 // 搜索表单配置
 const searchFormItems = [
@@ -158,7 +223,8 @@ const searchFormItems = [
   }
 ]
 
-const columns = [
+// 所有列定义（桌面端）
+const allColumns = [
   {
     title: 'ID',
     dataIndex: 'id',
@@ -209,9 +275,50 @@ const columns = [
     title: '操作',
     key: 'action',
     width: 200,
-    fixed: 'right',
+    fixed: 'right' as const,
   },
 ]
+
+// 移动端列定义（精简）
+const mobileColumns = [
+  {
+    title: '图片',
+    dataIndex: 'url',
+    width: 60,
+  },
+  {
+    title: '名称',
+    dataIndex: 'name',
+    width: 100,
+    ellipsis: true,
+  },
+  {
+    title: '审核',
+    dataIndex: 'reviewMessage',
+    width: 80,
+  },
+  {
+    title: '图片信息',
+    dataIndex: 'picInfo',
+    width: 120,
+  },
+  {
+    title: '创建时间',
+    dataIndex: 'createTime',
+    width: 90,
+  },
+  {
+    title: '操作',
+    key: 'action',
+    width: 150,
+    fixed: 'right' as const,
+  },
+]
+
+// 响应式列
+const responsiveColumns = computed(() => {
+  return isMobile.value ? mobileColumns : allColumns
+})
 
 // 定义数据
 const dataList = ref<API.Picture[]>([])
@@ -258,8 +365,9 @@ const pagination = computed(() => {
     current: searchParams.current,
     pageSize: searchParams.pageSize,
     total: total.value,
-    showSizeChanger: true,
+    showSizeChanger: !isMobile.value,
     showTotal: (total: number) => `共 ${total} 条`,
+    simple: isMobile.value,
   }
 })
 
@@ -352,5 +460,103 @@ const getReviewStatusColor = (status: number) => {
   margin-top: 4px;
   font-size: 12px;
   color: #666;
+}
+
+/* 搜索区域 */
+.search-section {
+  margin-bottom: 16px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #fafafa;
+  border: 1px solid #f0f0f0;
+}
+
+.search-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: white;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.2s;
+}
+
+.search-header:hover {
+  background: #f9f9f9;
+}
+
+.search-header.is-collapsed {
+  border-bottom: none;
+}
+
+.search-icon {
+  color: #2E7D32;
+}
+
+.search-title {
+  flex: 1;
+  font-weight: 500;
+  color: #333;
+}
+
+.collapse-icon {
+  transition: transform 0.2s;
+}
+
+.collapse-icon.is-collapsed {
+  transform: rotate(-90deg);
+}
+
+.search-content {
+  padding-top: 12px;
+}
+
+/* 移动端优化 */
+@media (max-width: 768px) {
+  .desktop-actions {
+    display: none;
+  }
+
+  .search-section {
+    background: transparent;
+    border: none;
+  }
+
+  .search-header {
+    background: #f5f5f5;
+    padding: 10px 12px;
+    border-radius: 6px;
+  }
+
+  .search-content {
+    padding: 12px 0;
+  }
+
+  /* 表格优化 */
+  .picture-table :deep(.ant-table) {
+    font-size: 13px;
+  }
+
+  .picture-table :deep(.ant-table-thead > tr > th),
+  .picture-table :deep(.ant-table-tbody > tr > td) {
+    padding: 8px 10px;
+  }
+
+  .picture-table :deep(.ant-table-cell) {
+    padding: 8px 10px !important;
+  }
+
+  /* 标签缩小 */
+  .picture-table :deep(.ant-tag) {
+    font-size: 10px;
+    padding: 0 3px;
+    margin: 2px;
+  }
+
+  /* 图片预览优化 */
+  .picture-table :deep(.ant-image-img) {
+    border-radius: 4px;
+  }
 }
 </style>
