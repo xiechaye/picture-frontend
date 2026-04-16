@@ -302,7 +302,7 @@ const userMenuItems = computed(() => {
     },
     {
       key: '/ai_picture_edit',
-      icon: () => h(BgColorsOutlined, { style: { color: '#2E7D32' } }),
+      icon: () => h(BgColorsOutlined),
       label: 'AI 编辑',
       title: 'AI 编辑',
     },
@@ -394,7 +394,7 @@ const mobileMenuItems = computed(() => {
     },
     {
       key: '/ai_picture_edit',
-      icon: () => h(BgColorsOutlined, { style: { color: '#2E7D32' } }),
+      icon: () => h(BgColorsOutlined),
       label: 'AI 编辑',
     },
     {
