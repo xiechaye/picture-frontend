@@ -16,6 +16,21 @@ export async function deletePictureUsingPost(
   })
 }
 
+/** deletePictureByBatch POST /api/picture/delete/batch */
+export async function deletePictureByBatchUsingPost(
+  body: API.PictureDeleteByBatchRequest,
+  options?: { [key: string]: any }
+) {
+  return request<API.BaseResponseBoolean_>('/api/picture/delete/batch', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    data: body,
+    ...(options || {}),
+  })
+}
+
 /** editPicture POST /api/picture/edit */
 export async function editPictureUsingPost(
   body: API.PictureEditRequest,

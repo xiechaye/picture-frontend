@@ -19,6 +19,14 @@
         <a-button type="primary" :disabled="selectedCount === 0" @click="openBatchEditModal">
           {{ isMobile ? '批量编辑' : '批量编辑' }}
         </a-button>
+        <a-button
+          v-if="canDeletePicture"
+          danger
+          :disabled="selectedCount === 0"
+          @click="handleBatchDelete"
+        >
+          {{ isMobile ? '批量删除' : '批量删除' }}
+        </a-button>
       </div>
 
       <!-- 空间信息 -->
@@ -141,6 +149,13 @@
                 >
                   <EditOutlined /> 批量编辑 ({{ selectedCount }})
                 </a-menu-item>
+                <a-menu-item
+                  v-if="canDeletePicture && isSelectionMode"
+                  :disabled="selectedCount === 0"
+                  @click="handleBatchDelete"
+                >
+                  <DeleteOutlined /> 批量删除 ({{ selectedCount }})
+                </a-menu-item>
                 <a-menu-divider v-if="canDeleteSpace" />
                 <a-menu-item v-if="canDeleteSpace" danger @click="doDeleteSpace">
                   <DeleteOutlined /> 删除空间
@@ -206,8 +221,9 @@
 import { computed, h, onMounted, onUnmounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { getSpaceVoByIdUsingGet, deleteSpaceUsingPost } from '@/api/spaceController.ts'
-import { message } from 'ant-design-vue'
+import { message, Modal } from 'ant-design-vue'
 import {
+  deletePictureByBatchUsingPost,
   listPictureVoByPageUsingPost,
   listPictureTagCategoryUsingGet,
   searchPictureByColorUsingPost,
@@ -552,6 +568,43 @@ const onBatchEditPictureSuccess = () => {
   pictureSelectionStore.clearSelection()
   isSelectionMode.value = false
   fetchData()
+}
+
+// 批量删除图片
+const handleBatchDelete = async () => {
+  if (selectedCount.value === 0) {
+    message.warning('请先选择要删除的图片')
+    return
+  }
+
+  // 获取选中的图片ID列表
+  const pictureIdList = selectedPictures.value.map((p) => p.id).filter((id): id is string => !!id)
+
+  Modal.confirm({
+    title: '确认删除',
+    content: `确定要删除选中的 ${selectedCount.value} 张图片吗？删除后图片将无法恢复。`,
+    okText: '确定删除',
+    okType: 'danger',
+    cancelText: '取消',
+    onOk: async () => {
+      try {
+        const res = await deletePictureByBatchUsingPost({
+          pictureIdList,
+          spaceId: props.id,
+        })
+        if (res.data.code === 0) {
+          message.success('删除成功')
+          pictureSelectionStore.clearSelection()
+          isSelectionMode.value = false
+          fetchData()
+        } else {
+          message.error('删除失败，' + res.data.message)
+        }
+      } catch {
+        message.error('删除失败')
+      }
+    },
+  })
 }
 
 // ---- 图片选择管理 ----

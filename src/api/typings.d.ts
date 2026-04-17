@@ -374,6 +374,11 @@ declare namespace API {
     tags?: string[]
   }
 
+  type PictureDeleteByBatchRequest = {
+    pictureIdList?: (number | string)[]
+    spaceId?: number | string
+  }
+
   type PictureEditRequest = {
     category?: string
     id?: number | string
@@ -863,7 +868,8 @@ declare namespace API {
 
   type SegmentPictureRequest = {
     pictureId: number | string
-    type?: string
+    type: string
+    bbox?: number[]  // [x1, y1, x2, y2] 框选区域坐标
   }
 
   type RemoveWatermarkRequest = {
