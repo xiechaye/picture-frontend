@@ -34,6 +34,78 @@
                     <a-radio-button value="object">物体抠图</a-radio-button>
                   </a-radio-group>
                 </a-form-item>
+
+                <a-form-item>
+                  <template #label>
+                    <span>抠图区域（可选）</span>
+                    <a-tooltip title="勾选后在下方图片上框选抠图区域，不勾选则自动识别整张图片">
+                      <QuestionCircleOutlined style="margin-left: 4px; color: #999;" />
+                    </a-tooltip>
+                  </template>
+                  <a-checkbox v-model:checked="useSegmentArea">
+                    手动指定抠图区域
+                  </a-checkbox>
+
+                  <!-- 框选区域 -->
+                  <div v-if="useSegmentArea" class="watermark-selection-area">
+                    <ImageAreaSelector
+                      v-if="selectedPicture"
+                      ref="segmentAreaSelectorRef"
+                      :imageUrl="selectedPicture?.url || ''"
+                      :alt="selectedPicture?.name || ''"
+                      v-model="segmentArea"
+                    />
+                    <a-empty
+                      v-else
+                      description="请先选择图片"
+                      style="margin: 20px 0;"
+                    />
+
+                    <!-- 坐标显示（只读）-->
+                    <a-row :gutter="8" style="margin-top: 12px;">
+                      <a-col :span="6">
+                        <a-input-number
+                          :value="segmentArea?.x"
+                          placeholder="X"
+                          :min="0"
+                          style="width: 100%"
+                          disabled
+                        />
+                      </a-col>
+                      <a-col :span="6">
+                        <a-input-number
+                          :value="segmentArea?.y"
+                          placeholder="Y"
+                          :min="0"
+                          style="width: 100%"
+                          disabled
+                        />
+                      </a-col>
+                      <a-col :span="6">
+                        <a-input-number
+                          :value="segmentArea?.width"
+                          placeholder="宽"
+                          :min="1"
+                          style="width: 100%"
+                          disabled
+                        />
+                      </a-col>
+                      <a-col :span="6">
+                        <a-input-number
+                          :value="segmentArea?.height"
+                          placeholder="高"
+                          :min="1"
+                          style="width: 100%"
+                          disabled
+                        />
+                      </a-col>
+                    </a-row>
+
+                    <a-button size="small" style="margin-top: 8px;" @click="clearSegmentSelection">
+                      清除选框
+                    </a-button>
+                  </div>
+                </a-form-item>
               </a-form>
             </a-tab-pane>
 
@@ -279,6 +351,8 @@ const {
   selectedPicture,
   activeEditType,
   segmentType,
+  useSegmentArea,
+  segmentArea,
   useWatermarkArea,
   watermarkArea,
   enhanceType,
@@ -304,6 +378,7 @@ const uploading = ref(false)
 const previewMode = ref('compare')
 const processingProgress = ref(0)
 const areaSelectorRef = ref()
+const segmentAreaSelectorRef = ref()
 
 // 模拟进度条动画
 let progressTimer: number | undefined
@@ -347,6 +422,12 @@ const handleTabChange = (key: string) => {
 const clearWatermarkSelection = () => {
   watermarkArea.value = { x: 0, y: 0, width: 0, height: 0 }
   areaSelectorRef.value?.clearSelection()
+}
+
+// 清除抠图选框
+const clearSegmentSelection = () => {
+  segmentArea.value = { x: 0, y: 0, width: 0, height: 0 }
+  segmentAreaSelectorRef.value?.clearSelection()
 }
 
 // 处理图片选择

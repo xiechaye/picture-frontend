@@ -4,9 +4,6 @@
       ref="containerRef"
       class="image-area-selector"
       @mousedown="handleMouseDown"
-      @mousemove="handleMouseMove"
-      @mouseup="handleMouseUp"
-      @mouseleave="handleMouseUp"
     >
       <!-- 原始图片 -->
       <img
@@ -40,12 +37,15 @@
         <div class="overlay-mask right" :style="maskRightStyle"></div>
       </template>
 
-      <!-- 选框：有选区时始终显示 -->
+      <!-- 选框：仅在拖拽时显示 -->
       <div
-        v-if="selection && selection.width > 0 && selection.height > 0"
+        v-if="isDragging && selection && selection.width > 0 && selection.height > 0"
         class="selection-box"
         :style="selectionStyle"
       >
+        <!-- 边框（更明显的视觉效果） -->
+        <div class="selection-border"></div>
+
         <!-- 调整手柄 -->
         <div
           class="resize-handle top-left"
@@ -71,13 +71,13 @@
       </div>
 
       <!-- 提示文字 -->
-      <div v-if="!selection" class="hint-text">点击并拖拽选择水印区域</div>
+      <div v-if="!selection" class="hint-text">点击并拖拽选择区域</div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onUnmounted } from 'vue'
+import { ref, computed, watch, onUnmounted, onMounted } from 'vue'
 
 interface Props {
   imageUrl: string
@@ -104,6 +104,7 @@ const isResizing = ref(false)
 const resizeDirection = ref('')
 const selection = ref<{ x: number; y: number; width: number; height: number } | null>(null)
 const startPos = ref({ x: 0, y: 0 })
+const initialSelection = ref<{ x: number; y: number; width: number; height: number } | null>(null)
 
 const overlayContainerStyle = computed(() => {
   if (imageSize.value.width === 0) {
@@ -129,39 +130,24 @@ watch(
         width: newVal.width / scaleX,
         height: newVal.height / scaleY,
       }
-    } else {
+    } else if (!isDragging.value && !isResizing.value) {
       selection.value = null
     }
   }
 )
 
-// 获取相对于容器的坐标
+// 获取相对于图片的坐标
 const getRelativeCoords = (event: MouseEvent) => {
-  if (!containerRef.value) return { x: 0, y: 0 }
-  const rect = containerRef.value.getBoundingClientRect()
+  if (!imageRef.value) return { x: 0, y: 0 }
+  const rect = imageRef.value.getBoundingClientRect()
   return {
     x: event.clientX - rect.left,
     y: event.clientY - rect.top,
   }
 }
 
-// 统一的鼠标按下处理
-const handleMouseDown = (event: MouseEvent) => {
-  if (isResizing.value) return // 如果正在调整大小，交给resize逻辑处理
-
-  isDragging.value = true
-  const coords = getRelativeCoords(event)
-  startPos.value = coords
-  selection.value = {
-    x: coords.x,
-    y: coords.y,
-    width: 0,
-    height: 0,
-  }
-}
-
-// 统一的鼠标移动处理
-const handleMouseMove = (event: MouseEvent) => {
+// 全局鼠标移动处理
+const handleGlobalMouseMove = (event: MouseEvent) => {
   if (isResizing.value) {
     updateResize(event)
     return
@@ -198,8 +184,8 @@ const handleMouseMove = (event: MouseEvent) => {
   selection.value = newSelection
 }
 
-// 统一的鼠标松开处理
-const handleMouseUp = () => {
+// 全局鼠标松开处理
+const handleGlobalMouseUp = () => {
   if (isDragging.value) {
     isDragging.value = false
 
@@ -212,58 +198,104 @@ const handleMouseUp = () => {
     }
   }
   isResizing.value = false
+  initialSelection.value = null
+
+  // 移除全局监听器
+  removeGlobalListeners()
+}
+
+// 统一的鼠标按下处理
+const handleMouseDown = (event: MouseEvent) => {
+  if (isResizing.value) return // 如果正在调整大小，交给resize逻辑处理
+
+  isDragging.value = true
+  const coords = getRelativeCoords(event)
+  startPos.value = coords
+  selection.value = {
+    x: coords.x,
+    y: coords.y,
+    width: 0,
+    height: 0,
+  }
+
+  // 添加全局监听器
+  addGlobalListeners()
+}
+
+// 统一的鼠标移动处理（本地，用于初始触发）
+const handleMouseMove = (event: MouseEvent) => {
+  // 本地鼠标移动事件已由全局监听器处理
+}
+
+// 统一的鼠标松开处理（本地，用于初始触发）
+const handleMouseUp = () => {
+  // 本地鼠标松开事件已由全局监听器处理
 }
 
 // 开始调整大小
 const startResize = (direction: string, event: MouseEvent) => {
+  event.preventDefault()
+  event.stopPropagation()
+
   isResizing.value = true
   isDragging.value = true // 同时设置dragging状态以显示遮罩
   resizeDirection.value = direction
   startPos.value = { x: event.clientX, y: event.clientY }
+
+  // 保存初始选区状态，避免累积误差
+  if (selection.value) {
+    initialSelection.value = { ...selection.value }
+  }
+
+  // 添加全局监听器
+  addGlobalListeners()
 }
 
 // 更新调整大小
 const updateResize = (event: MouseEvent) => {
-  if (!selection.value || !containerRef.value) return
+  if (!selection.value || !containerRef.value || !initialSelection.value) return
 
   const dx = event.clientX - startPos.value.x
   const dy = event.clientY - startPos.value.y
 
-  const newSelection = { ...selection.value }
+  // 基于初始选区计算新选区，避免累积误差
+  const newSelection = { ...initialSelection.value }
 
   switch (resizeDirection.value) {
     case 'bottom-right':
-      newSelection.width += dx
-      newSelection.height += dy
+      newSelection.width = Math.max(10, initialSelection.value.width + dx)
+      newSelection.height = Math.max(10, initialSelection.value.height + dy)
       break
     case 'bottom-left':
-      newSelection.x += dx
-      newSelection.width -= dx
-      newSelection.height += dy
+      newSelection.x = initialSelection.value.x + dx
+      newSelection.width = Math.max(10, initialSelection.value.width - dx)
+      newSelection.height = Math.max(10, initialSelection.value.height + dy)
       break
     case 'top-right':
-      newSelection.y += dy
-      newSelection.width += dx
-      newSelection.height -= dy
+      newSelection.y = initialSelection.value.y + dy
+      newSelection.width = Math.max(10, initialSelection.value.width + dx)
+      newSelection.height = Math.max(10, initialSelection.value.height - dy)
       break
     case 'top-left':
-      newSelection.x += dx
-      newSelection.y += dy
-      newSelection.width -= dx
-      newSelection.height -= dy
+      newSelection.x = initialSelection.value.x + dx
+      newSelection.y = initialSelection.value.y + dy
+      newSelection.width = Math.max(10, initialSelection.value.width - dx)
+      newSelection.height = Math.max(10, initialSelection.value.height - dy)
       break
   }
-
-  // 最小尺寸限制
-  if (newSelection.width < 10) newSelection.width = 10
-  if (newSelection.height < 10) newSelection.height = 10
 
   // 边界检查
   const maxX = imageSize.value.width
   const maxY = imageSize.value.height
 
-  if (newSelection.x < 0) newSelection.x = 0
-  if (newSelection.y < 0) newSelection.y = 0
+  if (newSelection.x < 0) {
+    newSelection.x = 0
+    newSelection.width = initialSelection.value.width + initialSelection.value.x
+  }
+  if (newSelection.y < 0) {
+    newSelection.y = 0
+    newSelection.height = initialSelection.value.height + initialSelection.value.y
+  }
   if (newSelection.x + newSelection.width > maxX) {
     newSelection.width = maxX - newSelection.x
   }
@@ -272,10 +304,21 @@ const updateResize = (event: MouseEvent) => {
   }
 
   selection.value = newSelection
-  startPos.value = { x: event.clientX, y: event.clientY }
 
   // 实时发送值
   emitValue()
+}
+
+// 添加全局监听器
+const addGlobalListeners = () => {
+  window.addEventListener('mousemove', handleGlobalMouseMove, { passive: false })
+  window.addEventListener('mouseup', handleGlobalMouseUp)
+}
+
+// 移除全局监听器
+const removeGlobalListeners = () => {
+  window.removeEventListener('mousemove', handleGlobalMouseMove)
+  window.removeEventListener('mouseup', handleGlobalMouseUp)
 }
 
 // 发送值变化
@@ -372,7 +415,15 @@ defineExpose({
 
 // 组件卸载时清理
 onUnmounted(() => {
-  // 不需要手动清理，因为没有添加全局监听器
+  removeGlobalListeners()
+})
+
+// 组件挂载时添加图片尺寸观察
+onMounted(() => {
+  // 确保图片加载后更新尺寸
+  if (imageRef.value && imageRef.value.complete) {
+    handleImageLoad()
+  }
 })
 </script>
 
@@ -386,14 +437,19 @@ onUnmounted(() => {
   position: relative;
   display: inline-block;
   cursor: crosshair;
+  user-select: none;
+  line-height: 0; /* 移除图片底部的空隙 */
 }
 
 .selector-image {
   display: block;
   max-width: 100%;
   max-height: 400px;
-  user-select: none;
   pointer-events: none;
+  user-select: none;
+  -webkit-user-drag: none;
+  width: auto;
+  height: auto;
 }
 
 /* 整体遮罩层 - 仅在拖拽时显示 */
@@ -408,10 +464,19 @@ onUnmounted(() => {
 
 .selection-box {
   position: absolute;
-  border: 2px solid #1890ff;
-  background: transparent;
   pointer-events: none;
   z-index: 10;
+}
+
+.selection-border {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border: 2px solid #1890ff;
+  background: rgba(24, 144, 255, 0.1);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.5);
 }
 
 .overlay-mask {
@@ -431,30 +496,36 @@ onUnmounted(() => {
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
   z-index: 20;
   pointer-events: auto;
+  cursor: pointer;
 }
 
 .resize-handle.top-left {
-  top: -6px;
-  left: -6px;
+  top: -7px;
+  left: -7px;
   cursor: nwse-resize;
 }
 
 .resize-handle.top-right {
-  top: -6px;
-  right: -6px;
+  top: -7px;
+  right: -7px;
   cursor: nesw-resize;
 }
 
 .resize-handle.bottom-left {
-  bottom: -6px;
-  left: -6px;
+  bottom: -7px;
+  left: -7px;
   cursor: nesw-resize;
 }
 
 .resize-handle.bottom-right {
-  bottom: -6px;
-  right: -6px;
+  bottom: -7px;
+  right: -7px;
   cursor: nwse-resize;
+}
+
+.resize-handle:hover {
+  transform: scale(1.2);
+  background: #40a9ff;
 }
 
 .selection-info {

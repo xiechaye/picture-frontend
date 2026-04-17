@@ -17,6 +17,13 @@ export function useAIPictureEdit() {
 
   // 各编辑功能的参数
   const segmentType = ref<'human' | 'object'>('human')
+  const useSegmentArea = ref(false)
+  const segmentArea = ref<{ x: number; y: number; width: number; height: number }>({
+    x: 0,
+    y: 0,
+    width: 0,
+    height: 0,
+  })
   const useWatermarkArea = ref(false)
   const watermarkArea = ref<{ x: number; y: number; width: number; height: number }>({
     x: 0,
@@ -65,10 +72,20 @@ export function useAIPictureEdit() {
 
       switch (activeEditType.value) {
         case 'segment':
-          res = await segmentPictureUsingPost({
+          // 构建请求参数，如果使用框选区域，则转换为 bbox 格式 [x1, y1, x2, y2]
+          const segmentParams: API.SegmentPictureRequest = {
             pictureId: selectedPicture.value.id,
             type: segmentType.value,
-          })
+          }
+          if (useSegmentArea.value && segmentArea.value.width > 0 && segmentArea.value.height > 0) {
+            segmentParams.bbox = [
+              segmentArea.value.x,
+              segmentArea.value.y,
+              segmentArea.value.x + segmentArea.value.width,
+              segmentArea.value.y + segmentArea.value.height,
+            ]
+          }
+          res = await segmentPictureUsingPost(segmentParams)
           break
         case 'removeWatermark':
           res = await removeWatermarkUsingPost({
@@ -180,6 +197,8 @@ export function useAIPictureEdit() {
     selectedPicture,
     activeEditType,
     segmentType,
+    useSegmentArea,
+    segmentArea,
     useWatermarkArea,
     watermarkArea,
     enhanceType,
