@@ -7,6 +7,7 @@
         :show-upload-list="false"
         :before-upload="beforeUpload"
         :custom-request="handleUpload"
+        accept="image/jpeg,image/png,image/webp,image/gif,image/bmp,image/x-icon"
       >
         <div class="avatar-wrapper">
           <a-avatar
@@ -103,6 +104,7 @@ import { message } from 'ant-design-vue'
 import { LoadingOutlined, UserOutlined, CameraOutlined, CopyOutlined } from '@ant-design/icons-vue'
 import { useLoginUserStore } from '@/stores/useLoginUserStore'
 import CenterContainer from '@/components/CenterContainer.vue'
+import { ALLOWED_PICTURE_FORMATS, isAllowedPictureFormat } from '@/constants/picture'
 
 const editUser = ref<API.UserUpdateRequest>({})
 const userAccount = ref<string>('')
@@ -143,15 +145,14 @@ const copyUserId = async () => {
 }
 
 const beforeUpload = (file: File) => {
-  const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png'
-  if (!isJpgOrPng) {
-    message.error('只能上传 JPG/PNG 文件！')
+  if (!isAllowedPictureFormat(file)) {
+    message.error(`只能上传 ${ALLOWED_PICTURE_FORMATS} 文件！`)
   }
   const isLt50M = file.size / 1024 / 1024 < 50
   if (!isLt50M) {
     message.error('图片大小不能超过 50MB！')
   }
-  return isJpgOrPng && isLt50M
+  return isAllowedPictureFormat(file) && isLt50M
 }
 
 const handleUpload = async ({ file, onSuccess, onError }: {

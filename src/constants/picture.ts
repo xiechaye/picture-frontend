@@ -132,3 +132,29 @@ export const EDIT_TASK_STATUS_MAP: Record<string, string> = {
   SUCCESS: '成功',
   FAILED: '失败',
 };
+
+/**
+ * 允许的图片 MIME 类型
+ * 与后端 allowed-picture-formats 和 allowed-file-formats 保持一致
+ */
+export const ALLOWED_PICTURE_MIME_TYPES = [
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+  'image/bmp',
+  'image/x-icon',
+  'image/vnd.microsoft.icon',
+] as const;
+
+/**
+ * 允许的图片格式显示名称
+ */
+export const ALLOWED_PICTURE_FORMATS = 'JPG、PNG、WEBP、GIF、BMP、ICO';
+
+/**
+ * 检查文件是否为允许的图片格式
+ */
+export const isAllowedPictureFormat = (file: File): boolean => {
+  return ALLOWED_PICTURE_MIME_TYPES.includes(file.type as typeof ALLOWED_PICTURE_MIME_TYPES[number]);
+};

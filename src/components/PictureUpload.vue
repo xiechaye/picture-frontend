@@ -5,6 +5,7 @@
       :show-upload-list="false"
       :custom-request="handleUpload"
       :before-upload="beforeUpload"
+      accept="image/jpeg,image/png,image/webp,image/gif,image/bmp,image/x-icon"
     >
       <img v-if="picture?.url" :src="picture?.url" alt="avatar" />
       <div v-else>
@@ -22,6 +23,7 @@ import type { UploadProps } from 'ant-design-vue'
 import { message } from 'ant-design-vue'
 import { uploadPictureUsingPost } from '@/api/pictureController.ts'
 import { error } from '@/utils/logger'
+import { ALLOWED_PICTURE_FORMATS, isAllowedPictureFormat } from '@/constants/picture'
 
 interface Props {
   picture?: API.PictureVO
@@ -67,16 +69,15 @@ const loading = ref<boolean>(false)
  */
 const beforeUpload = (file: UploadProps['fileList'] extends (infer U)[] | undefined ? U : never) => {
   // 校验图片格式
-  const isJpgOrPng = file.type === 'image/jpeg' || file.type === 'image/png'
-  if (!isJpgOrPng) {
-    message.error('不支持上传该格式的图片，推荐 jpg 或 png')
+  if (!isAllowedPictureFormat(file)) {
+    message.error(`不支持上传该格式的图片，支持 ${ALLOWED_PICTURE_FORMATS}`)
   }
   // 校验图片大小
   const isLt50M = (file.size ?? 0) / 1024 / 1024 < 50
   if (!isLt50M) {
     message.error('不能上传超过 50MB 的图片')
   }
-  return isJpgOrPng && isLt50M
+  return isAllowedPictureFormat(file) && isLt50M
 }
 </script>
 <style scoped>
