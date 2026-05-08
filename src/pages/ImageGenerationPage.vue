@@ -166,6 +166,7 @@
                 <span class="info-label">优化后的描述</span>
                 <a-typography-paragraph
                   :copyable="{ text: generatedImage.optimizedPrompt }"
+                  :ellipsis="{ rows: 3, expandable: true }"
                   class="info-value"
                 >
                   {{ generatedImage.optimizedPrompt }}
@@ -387,14 +388,13 @@ onMounted(() => {
 
 <style scoped>
 #imageGenerationPage {
-  height: calc(100vh - 64px - 60px - 48px);
+  min-height: calc(100vh - 64px - 60px - 48px);
   padding: 0;
 }
 
 .split-layout {
   display: flex;
   gap: 24px;
-  height: 100%;
 }
 
 .left-panel {
@@ -406,8 +406,8 @@ onMounted(() => {
 .right-panel {
   flex: 1;
   display: flex;
-  align-items: center;
-  justify-content: center;
+  overflow-y: auto;
+  padding: 0 0 24px 0;
 }
 
 .panel-title {
@@ -488,6 +488,7 @@ onMounted(() => {
 .canvas-area {
   width: 100%;
   max-width: 700px;
+  align-self: center;
   background: white;
   border-radius: 24px;
   padding: 32px;
@@ -543,12 +544,17 @@ onMounted(() => {
 }
 
 .image-container {
+  max-height: 60vh;
   border-radius: 16px;
   overflow: hidden;
+  display: flex;
+  justify-content: center;
 }
 
 .generated-image {
   width: 100%;
+  max-height: 60vh;
+  object-fit: contain;
   border-radius: 16px;
 }
 
@@ -584,6 +590,10 @@ onMounted(() => {
   gap: 24px;
 }
 
+.info-value :deep(.ant-typography-expand) {
+  color: #2E7D32;
+}
+
 .result-actions {
   display: flex;
   gap: 12px;
@@ -595,7 +605,6 @@ onMounted(() => {
 @media (max-width: 992px) {
   .split-layout {
     flex-direction: column;
-    height: auto;
   }
 
   .left-panel {
@@ -605,6 +614,7 @@ onMounted(() => {
 
   .right-panel {
     min-height: 400px;
+    overflow-y: visible;
   }
 }
 </style>
